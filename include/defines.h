@@ -1,0 +1,4 @@
+#pragma once
+
+#define CONSOLE_ENABLED true
+#define BOTTOM_SCREEN_ENABLED !CONSOLE_ENABLED
