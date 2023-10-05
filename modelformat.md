@@ -2,6 +2,23 @@
 
 ## Binary
 
+Each file represents a group of 3D objects as well as the materials to draw them with
+
+### Sections
+
+#### Header
+
+Total size
+Number of objects
+
+#### Data
+
+##### Materials
+
+##### Objects
+
+Number of vertices
+
 struct vertex { float position[3]; float texcoord[2]; float normal[3]; };
 
 Each file is basically just the binary representation of that, repeated for each vertex
@@ -22,9 +39,3 @@ bytes 28-31 represent (vertex 0).normal[2]
 bytes 32-63 represent vertex 1
 
 etc...
-
-## Text
-
-line 1: number of vertices
-line 2: number of objects/vertex groups (n)
-lines 3-(2n+3): number of vertices on one line, material file on the other line

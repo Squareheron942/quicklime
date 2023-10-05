@@ -56,8 +56,8 @@ namespace mdlLoader
         fseek(f, 0x28, SEEK_SET);
         fread(vertices, sizevert, numVerts, f);
         printf("pos1 %f\n", ((vertex*)vertices)->position[0]);
-        Mesh mesh(vertices, numVerts, sizevert);
-        object3d *object = new object3d(reg, &mesh, m);
+        Mesh *mesh = new Mesh(vertices, numVerts, sizevert);
+        object3d *object = new object3d(reg, mesh, m);
         return object;
     }
     
