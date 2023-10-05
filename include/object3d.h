@@ -44,8 +44,6 @@ class object3d {
 
 			mat->setMaterial(view);
 
-            C3D_CullFace(GPU_CULL_NONE);
-
 			// Draw the VBO
 			C3D_DrawArrays(GPU_TRIANGLES, 0, m->numVerts);
 		}

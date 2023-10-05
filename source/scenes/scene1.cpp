@@ -101,14 +101,13 @@ Scene1::Scene1() : Scene("Scene 1"), cube(objects.create()), camera(objects.crea
 	cubepos->position = {0.0f, -1.0f, 0.0f};
 	campos->position = {0, 0, -4};
 	mesh = fast_obj_read("romfs:/teapot.obj");
-	
-	numvertices = new unsigned int[mesh->group_count];
 
 	printmesh(obj->mesh());
 
 	if (mesh->face_count != 0) {
 		// printf("file load successful!\n");
 		numgroups = mesh->group_count;
+		numvertices = new unsigned int[mesh->group_count];
 		meshes = new vertex*[numgroups];
 		for (unsigned int ii = 0; ii < mesh->group_count; ii++) 
 		{
@@ -125,9 +124,9 @@ Scene1::Scene1() : Scene("Scene 1"), cube(objects.create()), camera(objects.crea
 					fastObjIndex mi = mesh->indices[grp.index_offset + idx];
 					meshes[ii][idx] = {
 						{
-							mesh->positions[3 * mi.p + 0] * 0.01f, 
-							mesh->positions[3 * mi.p + 1] * 0.01f, 
-							mesh->positions[3 * mi.p + 2] * 0.01f
+							mesh->positions[3 * mi.p + 0], 
+							mesh->positions[3 * mi.p + 1], 
+							mesh->positions[3 * mi.p + 2]
 						}, 
 						{
 							mesh->texcoords[2 * mi.t + 0], 
