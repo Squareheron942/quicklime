@@ -12,8 +12,8 @@
 namespace mdlLoader
 {
     material *parseMat(FILE* f) {
-        int numbers[4] = { 0 };
-        fread(numbers, sizeof(int), 4, f);
+        int mat[16] = { 0 };
+        fread(mat, sizeof(int), 16, f);
         return new material();
     }
     inline object3d* load(const char path[], entt::registry &reg) {
@@ -47,15 +47,18 @@ namespace mdlLoader
         fread(&sv, sizeof(char), 1, f);
 
         const size_t sizevert = sv;
+
         #if CONSOLE_ENABLED
-            printf(" 1 id %u nv %u sv %u\n", id, numVerts, sizevert);
+            printf("id %u nv %u sv %u\n", id, numVerts, sizevert);
         #endif
         
         void* vertices = linearAlloc(numVerts * sizevert);
-        printf("starting obj read at position %p", (void*)ftell(f));
+        printf("starting obj read at position %p\n", (void*)ftell(f));
         fseek(f, 0x28, SEEK_SET);
         fread(vertices, sizevert, numVerts, f);
-        printf("pos1 %f\n", ((vertex*)vertices)->position[0]);
+        #if CONSOLE_ENABLED
+            for (int i = 0; i < numVerts; i++) printf("%u p%0.1f %0.1f %0.1f n%0.1f %0.1f %0.1f t%0.1f %0.1f\n", i, ((vertex*)vertices)[i].position[0], ((vertex*)vertices)[i].position[1], ((vertex*)vertices)[i].position[2], ((vertex*)vertices)[i].normal[0], ((vertex*)vertices)[i].normal[1], ((vertex*)vertices)[i].normal[2], ((vertex*)vertices)[i].texcoord[0], ((vertex*)vertices)[i].texcoord[1]);
+        #endif
         Mesh *mesh = new Mesh(vertices, numVerts, sizevert);
         object3d *object = new object3d(reg, mesh, m);
         return object;

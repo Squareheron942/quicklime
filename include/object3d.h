@@ -5,14 +5,14 @@
 #include "material.h"
 #include "citro3d.h"
 #include "defines.h"
+#include "scene1.h"
+#include "scenemanager.h"
 
 
 class object3d {
     protected:
         entt::entity id;
         entt::registry &reg;
-		
-		
 
     public:
     object3d(entt::registry &r, Mesh *m, material *mat) : reg(r) {
@@ -40,9 +40,7 @@ class object3d {
             #endif
         } else {
 			C3D_SetBufInfo(m->buf);
-            C3D_SetAttrInfo(m->attrInfo);
-
-			mat->setMaterial(view);
+			// mat->setMaterial(view);
 
 			// Draw the VBO
 			C3D_DrawArrays(GPU_TRIANGLES, 0, m->numVerts);

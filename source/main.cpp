@@ -70,13 +70,11 @@ int main()
 		C3D_RenderTargetSetOutput(targetBottom, GFX_BOTTOM, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
 	#endif
 
-	
-
 	// Main loop
 	while (aptMainLoop())
 	{
 		controls::update();
-		
+
 		HIDUSER_EnableGyroscope();
 
 		float slider = osGet3DSliderState();
@@ -92,13 +90,13 @@ int main()
 
 			C3D_RenderTargetClear(targetLeft, C3D_CLEAR_ALL, CLEAR_COLOR, 0);
 			C3D_FrameDrawOn(targetLeft);
-			SceneManager::currentScene->drawTop(iod);
+			SceneManager::currentScene->drawTop(-iod);
 
 			if (iod > 0.0f)
 			{
 				C3D_RenderTargetClear(targetRight, C3D_CLEAR_ALL, CLEAR_COLOR, 0);
 				C3D_FrameDrawOn(targetRight);
-				SceneManager::currentScene->drawTop(-iod);
+				SceneManager::currentScene->drawTop(iod);
 			}
 			#if BOTTOM_SCREEN_ENABLED
             C3D_RenderTargetClear(targetBottom, C3D_CLEAR_ALL, 0x000000, 0);

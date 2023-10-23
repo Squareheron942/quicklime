@@ -65,7 +65,16 @@ int draw(entt::registry registry, entt::entity object) {
 
 void printmesh(const Mesh *mesh) {
 	if (mesh == NULL) return;
+	#if CONSOLE_ENABLED
 	for (int i = 0; i < mesh->numVerts; i++) printf("%u. pos %f %f %f\n", i, ((vertex*)mesh->vertices)[i].position[0], ((vertex*)mesh->vertices)[i].position[1], ((vertex*)mesh->vertices)[i].position[2]);
+	#endif
+}
+
+void printmesh(const void *mesh, const int n) {
+	if (mesh == NULL) return;
+	#if CONSOLE_ENABLED
+	for (int i = 0; i < n; i++) printf("%u. pos %f %f %f\n", i, ((vertex*)mesh)[i].position[0], ((vertex*)mesh)[i].position[1], ((vertex*)mesh)[i].position[2]);
+	#endif
 }
 
 char* getfiletext(const char* path)
@@ -81,12 +90,10 @@ char* getfiletext(const char* path)
 	buffer = new char[length];    // allocate memory for a buffer of appropriate dimension
 	t.read(buffer, length);       // read the whole file into the buffer
 	t.close(); 
-	// printf("%u chars\n", length);
 	if (f)
 	{
 		
 		fgets(buffer, length, f);
-		// printf("this %s is the contents of the file\n", buffer);
 		fclose(f);
 	}
 	return buffer;
@@ -100,20 +107,18 @@ Scene1::Scene1() : Scene("Scene 1"), cube(objects.create()), camera(objects.crea
 
 	cubepos->position = {0.0f, -1.0f, 0.0f};
 	campos->position = {0, 0, -4};
-	mesh = fast_obj_read("romfs:/teapot.obj");
+	mesh = fast_obj_read("romfs:/plaza.obj");
 
-	printmesh(obj->mesh());
+	// printmesh(obj->mesh());
 
 	if (mesh->face_count != 0) {
-		// printf("file load successful!\n");
 		numgroups = mesh->group_count;
 		numvertices = new unsigned int[mesh->group_count];
 		meshes = new vertex*[numgroups];
 		for (unsigned int ii = 0; ii < mesh->group_count; ii++) 
 		{
 			const fastObjGroup& grp = mesh->groups[ii];
-			// if (grp.name || true) printf("%u\n", grp.face_count);
-			numvertices[ii] = grp.face_count;
+			numvertices[ii] = grp.face_count * 3;
 			meshes[ii] = (vertex*)linearAlloc(numvertices[ii] * sizeof(vertex));
 			int idx = 0;
 			for (unsigned int jj = 0; jj < grp.face_count; jj++)
@@ -124,9 +129,9 @@ Scene1::Scene1() : Scene("Scene 1"), cube(objects.create()), camera(objects.crea
 					fastObjIndex mi = mesh->indices[grp.index_offset + idx];
 					meshes[ii][idx] = {
 						{
-							mesh->positions[3 * mi.p + 0], 
-							mesh->positions[3 * mi.p + 1], 
-							mesh->positions[3 * mi.p + 2]
+							mesh->positions[3 * mi.p + 0] * 0.01f, 
+							mesh->positions[3 * mi.p + 1] * 0.01f, 
+							mesh->positions[3 * mi.p + 2] * 0.01f
 						}, 
 						{
 							mesh->texcoords[2 * mi.t + 0], 
@@ -143,6 +148,10 @@ Scene1::Scene1() : Scene("Scene 1"), cube(objects.create()), camera(objects.crea
 			}
 		}
 	}
+	
+	#if CONSOLE_ENABLED
+		printf("draw calls: %u\n", numgroups);
+	#endif
 	
 	// Load the vertex shader, create a shader program and bind it
 	vshader_dvlb = DVLB_ParseFile((u32*)vshader_shbin, vshader_shbin_size);
@@ -183,8 +192,6 @@ Scene1::Scene1() : Scene("Scene 1"), cube(objects.create()), camera(objects.crea
 	// 	svcBreak(USERBREAK_PANIC);
 	// C3D_TexSetFilter(&top_tex, GPU_LINEAR, GPU_NEAREST);
 	// C3D_TexSetWrap(&top_tex, GPU_REPEAT, GPU_REPEAT);
-	// printf("cnt:%u", numvertices[0]);
-	// printf("obj:%u", numgroups);
 
 	C3D_LightEnvInit(&lightEnv);
 	C3D_LightEnvBind(&lightEnv);
@@ -203,6 +210,11 @@ Scene1::Scene1() : Scene("Scene 1"), cube(objects.create()), camera(objects.crea
 
 void Scene1::update() {
 	transform *cam = objects.try_get<transform>(camera);
+
+	curtime = osGetTime();
+	dtime = curtime - oldtime;
+	oldtime = curtime;
+
 	float dTime = C3D_GetProcessingTime() * 0.001;
 	cam->rotation.x = controls::gyroPos().x;
 	cam->rotation.y = -controls::gyroPos().z;
@@ -211,6 +223,8 @@ void Scene1::update() {
 
     cam->position.x += (abs(controls::circlePos().dx) > 20 ? controls::circlePos().dx : 0) * dTime;
     cam->position.z += (abs(controls::circlePos().dy) > 20 ? controls::circlePos().dy : 0) * dTime;
+	cam->position.y += (controls::getHeld("L") ? 128 : controls::getHeld("R") ? -128 : 0) * dTime;
+
 	
 	// float fps = C3D_GetProcessingTime();
 	
@@ -229,7 +243,9 @@ void Scene1::update() {
 	// printf("\x1b[29;1Hp=%2.1f %2.1f %2.1f r=%2.1f %2.1f %2.1f\n", campos->position.x, campos->position.y, campos->position.z, campos->rotation.x, campos->rotation.y, campos->rotation.z);
 	// printf("\x1b[29;1Hp=%d,%d at=%d dTime: %1.2f \n", controls::circlePos().dx, controls::circlePos().dy, (unsigned char)angleY, C3D_GetProcessingTime());
 	// printf("%f %f\n", sinf(angle) * dTime, cosf(angle) * dTime);
-	// printf("frametime: %f\n", fps);
+	#if CONSOLE_ENABLED
+	// printf("\e[2k\rfps: %f\n", 1000.0f / dtime);
+	#endif
 
 	// snprintf(text, 128, "fps: %u", fps);
 };
@@ -248,15 +264,20 @@ void Scene1::drawTop(float iod)
 	Mtx_RotateY(&view, campos->rotation.y, true);
 	Mtx_Translate(&view, -campos->position.x, campos->position.y, campos->position.z, true);
 
+
+
 	// Calculate the modelView matrix
 	C3D_Mtx modelView;
 
-	for (unsigned int i = 0; i < numgroups; i++) {
+	for (unsigned int i = 0; i < 1; i++) {
 		
-		C3D_SetBufInfo(&bufPlaza[i]);
+
+		// C3D_SetBufInfo(&bufPlaza[i]);
+
+		// C3D_SetBufInfo(obj->mesh()->buf);
 
 		C3D_TexBind(0, &bottom_tex);
-		// C3D_TexBind(1, &bottom_tex);
+		C3D_TexBind(1, &bottom_tex);
 
 		C3D_TexEnv* env = C3D_GetTexEnv(0);
 		C3D_TexEnvInit(env);
@@ -270,22 +291,24 @@ void Scene1::drawTop(float iod)
 
 		Mtx_Identity(&modelView);
 		Mtx_Multiply(&modelView, &view, &modelView);
+		
 
-		// Update the uniforms
+		// // Update the uniforms
 		C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &projection);
 		C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView,  &modelView);
 		C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_material,   &material);
 		C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightVec,     0.0f, 0.0f, -1.0f, 0.0f);
 		C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightHalfVec, 0.0f, 0.0f, -1.0f, 0.0f);
 		C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightClr,     1.0f, 1.0f,  1.0f, 1.0f);
-		C3D_FVUnifSet(GPU_VERTEX_SHADER, texcoord_offsets,     offsetX * 0.1f, offsetY * 0.1f,  offset2 * 0.1f, 1.0f);
+		// C3D_FVUnifSet(GPU_VERTEX_SHADER, texcoord_offsets,     offsetX * 0.1f, offsetY * 0.1f,  offset2 * 0.1f, 1.0f);
+		
+		obj->draw(&view);
 
-		// Draw the VBO
-		C3D_DrawArrays(GPU_TRIANGLES, 0, numvertices[i]);
+		// // Draw the VBO
+		// C3D_DrawArrays(GPU_TRIANGLES, 0, numvertices[i]);
+		// C3D_DrawArrays(GPU_TRIANGLES, 0, obj->mesh()->numVerts / 3);
 	}
-	Mtx_Identity(&modelView);
-	Mtx_Multiply(&modelView, &view, &modelView);
-	obj->draw(&view);
+	
 }
 
 
