@@ -2,12 +2,17 @@
 
 #include "vertex.h"
 #include "citro3d.h"
+#include "defines.h"
 
 class Mesh {
     public:
     // Configure attributes for use with the vertex shader
 	C3D_AttrInfo* attrInfo;
     C3D_BufInfo* buf;
+    int numVerts;
+    char vertsize;
+    void *vertices;
+
     Mesh(void* vertices, int numVerts, char vertsize) : numVerts(numVerts), vertsize(vertsize), vertices(vertices) {
         // Configure attributes for use with the vertex shader
         attrInfo = C3D_GetAttrInfo();
@@ -19,11 +24,11 @@ class Mesh {
         BufInfo_Init(buf);
         BufInfo_Add(buf, vertices, vertsize, 3, 0x210);
     }
-    int numVerts;
-    char vertsize;
-    void *vertices;
     
     ~Mesh() {
+        #if CONSOLE_ENABLED
+        printf("mesh destroyed");
+        #endif
         linearFree(vertices); 
     }
 };  

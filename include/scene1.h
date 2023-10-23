@@ -156,7 +156,7 @@ class Scene1 : public Scene {
         {
         { { 0.0f, 0.2f, 0.2f, 0.2f } }, // Ambient
         { { 0.0f, 0.4f, 0.4f, 0.4f } }, // Diffuse
-        { { 0.0f, 0.8f, 0.8f, 0.8f } }, // Specular
+        { { 0.0f, 0.0f, 0.0f, 0.0f } }, // Specular
         { { 1.0f, 0.0f, 0.0f, 0.0f } }, // Emission
         }
     };
@@ -165,7 +165,7 @@ class Scene1 : public Scene {
 	{
 		{ 0.1f, 0.1f, 0.1f }, //ambient
 		{ 0.4f, 0.4f, 0.4f }, //diffuse
-		{ 0.5f, 0.5f, 0.5f }, //specular0
+		{ 0.0f, 0.0f, 0.0f }, //specular0
 		{ 0.0f, 0.0f, 0.0f }, //specular1
 		{ 0.0f, 0.0f, 0.0f }, //emission
 	};
@@ -174,6 +174,7 @@ class Scene1 : public Scene {
     void* vbo_data;
     void** vbo_data2;
     C3D_Tex bottom_tex, top_tex;
+	unsigned long long int oldtime, curtime, dtime;
     C3D_BufInfo bufCube, bufCube2, *bufPlaza;
     float offsetX = 0.0, offsetY = 0.0, angleX = 0.0, distance = 0.0, offset2 = 0.0;
     unsigned char angleY = 0;

@@ -37,14 +37,15 @@ PYTHON      	:=  python3
 BUILD			:=	build
 SOURCES			:=	source source/scenes
 DATA			:=	data
+MODEL			:=  data/scene1/models
 INCLUDES		:=	include entt
 GRAPHICS		:=	gfx
 GFXBUILD		:=	$(BUILD)
-EXTTOOL     	:=  @$(PYTHON) buildscripts/test.py
 ROMFS		    :=	romfs
 APP_TITLE       := 	Splatoon Legends
 APP_DESCRIPTION := 	nodesc
 APP_AUTHOR		:= 	nontendo
+EXTTOOL     	:=  @$(PYTHON) buildscripts/daetomdl.py --romfs $(ROMFS) --models $(MODEL) --mirrorpath 
 #GFXBUILD		:=	$(ROMFS)/gfx
 
 #---------------------------------------------------------------------------------
@@ -58,7 +59,7 @@ CFLAGS	:=	-g -Wall -O2 -mword-relocations \
 
 CFLAGS	+=	$(INCLUDE) -D__3DS__
 
-CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++20
+CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++20 -flto
 
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
