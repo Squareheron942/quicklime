@@ -69,6 +69,18 @@
         "span": "c",
         "stack": "c",
         "unordered_set": "c",
-        "format": "c"
+        "format": "c",
+        "__locale": "cpp",
+        "__errc": "cpp",
+        "__mutex_base": "cpp",
+        "charconv": "cpp",
+        "complex": "cpp",
+        "cstdarg": "cpp",
+        "fstream": "cpp",
+        "iomanip": "cpp",
+        "iostream": "cpp",
+        "istream": "cpp",
+        "mutex": "cpp",
+        "system_error": "cpp"
     }
 }

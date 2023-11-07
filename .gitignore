@@ -1,4 +1,5 @@
-.vscode/
-proctex.3dsx
-*.elf
-./build
+**/.vscode
+**.3dsx
+**.smdh
+**.elf
+**/build

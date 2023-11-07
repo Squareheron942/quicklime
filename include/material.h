@@ -4,13 +4,13 @@
 #include "citro3d.h"
 #include "vshader_shbin.h"
 #include "tex3ds.h"
-#include "waterwave_t3x.h"
+// #include "waterwave_t3x.h"
 
 class material {
     C3D_Tex bottom_tex, top_tex;
     public:
     color ambient = {1, 1, 1}, diffuse = {1, 1, 1}, specular = {1, 1, 1}, transmission = {1, 1, 1};
-    float specexp = 100, alpha = 1;
+    float specexp = 30, alpha = 1;
     char *albedoPath = nullptr, *specularPath = nullptr, *specexpPath = nullptr, *decalPath = nullptr;
     DVLB_s *vshader_dvlb;
 	shaderProgram_s program;
@@ -38,12 +38,25 @@ class material {
         return true;
     }
 
+    bool loadTextureFromFile(C3D_Tex* tex, C3D_TexCube* cube, const char* path, bool vram) {
+        FILE* f = fopen(path, "rb");
+        if (!f) return false;
+        Tex3DS_Texture t3x = Tex3DS_TextureImportStdio(f, tex, cube, vram);
+        
+        if (!t3x)
+            return false;
+        fclose(f);
+        // Delete the t3x object since we don't need it
+        Tex3DS_TextureFree(t3x);
+        return true;
+    }
+
     material() {
         vshader_dvlb = DVLB_ParseFile((u32*)vshader_shbin, vshader_shbin_size);
         shaderProgramInit(&program);
         shaderProgramSetVsh(&program, &vshader_dvlb->DVLE[0]);
         C3D_BindProgram(&program);
-        if (!loadTextureFromMem(&bottom_tex, NULL, waterwave_t3x, waterwave_t3x_size))
+        if (!loadTextureFromFile(&bottom_tex, NULL, "romfs:/gfx/waterwave.t3x", false))
             svcBreak(USERBREAK_PANIC);
         C3D_TexSetFilter(&bottom_tex, GPU_LINEAR, GPU_NEAREST);
         C3D_TexSetWrap(&bottom_tex, GPU_REPEAT, GPU_REPEAT);

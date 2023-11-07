@@ -46,7 +46,7 @@ APP_TITLE       := 	Splatoon Legends
 APP_DESCRIPTION := 	nodesc
 APP_AUTHOR		:= 	nontendo
 EXTTOOL     	:=  @$(PYTHON) buildscripts/daetomdl.py --romfs $(ROMFS) --models $(MODEL) --mirrorpath 
-#GFXBUILD		:=	$(ROMFS)/gfx
+GFXBUILD		:=	$(ROMFS)/gfx
 
 #---------------------------------------------------------------------------------
 # options for code generation
