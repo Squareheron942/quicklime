@@ -6,6 +6,7 @@
 #include "scene1.h"
 #include "controls.h"
 #include "defines.h"
+#include "sl_time.h"
 #include <citro2d.h>
 
 #define CLEAR_COLOR 0x3477ebFF
@@ -44,8 +45,19 @@ void printfile(const char* path)
 	}
 }
 
+#include "entt.hpp"
+#include "componentmanager.h"
+
+struct example {
+	template<typename T> static void emplaceComponent(entt::registry& reg, entt::entity e) {
+		reg.emplace<T>(e);
+	}
+};
+
+
 int main()
 {
+
 	// Initialize graphics
 	gfxInitDefault();
 	gfxSet3D(true);
@@ -85,6 +97,7 @@ int main()
 			break; // break in order to return to hbmenu
 
 		SceneManager::currentScene->update();
+		Time::Update();
 		// Render the scene
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
 

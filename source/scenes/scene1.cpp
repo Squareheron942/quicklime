@@ -4,8 +4,6 @@
 #include <tex3ds.h>
 #include <string.h>
 #include "vshader_shbin.h"
-#include "blank_t3x.h"
-#include "waterwave_t3x.h"
 #include "scenemanager.h"
 #include "scene1.h"
 #include "fast_obj.h"
@@ -20,6 +18,11 @@
 #include "mesh.h"
 #include "material.h"
 #include "slmdlloader.h"
+#include "console.h"
+#include "sl_time.h"
+// #include "movement_script.h"
+#include "componentmanager.h"
+#include "script1.h"
 
 #define vertex_list_count (sizeof(vertex_list)/sizeof(vertex_list[0]))
 
@@ -43,13 +46,29 @@ void drawText(float x, float y, float z, float scale, const char* value) {
 bool loadTextureFromMem(C3D_Tex* tex, C3D_TexCube* cube, const void* data, size_t size)
 {
 	Tex3DS_Texture t3x = Tex3DS_TextureImport(data, size, tex, cube, false);
-	if (!t3x)
-		return false;
+	if (!t3x){
+		printf("didn't find it");
+		return false;}
 
 	// Delete the t3x object since we don't need it
 	Tex3DS_TextureFree(t3x);
 	return true;
 }
+
+bool loadTextureFromFile(C3D_Tex* tex, C3D_TexCube* cube, const char* path, bool vram) {
+        FILE* f = fopen(path, "rb");
+		if (!f) {printf("couldn't open file");fclose(f);return false;}
+		setvbuf(f, NULL, _IOFBF, 64*1024);
+        Tex3DS_Texture t3x = Tex3DS_TextureImportStdio(f, tex, cube, vram);
+        fclose(f);
+        if (!t3x){
+			printf("didn't load it");
+            return false;}
+
+        // Delete the t3x object since we don't need it
+        Tex3DS_TextureFree(t3x);
+		return true;
+    }
 
 int draw(entt::registry registry, entt::entity object) {
 	// Mesh<vertex> *mesh = registry.try_get<Mesh<vertex>>(object); 
@@ -99,9 +118,16 @@ char* getfiletext(const char* path)
 	return buffer;
 }
 
-Scene1::Scene1() : Scene("Scene 1"), cube(objects.create()), camera(objects.create()), obj(mdlLoader::load("romfs:/cube.slmdl", objects)) {
+Scene1::Scene1() : Scene("Scene 1"), cube(objects.create()), camera(objects.create()), script1object(objects), obj(mdlLoader::load("romfs:/cube.slmdl", objects)) {
 	objects.emplace<transform>(cube);
 	objects.emplace<transform>(camera);
+
+	// printf("Script1 registered: %s\n", Script1_component ? "true" : "false");
+
+	ComponentManager::addComponent("transform", objects, script1object.id);
+	script1object.scripts[0] = ComponentManager::addScript("Script1", objects, script1object.id);
+	script1object.scripts[0]->Start();
+	
 	
 	transform *cubepos = objects.try_get<transform>(cube), *campos = objects.try_get<transform>(camera);
 
@@ -149,10 +175,6 @@ Scene1::Scene1() : Scene("Scene 1"), cube(objects.create()), camera(objects.crea
 		}
 	}
 	
-	#if CONSOLE_ENABLED
-		printf("draw calls: %u\n", numgroups);
-	#endif
-	
 	// Load the vertex shader, create a shader program and bind it
 	vshader_dvlb = DVLB_ParseFile((u32*)vshader_shbin, vshader_shbin_size);
 	shaderProgramInit(&program);
@@ -183,21 +205,19 @@ Scene1::Scene1() : Scene("Scene 1"), cube(objects.create()), camera(objects.crea
 	}
 
 	// Load the texture and bind it to the first texture unit
-	if (!loadTextureFromMem(&bottom_tex, NULL, waterwave_t3x, waterwave_t3x_size))
+	if (!loadTextureFromMem(&bottom_tex, NULL, "romfs:/gfx/kitten.t3x", true))
 		svcBreak(USERBREAK_PANIC);
 	C3D_TexSetFilter(&bottom_tex, GPU_LINEAR, GPU_NEAREST);
 	C3D_TexSetWrap(&bottom_tex, GPU_REPEAT, GPU_REPEAT);
-
-	// if (!loadTextureFromMem(&top_tex, NULL, waterwave_t3x, waterwave_t3x_size))
-	// 	svcBreak(USERBREAK_PANIC);
-	// C3D_TexSetFilter(&top_tex, GPU_LINEAR, GPU_NEAREST);
-	// C3D_TexSetWrap(&top_tex, GPU_REPEAT, GPU_REPEAT);
 
 	C3D_LightEnvInit(&lightEnv);
 	C3D_LightEnvBind(&lightEnv);
 	C3D_LightEnvMaterial(&lightEnv, &lmat);
 
-	LightLut_Phong(&lut_Light, 0);
+	// if (objects.try_get<Script1>(cube)) objects.try_get<Script1>(cube)->Update();
+	// else printf("didn't find it\n");
+
+	LightLut_Phong(&lut_Light, 300);
 	C3D_LightEnvLut(&lightEnv, GPU_LUT_D0, GPU_LUTINPUT_LN, false, &lut_Light);
 
 	C3D_FVec lightVec = FVec4_New(0.0f, 0.0f, -0.5f, 1.0f);
@@ -210,20 +230,16 @@ Scene1::Scene1() : Scene("Scene 1"), cube(objects.create()), camera(objects.crea
 
 void Scene1::update() {
 	transform *cam = objects.try_get<transform>(camera);
-
-	curtime = osGetTime();
-	dtime = curtime - oldtime;
-	oldtime = curtime;
-
-	float dTime = C3D_GetProcessingTime() * 0.001;
+	
+	// float dTime = C3D_GetProcessingTime() * 0.001;
 	cam->rotation.x = controls::gyroPos().x;
 	cam->rotation.y = -controls::gyroPos().z;
 	// float angle = atan2f(abs(controls::circlePos().dx) > 20 ? controls::circlePos().dx : 0, abs(controls::circlePos().dy) > 20 ? controls::circlePos().dy : 0) + cam->rotation.y;
 	// float invmagnitude = 1 / sqrtf(controls::circlePos().dx * controls::circlePos().dx + controls::circlePos().dy * controls::circlePos().dy);
 
-    cam->position.x += (abs(controls::circlePos().dx) > 20 ? controls::circlePos().dx : 0) * dTime;
-    cam->position.z += (abs(controls::circlePos().dy) > 20 ? controls::circlePos().dy : 0) * dTime;
-	cam->position.y += (controls::getHeld("L") ? 128 : controls::getHeld("R") ? -128 : 0) * dTime;
+    cam->position.x += (abs(controls::circlePos().dx) > 20 ? controls::circlePos().dx : 0) * Time::deltaTime * 0.005f;
+    cam->position.z += (abs(controls::circlePos().dy) > 20 ? controls::circlePos().dy : 0) * Time::deltaTime * 0.005f;
+	cam->position.y += (controls::getHeld("L") ? 128 : controls::getHeld("R") ? -128 : 0) * Time::deltaTime * 0.005f;
 
 	
 	// float fps = C3D_GetProcessingTime();
@@ -238,14 +254,17 @@ void Scene1::update() {
 	if (controls::getHeld("a")) distance += 0.1f;
 	if (controls::getDown("y")) controls::resetGyro({0, 0, 0});
 
+	script1object.scripts[0]->Update();
 
 	// 
 	// printf("\x1b[29;1Hp=%2.1f %2.1f %2.1f r=%2.1f %2.1f %2.1f\n", campos->position.x, campos->position.y, campos->position.z, campos->rotation.x, campos->rotation.y, campos->rotation.z);
 	// printf("\x1b[29;1Hp=%d,%d at=%d dTime: %1.2f \n", controls::circlePos().dx, controls::circlePos().dy, (unsigned char)angleY, C3D_GetProcessingTime());
 	// printf("%f %f\n", sinf(angle) * dTime, cosf(angle) * dTime);
-	#if CONSOLE_ENABLED
-	// printf("\e[2k\rfps: %f\n", 1000.0f / dtime);
-	#endif
+
+	Console::setFPS(1.0f / Time::deltaTime);
+	Console::setFrameTime(Time::deltaTime * 1000);
+	Console::setDrawCalls(numgroups);
+	Console::setPosition(cam->position.x, cam->position.y, cam->position.z);
 
 	// snprintf(text, 128, "fps: %u", fps);
 };
@@ -259,12 +278,10 @@ void Scene1::drawTop(float iod)
 	transform *campos = objects.try_get<transform>(camera);
 	C3D_Mtx view;
 	Mtx_Identity(&view);
-	Mtx_RotateZ(&view, campos->rotation.z, true); // zyx rotation order, default in unity
+	Mtx_RotateZ(&view, campos->rotation.z, true); // zxy rotation order, default in unity
 	Mtx_RotateX(&view, campos->rotation.x, true);
 	Mtx_RotateY(&view, campos->rotation.y, true);
 	Mtx_Translate(&view, -campos->position.x, campos->position.y, campos->position.z, true);
-
-
 
 	// Calculate the modelView matrix
 	C3D_Mtx modelView;
@@ -272,7 +289,7 @@ void Scene1::drawTop(float iod)
 	for (unsigned int i = 0; i < 1; i++) {
 		
 
-		// C3D_SetBufInfo(&bufPlaza[i]);
+		C3D_SetBufInfo(&bufPlaza[i]);
 
 		// C3D_SetBufInfo(obj->mesh()->buf);
 
@@ -281,11 +298,11 @@ void Scene1::drawTop(float iod)
 
 		C3D_TexEnv* env = C3D_GetTexEnv(0);
 		C3D_TexEnvInit(env);
-		C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_PRIMARY_COLOR);
+		C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_PRIMARY_COLOR, GPU_FRAGMENT_PRIMARY_COLOR);
 		C3D_TexEnvFunc(env, C3D_Both, GPU_ADD_MULTIPLY);
 		env = C3D_GetTexEnv(1);
 		C3D_TexEnvInit(env);
-		C3D_TexEnvSrc(env, C3D_Both, GPU_PREVIOUS, GPU_FRAGMENT_PRIMARY_COLOR);
+		C3D_TexEnvSrc(env, C3D_Both, GPU_PREVIOUS, GPU_FRAGMENT_SECONDARY_COLOR);
 		C3D_TexEnvFunc(env, C3D_Both, GPU_ADD);
 		
 
@@ -302,10 +319,10 @@ void Scene1::drawTop(float iod)
 		C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightClr,     1.0f, 1.0f,  1.0f, 1.0f);
 		// C3D_FVUnifSet(GPU_VERTEX_SHADER, texcoord_offsets,     offsetX * 0.1f, offsetY * 0.1f,  offset2 * 0.1f, 1.0f);
 		
-		obj->draw(&view);
+		// obj->draw(&view);
 
 		// // Draw the VBO
-		// C3D_DrawArrays(GPU_TRIANGLES, 0, numvertices[i]);
+		C3D_DrawArrays(GPU_TRIANGLES, 0, numvertices[i]);
 		// C3D_DrawArrays(GPU_TRIANGLES, 0, obj->mesh()->numVerts / 3);
 	}
 	

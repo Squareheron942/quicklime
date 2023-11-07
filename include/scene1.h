@@ -4,10 +4,9 @@
 #include "vertex.h"
 #include <3ds.h>
 #include "object3d.h"
-#include "transform.h"
 #include "entt.hpp"
 #include "fast_obj.h"
-#include "object3d.h"
+#include "gameobject.h"
 
 static const vertex vertex_list[] =
 {
@@ -150,6 +149,8 @@ class Scene1 : public Scene {
     int uLoc_lightVec, uLoc_lightHalfVec, uLoc_lightClr, uLoc_material, texcoord_offsets;
     C3D_Mtx projection;
 	entt::entity cube, camera;
+	GameObject script1object;
+
 	object3d* obj;
     C3D_Mtx material =
     {
@@ -165,11 +166,11 @@ class Scene1 : public Scene {
 	{
 		{ 0.1f, 0.1f, 0.1f }, //ambient
 		{ 0.4f, 0.4f, 0.4f }, //diffuse
-		{ 0.0f, 0.0f, 0.0f }, //specular0
+		{ 0.8f, 0.8f, 0.8f }, //specular0
 		{ 0.0f, 0.0f, 0.0f }, //specular1
 		{ 0.0f, 0.0f, 0.0f }, //emission
 	};
-    // void draw(C3D_BufInfo* bufinfo);
+	
     C3D_TexEnv* env;
     void* vbo_data;
     void** vbo_data2;

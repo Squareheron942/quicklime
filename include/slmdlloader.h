@@ -22,7 +22,7 @@ namespace mdlLoader
         fread(str, sizeof(char), 3, f);
         if (str[0] != 'm' || str[1] != 'd' || str[2] != 'l') {
             #if CONSOLE_ENABLED
-                printf("error: wrong magic word '%c%c%c', 'mdl' expected\n(file pointer at position %p)", str[0], str[1], str[2], (void*)ftell(f));
+                printf("error: wrong magic word '%c%c%c', 'mdl' expected\n(file pointer at position %p)\n", str[0], str[1], str[2], (void*)ftell(f));
             #endif
             return NULL;
         }
@@ -36,7 +36,7 @@ namespace mdlLoader
         // read obj section
         if (str[0] != 'o' || str[1] != 'b' || str[2] != 'j') {
             #if CONSOLE_ENABLED
-                printf("error: wrong magic word '%c%c%c', 'obj' expected\n(file pointer at position %p)", str[0], str[1], str[2], (void*)ftell(f));
+                printf("error: wrong magic word '%c%c%c', 'obj' expected\n(file pointer at position %p)\n", str[0], str[1], str[2], (void*)ftell(f));
             #endif
             return NULL;
         }
