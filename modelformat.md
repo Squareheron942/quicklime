@@ -16,7 +16,10 @@ Number of objects
 ##### Materials
 
 Specify a vshader
-Specify a material class, give it the parameters needed
+Specify a material class by name, give it the parameters needed through the binary data section
+
+Example:
+
 
 
 ##### Objects
