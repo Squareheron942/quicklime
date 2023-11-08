@@ -18,7 +18,7 @@ class object3d {
     object3d(entt::registry &r, Mesh *m, material *mat) : reg(r) {
         this->id = r.create();
         reg.emplace<Mesh>(this->id, *m);
-        reg.emplace<material>(this->id, *mat);
+        // reg.emplace<material>(this->id, *mat);
     }
 
 	~object3d() {
