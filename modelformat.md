@@ -15,6 +15,10 @@ Number of objects
 
 ##### Materials
 
+Specify a vshader
+Specify a material class, give it the parameters needed
+
+
 ##### Objects
 
 Number of vertices

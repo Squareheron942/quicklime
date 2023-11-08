@@ -8,13 +8,16 @@
 #include "object3d.h"
 #include "defines.h"
 #include "entt.hpp"
+#include "fragmentlit.h"
 
 namespace mdlLoader
 {
-    material *parseMat(FILE* f) {
-        int mat[16] = { 0 };
-        fread(mat, sizeof(int), 16, f);
-        return new material();
+    material* parseMat(FILE* f) {
+        int argsize = 0;
+        fread(&argsize, 1, 1, f); // read size of material arguments
+        void* mat_args = malloc(argsize);
+        fread(mat_args, 1, argsize, f); // read the data to pass to the material
+        return new fragment_lit(mat_args);
     }
     inline object3d* load(const char path[], entt::registry &reg) {
         FILE *f = fopen(path, "rb");

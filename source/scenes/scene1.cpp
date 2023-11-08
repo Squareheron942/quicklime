@@ -205,7 +205,7 @@ Scene1::Scene1() : Scene("Scene 1"), cube(objects.create()), camera(objects.crea
 	}
 
 	// Load the texture and bind it to the first texture unit
-	if (!loadTextureFromMem(&bottom_tex, NULL, "romfs:/gfx/kitten.t3x", true))
+	if (!loadTextureFromFile(&bottom_tex, NULL, "romfs:/gfx/kitten.t3x", true))
 		svcBreak(USERBREAK_PANIC);
 	C3D_TexSetFilter(&bottom_tex, GPU_LINEAR, GPU_NEAREST);
 	C3D_TexSetWrap(&bottom_tex, GPU_REPEAT, GPU_REPEAT);
@@ -265,6 +265,7 @@ void Scene1::update() {
 	Console::setFrameTime(Time::deltaTime * 1000);
 	Console::setDrawCalls(numgroups);
 	Console::setPosition(cam->position.x, cam->position.y, cam->position.z);
+	Console::updateMemUsage();
 
 	// snprintf(text, 128, "fps: %u", fps);
 };
