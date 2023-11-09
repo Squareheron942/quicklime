@@ -19,21 +19,23 @@ class fragment_lit : public material {
 	shaderProgram_s program;
     int uLoc_projection, uLoc_modelView;
     int uLoc_lightVec, uLoc_lightHalfVec, uLoc_lightClr, uLoc_material, texcoord_offsets;
-    fragment_lit(void* args) {
-        fragment_lit_args m_args = *(fragment_lit_args*)args;
-        loadTextureFromFile(&tex, NULL, m_args.texpath, false);
-        mat = m_args.mat;
-        vshader_dvlb = DVLB_ParseFile((u32*)vshader_shbin, vshader_shbin_size);
-        shaderProgramInit(&program);
-        shaderProgramSetVsh(&program, &vshader_dvlb->DVLE[0]);
-        uLoc_projection   = shaderInstanceGetUniformLocation(program.vertexShader, "projection");
-        uLoc_modelView    = shaderInstanceGetUniformLocation(program.vertexShader, "modelView");
-        uLoc_lightVec     = shaderInstanceGetUniformLocation(program.vertexShader, "lightVec");
-        uLoc_lightHalfVec = shaderInstanceGetUniformLocation(program.vertexShader, "lightHalfVec");
-        uLoc_lightClr     = shaderInstanceGetUniformLocation(program.vertexShader, "lightClr");
-        uLoc_material     = shaderInstanceGetUniformLocation(program.vertexShader, "material");
-        texcoord_offsets  = shaderInstanceGetUniformLocation(program.vertexShader, "texcoordoffsets");
-        free(args);
+    fragment_lit(void* args) noexcept {
+        if (args) {
+            fragment_lit_args m_args = *(fragment_lit_args*)args;
+            loadTextureFromFile(&tex, NULL, m_args.texpath, false);
+            mat = m_args.mat;
+            vshader_dvlb = DVLB_ParseFile((u32*)vshader_shbin, vshader_shbin_size);
+            shaderProgramInit(&program);
+            shaderProgramSetVsh(&program, &vshader_dvlb->DVLE[0]);
+            uLoc_projection   = shaderInstanceGetUniformLocation(program.vertexShader, "projection");
+            uLoc_modelView    = shaderInstanceGetUniformLocation(program.vertexShader, "modelView");
+            uLoc_lightVec     = shaderInstanceGetUniformLocation(program.vertexShader, "lightVec");
+            uLoc_lightHalfVec = shaderInstanceGetUniformLocation(program.vertexShader, "lightHalfVec");
+            uLoc_lightClr     = shaderInstanceGetUniformLocation(program.vertexShader, "lightClr");
+            uLoc_material     = shaderInstanceGetUniformLocation(program.vertexShader, "material");
+            texcoord_offsets  = shaderInstanceGetUniformLocation(program.vertexShader, "texcoordoffsets");
+        }
+        
     }
 
     ~fragment_lit() {}

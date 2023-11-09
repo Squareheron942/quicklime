@@ -50,7 +50,7 @@ class material {
         return true;
     }
 
-    material() {};
+    material() noexcept {};
     // {
     //     vshader_dvlb = DVLB_ParseFile((u32*)vshader_shbin, vshader_shbin_size);
     //     shaderProgramInit(&program);

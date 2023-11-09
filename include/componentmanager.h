@@ -4,8 +4,8 @@
 #include <utility>
 #include "script.h"
 #include "entt.hpp"
-#include "transform.h"
 #include <stdio.h>
+#include "gameobject.h"
 
 // template<typename ...Args> std::unordered_map<char*, Script*(*)(entt::registry&, entt::entity, Args&& ...args)> class_map_type;
 
@@ -29,7 +29,8 @@ class ComponentManager {
     }
 
     static Script* addScript(const char* name, entt::registry& reg, entt::entity e) {
-        return (getScriptMap()[name](reg, e));
+        return ((getScriptMap()[name](reg, e))); //TODO fix this
+        // return true;
     }
 
     private:
