@@ -7,6 +7,7 @@
 #include "controls.h"
 #include "defines.h"
 #include "sl_time.h"
+#include "console.h"
 #include <citro2d.h>
 
 #define CLEAR_COLOR 0x3477ebFF
@@ -69,7 +70,7 @@ int main()
 
 	romfsInit();
 
-	printf("Running on %c3DS\n", osGetApplicationMemType() > 5 ? 'N' : 'O');
+	Console::log("Running on %c3DS", osGetApplicationMemType() > 5 ? 'N' : 'O');
 
 	SceneManager::load<Scene1>();
 
@@ -77,17 +78,18 @@ int main()
 	C3D_RenderTarget* targetLeft  = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
 	C3D_RenderTarget* targetRight = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);C3D_RenderTargetSetOutput(targetLeft,  GFX_TOP, GFX_LEFT,  DISPLAY_TRANSFER_FLAGS);
 	C3D_RenderTargetSetOutput(targetRight, GFX_TOP, GFX_RIGHT, DISPLAY_TRANSFER_FLAGS);
+	
 	#if BOTTOM_SCREEN_ENABLED
 		C3D_RenderTarget* targetBottom = C3D_RenderTargetCreate(240, 320, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
 		C3D_RenderTargetSetOutput(targetBottom, GFX_BOTTOM, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
 	#endif
 
+	HIDUSER_EnableGyroscope();
+
 	// Main loop
 	while (aptMainLoop())
 	{
 		controls::update();
-
-		HIDUSER_EnableGyroscope();
 
 		float slider = osGet3DSliderState();
 		float iod = slider/3;
@@ -120,6 +122,10 @@ int main()
 
 		C3D_FrameEnd(0);
 	}
+
+	for (int i = 0; i < CONSOLE_NUM_LINES; i++) // empty the console buffer to prevent memory leakage
+		delete[] Console::textbuf[i];
+	
 
 	// Deinitialize the scene
 	sceneExit();

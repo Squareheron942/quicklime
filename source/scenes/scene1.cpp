@@ -3,7 +3,7 @@
 #include <citro2d.h>
 #include <tex3ds.h>
 #include <string.h>
-#include "vshader_shbin.h"
+#include "fragvshader_shbin.h"
 #include "scenemanager.h"
 #include "scene1.h"
 #include "fast_obj.h"
@@ -125,11 +125,14 @@ Scene1::Scene1() : Scene("Scene 1"), cube(objects.create()), camera(objects.crea
 	// printf("Script1 registered: %s\n", Script1_component ? "true" : "false");
 
 	ComponentManager::addComponent("transform", objects, script1object.id);
-	script1object.scripts[0] = ComponentManager::addScript("Script1", objects, script1object.id);
+	// ComponentManager::addScript("Script1", script1object);
+	// ComponentManager::addScript("MovementScript", script1object);
+	// script1object.scripts[0] = ComponentManager::addScript("Script1", objects, script1object.id);
+	// if (script1object.scripts[0]) script1object.scripts[0]->Start();
+	script1object.scripts[0] = ComponentManager::addScript("MovementScript", objects, script1object.id);
 	script1object.scripts[0]->Start();
 	
-	
-	transform *cubepos = objects.try_get<transform>(cube), *campos = objects.try_get<transform>(camera);
+	transform *cubepos = objects.try_get<transform>(cube), *campos = objects.try_get<transform>(script1object);
 
 	cubepos->position = {0.0f, -1.0f, 0.0f};
 	campos->position = {0, 0, -4};
@@ -176,7 +179,7 @@ Scene1::Scene1() : Scene("Scene 1"), cube(objects.create()), camera(objects.crea
 	}
 	
 	// Load the vertex shader, create a shader program and bind it
-	vshader_dvlb = DVLB_ParseFile((u32*)vshader_shbin, vshader_shbin_size);
+	vshader_dvlb = DVLB_ParseFile((u32*)fragvshader_shbin, fragvshader_shbin_size);
 	shaderProgramInit(&program);
 	shaderProgramSetVsh(&program, &vshader_dvlb->DVLE[0]);
 	C3D_BindProgram(&program);
@@ -184,11 +187,11 @@ Scene1::Scene1() : Scene("Scene 1"), cube(objects.create()), camera(objects.crea
 	// Get the location of the uniforms
 	uLoc_projection   = shaderInstanceGetUniformLocation(program.vertexShader, "projection");
 	uLoc_modelView    = shaderInstanceGetUniformLocation(program.vertexShader, "modelView");
-	uLoc_lightVec     = shaderInstanceGetUniformLocation(program.vertexShader, "lightVec");
-	uLoc_lightHalfVec = shaderInstanceGetUniformLocation(program.vertexShader, "lightHalfVec");
-	uLoc_lightClr     = shaderInstanceGetUniformLocation(program.vertexShader, "lightClr");
-	uLoc_material     = shaderInstanceGetUniformLocation(program.vertexShader, "material");
-	texcoord_offsets  = shaderInstanceGetUniformLocation(program.vertexShader, "texcoordoffsets");
+	// uLoc_lightVec     = shaderInstanceGetUniformLocation(program.vertexShader, "lightVec");
+	// uLoc_lightHalfVec = shaderInstanceGetUniformLocation(program.vertexShader, "lightHalfVec");
+	// uLoc_lightClr     = shaderInstanceGetUniformLocation(program.vertexShader, "lightClr");
+	// uLoc_material     = shaderInstanceGetUniformLocation(program.vertexShader, "material");
+	// texcoord_offsets  = shaderInstanceGetUniformLocation(program.vertexShader, "texcoordoffsets");
 
 	// Configure attributes for use with the vertex shader
 	C3D_AttrInfo* attrInfo = C3D_GetAttrInfo();
@@ -223,26 +226,13 @@ Scene1::Scene1() : Scene("Scene 1"), cube(objects.create()), camera(objects.crea
 	C3D_FVec lightVec = FVec4_New(0.0f, 0.0f, -0.5f, 1.0f);
 
 	C3D_LightInit(&light, &lightEnv);
-	C3D_LightColor(&light, 1.0, 1.0, 1.0);
+	C3D_LightColor(&light, 0.992, 0.984, 0.827);
 	C3D_LightPosition(&light, &lightVec);
 
 }
 
 void Scene1::update() {
 	transform *cam = objects.try_get<transform>(camera);
-	
-	// float dTime = C3D_GetProcessingTime() * 0.001;
-	cam->rotation.x = controls::gyroPos().x;
-	cam->rotation.y = -controls::gyroPos().z;
-	// float angle = atan2f(abs(controls::circlePos().dx) > 20 ? controls::circlePos().dx : 0, abs(controls::circlePos().dy) > 20 ? controls::circlePos().dy : 0) + cam->rotation.y;
-	// float invmagnitude = 1 / sqrtf(controls::circlePos().dx * controls::circlePos().dx + controls::circlePos().dy * controls::circlePos().dy);
-
-    cam->position.x += (abs(controls::circlePos().dx) > 20 ? controls::circlePos().dx : 0) * Time::deltaTime * 0.005f;
-    cam->position.z += (abs(controls::circlePos().dy) > 20 ? controls::circlePos().dy : 0) * Time::deltaTime * 0.005f;
-	cam->position.y += (controls::getHeld("L") ? 128 : controls::getHeld("R") ? -128 : 0) * Time::deltaTime * 0.005f;
-
-	
-	// float fps = C3D_GetProcessingTime();
 	
 	offsetX += 0.01f;
 	offsetY += 0.01f;
@@ -254,6 +244,9 @@ void Scene1::update() {
 	if (controls::getHeld("a")) distance += 0.1f;
 	if (controls::getDown("y")) controls::resetGyro({0, 0, 0});
 
+	// for (Script* script : script1object.scripts) {
+	// 	script->Update();
+	// }
 	script1object.scripts[0]->Update();
 
 	// 
@@ -276,7 +269,7 @@ void Scene1::drawTop(float iod)
 {
 	Mtx_PerspStereoTilt(&projection, C3D_AngleFromDegrees(80.0f), C3D_AspectRatioTop, 0.01f, 1000.0f, iod, 2.0f, false);
 
-	transform *campos = objects.try_get<transform>(camera);
+	transform *campos = objects.try_get<transform>(script1object);
 	C3D_Mtx view;
 	Mtx_Identity(&view);
 	Mtx_RotateZ(&view, campos->rotation.z, true); // zxy rotation order, default in unity
@@ -288,7 +281,7 @@ void Scene1::drawTop(float iod)
 	C3D_Mtx modelView;
 
 	for (unsigned int i = 0; i < 1; i++) {
-		
+		C3D_LightEnvBind(&lightEnv);
 
 		C3D_SetBufInfo(&bufPlaza[i]);
 
@@ -314,10 +307,10 @@ void Scene1::drawTop(float iod)
 		// // Update the uniforms
 		C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &projection);
 		C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView,  &modelView);
-		C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_material,   &material);
-		C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightVec,     0.0f, 0.0f, -1.0f, 0.0f);
-		C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightHalfVec, 0.0f, 0.0f, -1.0f, 0.0f);
-		C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightClr,     1.0f, 1.0f,  1.0f, 1.0f);
+		// C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_material,   &material);
+		// C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightVec,     0.0f, 0.0f, -1.0f, 0.0f);
+		// C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightHalfVec, 0.0f, 0.0f, -1.0f, 0.0f);
+		// C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightClr,     1.0f, 1.0f,  1.0f, 1.0f);
 		// C3D_FVUnifSet(GPU_VERTEX_SHADER, texcoord_offsets,     offsetX * 0.1f, offsetY * 0.1f,  offset2 * 0.1f, 1.0f);
 		
 		// obj->draw(&view);

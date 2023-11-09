@@ -20,6 +20,7 @@ cube[
 - Name maps to a corresponding class
 - Use square brackets to specify scripts and components
 - Spaces, newlines and tabs will be ignored
+- Name is case sensitive, and cannot include square brackets, curly brackets, or commas
 
 ## Data sections:
 
