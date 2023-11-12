@@ -5,14 +5,15 @@
 
 namespace {
     struct ink_args {
-        const char* tex1path; // if we want to have a special texture to overlay onto the ink (decals etc)
-        const char* tex2path;
-        const char* mask1path; // ink mask (dictating how the ink is on the ground)
-        const char* mask2path;
         const C3D_Mtx ink1mat, ink2mat;
         uint8_t alpha;
         float phase, frequency, amplitude, specular;
         unsigned int team1color, team2color;
+        // can only include fixed size variables, strings need to be parsed separately
+        // const char* tex1path; // if we want to have a special texture to overlay onto the ink (decals etc)
+        // const char* tex2path;
+        // const char* mask1path; // ink mask (dictating how the ink is on the ground)
+        // const char* mask2path;
     };
 }
 
@@ -37,15 +38,21 @@ class ink : public material {
     int uLoc_projection, uLoc_modelView;
     float data[129], specular;
     unsigned int team1color, team2color;
-    ink(void* args) noexcept {
+    ink(FILE* args) noexcept {
         if (args) {
-            ink_args m_args = *(ink_args*)args;
+            ink_args m_args = {0};
+            fread(&m_args, sizeof(ink_args), 1, args);
+            char tex1path[255], tex2path[255], mask1path[255], mask2path[255];
+            
+            fgets(tex1path, 255, args);
+            fgets(tex2path, 255, args);
+
 
             // load textures
-            ink1hastex = loadTextureFromFile(&team1tex, NULL, m_args.tex1path, false);
-            ink2hastex = loadTextureFromFile(&team2tex, NULL, m_args.tex2path, false);
-            loadTextureFromFile(&team1mask, NULL, m_args.mask1path, false);
-            loadTextureFromFile(&team2mask, NULL, m_args.mask2path, false);
+            ink1hastex = loadTextureFromFile(&team1tex, NULL, tex1path, false);
+            ink2hastex = loadTextureFromFile(&team2tex, NULL, tex2path, false);
+            loadTextureFromFile(&team1mask, NULL, mask1path, false);
+            loadTextureFromFile(&team2mask, NULL, mask2path, false);
 
             C3D_TexSetFilter(&team1tex, GPU_LINEAR, GPU_NEAREST);
             C3D_TexSetFilter(&team2tex, GPU_LINEAR, GPU_NEAREST);

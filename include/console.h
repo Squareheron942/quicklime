@@ -39,7 +39,7 @@ class Console {
             line++;
         }
 
-        char* unformatted = new char[snprintf(NULL, 0, "\e[2K\e[1;37m[DEBUG]\e[22m %s", text) + 1];
+        char* unformatted = new char[snprintf(NULL, 0, "\e[2K\e[1;37m[DEBUG]\e[22m %s\e[0m", text) + 1];
         sprintf(unformatted, "\e[2K\e[1;37m[DEBUG]\e[22m %s\e[0m", text);
         textbuf[line] = new char[vsnprintf(NULL, 0, unformatted, args) + 1];
         vsprintf(textbuf[line], unformatted, args);
@@ -51,20 +51,30 @@ class Console {
     };
 
     static inline void warn(const char* text, ...) {
+        // printf(text);
+        #if CONSOLE_ENABLED
         va_list args;
         va_start (args, text);
-        #if CONSOLE_ENABLED
-        if (line >= CONSOLE_NUM_LINES - 1) { // scroll text
+        // if (line >= CONSOLE_NUM_LINES - 1) { // scroll text
+        //     line = 1;
+        //     // scrolloffset++;
+        //     // for (int i = 0; i < CONSOLE_NUM_LINES - 1; i++) {
+        //     //     textbuf[i] = textbuf[i + 1]; // scroll each line down
+        //     //     printf("\e[s\e[%u;0H%s\e[0m\e[u", i + CONSOLE_TOP, textbuf[i]);
+        //     // }
+        // } else { // just add text to next line
+        //     line++;
+        // }
+
+        if (line >= CONSOLE_NUM_LINES - 1) 
+        { // loop text position
             line = 1;
-            // scrolloffset++;
-            // for (int i = 0; i < CONSOLE_NUM_LINES - 1; i++) {
-            //     textbuf[i] = textbuf[i + 1]; // scroll each line down
-            //     printf("\e[s\e[%u;0H%s\e[0m\e[u", i + CONSOLE_TOP, textbuf[i]);
-            // }
-        } else { // just add text to next line
+        } else
+        { // just add text to next line
             line++;
         }
-        char* unformatted = new char[snprintf(NULL, 0, "\e[2K\e[1;33m[WARN]\e[22m %s", text) + 1];
+
+        char* unformatted = new char[snprintf(NULL, 0, "\e[2K\e[1;33m[WARN]\e[22m %s\e[0m", text) + 1];
         sprintf(unformatted, "\e[2K\e[1;33m[WARN]\e[22m %s\e[0m", text);
         textbuf[line] = new char[vsnprintf(NULL, 0, unformatted, args) + 1];
         vsprintf(textbuf[line], unformatted, args);
@@ -78,17 +88,26 @@ class Console {
         #if CONSOLE_ENABLED
         va_list args;
         va_start (args, text);
-        if (line >= CONSOLE_NUM_LINES - 1) { // scroll text
+        // if (line >= CONSOLE_NUM_LINES - 1) { // scroll text
+        //     line = 1;
+        //     // scrolloffset++;
+        //     // for (int i = 0; i < CONSOLE_NUM_LINES - 1; i++) {
+        //     //     textbuf[i] = textbuf[i + 1]; // scroll each line down
+        //     //     printf("\e[s\e[%u;0H%s\e[0m\e[u", i + CONSOLE_TOP, textbuf[i]);
+        //     // }
+        // } else { // just add text to next line
+        //     line++;
+        // }
+
+        if (line >= CONSOLE_NUM_LINES - 1) 
+        { // loop text position
             line = 1;
-            // scrolloffset++;
-            // for (int i = 0; i < CONSOLE_NUM_LINES - 1; i++) {
-            //     textbuf[i] = textbuf[i + 1]; // scroll each line down
-            //     printf("\e[s\e[%u;0H%s\e[0m\e[u", i + CONSOLE_TOP, textbuf[i]);
-            // }
-        } else { // just add text to next line
+        } else
+        { // just add text to next line
             line++;
         }
-        char* unformatted = new char[snprintf(NULL, 0, "\e[2K\e[1;31m[ERROR]\e[22m %s", text) + 1];
+        
+        char* unformatted = new char[snprintf(NULL, 0, "\e[2K\e[1;31m[ERROR]\e[22m %s\e[0m", text) + 1];
         sprintf(unformatted, "\e[2K\e[1;31m[ERROR]\e[22m %s\e[0m", text);
         textbuf[line] = new char[vsnprintf(NULL, 0, unformatted, args) + 1];
         vsprintf(textbuf[line], unformatted, args);

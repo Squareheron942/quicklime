@@ -20,6 +20,7 @@ def writeheader(inp: et.Element, out: io.BufferedWriter, path: str) -> None:
 def writematerials(inp: et.Element, path: str) -> None:
     for mat in inp.find('library_materials'):
         with open(os.path.join(path, mat.attrib['name']) + '.slmtl', 'wb') as out:
+            print(out.name)
             for effect in inp.find('library_effects'):
                 if effect.attrib['id'] == mat.find('instance_effect').attrib['url'].split('#')[1]:
 
@@ -39,6 +40,9 @@ def writematerials(inp: et.Element, path: str) -> None:
                         out.writelines(struct.pack('f', float((c))) for c in eff.find('specular/color').text.split(' ')) # specular colour
                     else:
                         out.writelines(struct.pack('f', float((c))) for c in '0 0 0 1'.split(' ')) # default colour
+
+                    out.writelines(struct.pack('f', float((c))) for c in '0 0 0 1'.split(' ')) # specular1 is unused by any model formats but required here
+
                     if eff.find('emission/color') != None:
                         out.writelines(struct.pack('f', float((c))) for c in eff.find('emission/color').text.split(' ')) # emission colour
                     else:
