@@ -319,7 +319,6 @@ void Scene1::drawTop(float iod)
 		C3D_DrawArrays(GPU_TRIANGLES, 0, numvertices[i]);
 		// C3D_DrawArrays(GPU_TRIANGLES, 0, obj->mesh()->numVerts / 3);
 	}
-	
 }
 
 

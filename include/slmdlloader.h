@@ -15,16 +15,13 @@
 namespace mdlLoader
 {
     material* parseMat(FILE* f) {
-        unsigned int argsize = 0;
-        fread(&argsize, sizeof(int), 1, f); // read size of material arguments
-        void* mat_args = malloc(argsize);
-        fread(mat_args, 1, argsize, f); // read the data to pass to the material
-        material* out = new fragment_lit(mat_args);
-        free(mat_args);
-        return out;
+        char m_path[255]; // max path length is 255 chars (probably fine)
+        fgets(m_path, 255, f); // get name of file from here
+        return new fragment_lit(fopen(m_path, "r"));
     }
+
     inline object3d* load(const char path[], entt::registry &reg) {
-        FILE *f = fopen(path, "rb");
+        FILE *f = fopen(path, "r");
         char str[3] = "";
         fread(str, sizeof(char), 3, f);
         if (str[0] != 'm' || str[1] != 'd' || str[2] != 'l') {
@@ -33,7 +30,8 @@ namespace mdlLoader
         }
         // fseek(f, 0, SEEK_END);
         fseek(f, 5, SEEK_CUR);
-        material *m = parseMat(f);
+        // material *m = parseMat(f);
+        material* m = NULL;
         
         fread(str, sizeof(char), 3, f);
 
