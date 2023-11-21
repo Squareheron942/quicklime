@@ -86,4 +86,7 @@ namespace controls {
      * @returns The position of the C Stick
     */
     const circlePosition cStickPos();
+
+    float gyroDeadZone(), gyroSensitivity();
+    void setGyroDeadZone(float min_radius), setGyroSensitivity(float multiplier);
 };

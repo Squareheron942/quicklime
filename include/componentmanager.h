@@ -6,8 +6,8 @@
 #include "entt.hpp"
 #include <stdio.h>
 #include "gameobject.h"
+#include "console.h"
 
-// template<typename ...Args> std::unordered_map<char*, Script*(*)(entt::registry&, entt::entity, Args&& ...args)> class_map_type;
 
 class ComponentManager {
     ComponentManager() {}
@@ -17,20 +17,31 @@ class ComponentManager {
     
     template<typename T> static bool registerComponent(const char* name) {
         if constexpr (std::is_base_of_v<Script, T>) {
+            Console::log("Added script %s", name);
             getScriptMap()[name] = ComponentManager::createScriptInstance<T>;
         } else {
+            Console::log("Added component %s", name);
             getComponentMap()[name] = ComponentManager::createComponentInstance<T>;
         }
         return true;
     }
 
-    static void addComponent(const char* name, entt::registry& reg, entt::entity e) {
-        getComponentMap()[name](reg, e);
+    static bool addComponent(const char* name, GameObject& obj) {
+        if (getComponentMap().find(name) == getComponentMap().end()) {
+            Console::error("Unknown component %s", name);
+            return false;
+        }
+        getComponentMap()[name](obj.reg, obj.id);
+        return true;
     }
 
-    static Script* addScript(const char* name, entt::registry& reg, entt::entity e) {
-        return ((getScriptMap()[name](reg, e))); //TODO fix this
-        // return true;
+    static bool addScript(const char* name, GameObject& obj) {
+        if (getScriptMap().find(name) == getScriptMap().end()) {
+            Console::error("Unknown script %s", name);
+            return false;
+        }
+        obj.scripts.push_back((getScriptMap()[name](obj.reg, obj.id)));
+        return true;
     }
 
     private:

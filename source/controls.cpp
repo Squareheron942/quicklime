@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <string>
 #include <algorithm>
+#include "sl_time.h"
 
 namespace controls {
     namespace // makes these inaccessible outside this namespace
@@ -14,6 +15,7 @@ namespace controls {
         angularRate gRate;
         C3D_FVec gPos = {0, 0, 0};
         circlePosition cPos, csPos;
+        float gyro_s = 0.5f, gyro_d = 10.f;
         std::unordered_map<std::string, unsigned int> mappings {
             {"A", KEY_A},
             {"B", KEY_B},
@@ -45,10 +47,7 @@ namespace controls {
         };
     };
 
-
     void update() {
-        float deltaTime = 0.0024f;
-        
         hidGyroRead(&gRate);
         hidCircleRead(&cPos);
         hidCstickRead(&csPos);
@@ -59,9 +58,13 @@ namespace controls {
         kHeld = hidKeysHeld(); 
         kUp = hidKeysUp();
 
-        gPos.x += gRate.x * deltaTime * M_RAD;
-        gPos.y += gRate.y * deltaTime * M_RAD;
-        gPos.z += gRate.z * deltaTime * M_RAD;
+        gRate.x *= gyro_s;
+        gRate.y *= gyro_s;
+        gRate.z *= gyro_s;
+
+        gPos.x += gRate.x * Time::deltaTime * M_RAD;
+        gPos.y += gRate.y * Time::deltaTime * M_RAD;
+        gPos.z += gRate.z * Time::deltaTime * M_RAD;
     }
 
     bool getDown(std::string inputName) {
@@ -96,6 +99,7 @@ namespace controls {
      * @returns The internal gyro angular rate (in deg/s)
     */
     const angularRate gyroRate() { return gRate; } // this way no one can modify the internal states
+
     /**
      * @returns The internal gyro position (in radians)
     */
@@ -118,4 +122,24 @@ namespace controls {
      * @returns The position of the C Stick
     */
     const circlePosition cStickPos() { /*hidCstickRead(&cPos);*/return csPos; }
+
+    /**
+     * @brief Returns sensitivity multiplier used by gyro
+    */
+    float gyroSensitivity() { return gyro_s; }
+
+    /**
+     * @brief Sets sensitivity multiplier used by gyro
+    */
+    void setGyroSensitivity(float sensitivity) { gyro_s = sensitivity; }
+
+    /**
+     * @brief Returns gyro dead zone radius
+    */
+    float gyroDeadZone() { return gyro_d; }
+
+    /**
+     * @brief Sets gyro dead zone radius
+    */
+    void setGyroDeadZone(float min_rate) { gyro_d = min_rate; }
 };
