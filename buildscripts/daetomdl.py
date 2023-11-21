@@ -18,35 +18,55 @@ def writeheader(inp: et.Element, out: io.BufferedWriter, path: str) -> None:
 
 # writes C3D_Mtx type thingy to file which represents material
 def writematerials(inp: et.Element, path: str) -> None:
-    for mat in inp.find('library_materials'):
+    tex = {}
+    for image in inp.findall('library_images/image'):
+        tex[image.attrib['id']] = image.find('init_from').text
+        print(tex[image.attrib['id']])
+    for mat in inp.findall('library_materials/material'):
+        print(mat.attrib['name'])
         with open(os.path.join(path, mat.attrib['name']) + '.slmtl', 'wb') as out:
             print(out.name)
             for effect in inp.find('library_effects'):
                 if effect.attrib['id'] == mat.find('instance_effect').attrib['url'].split('#')[1]:
-
+                    inputs = {}
+                    samplers = {}
+                    for param in effect.findall('profile_COMMON/newparam'):
+                        if param.find('surface') is not None:
+                            print(param.find('surface/init_from').text)
+                            inputs[param.attrib['sid']] = tex[param.find('surface/init_from').text]
+                        elif param.find('sampler2D/source') is not None:
+                            samplers[param.attrib['sid']] = param.find('sampler2D/source').text
+                            print(param.find('sampler2D/source').text)
+                    
                     eff = effect.find('profile_COMMON/technique/phong')
                     if eff == None:
-                        eff = effect.find('/profile_COMMON/technique/lambert')
+                        eff = effect.find('profile_COMMON/technique/lambert')
 
                     if eff.find('ambient/color') != None:
-                        out.writelines(struct.pack('f', float((c))) for c in eff.find('ambient/color').text.split(' ')) # ambient colour
+                        out.writelines(struct.pack('f', float(c)) for c in eff.find('ambient/color').text.split(' ')) # ambient colour
                     else:
-                        out.writelines(struct.pack('f', float((c))) for c in '0 0 0 1'.split(' ')) # default colour
+                        out.writelines(struct.pack('f', float(c)) for c in '0 0 0 1'.split(' ')) # default colour
                     if eff.find('diffuse/color') != None:
-                        out.writelines(struct.pack('f', float((c))) for c in eff.find('diffuse/color').text.split(' ')) # diffuse colour
+                        out.writelines(struct.pack('f', float(c)) for c in eff.find('diffuse/color').text.split(' ')) # diffuse colour
                     else:
-                        out.writelines(struct.pack('f', float((c))) for c in '0 0 0 1'.split(' ')) # default colour
+                        out.writelines(struct.pack('f', float(c)) for c in '0 0 0 1'.split(' ')) # default colour
                     if eff.find('specular/color') != None:
-                        out.writelines(struct.pack('f', float((c))) for c in eff.find('specular/color').text.split(' ')) # specular colour
+                        out.writelines(struct.pack('f', float(c)) for c in eff.find('specular/color').text.split(' ')) # specular colour
                     else:
-                        out.writelines(struct.pack('f', float((c))) for c in '0 0 0 1'.split(' ')) # default colour
+                        out.writelines(struct.pack('f', float(c)) for c in '0 0 0 1'.split(' ')) # default colour
 
-                    out.writelines(struct.pack('f', float((c))) for c in '0 0 0 1'.split(' ')) # specular1 is unused by any model formats but required here
+                    out.writelines(struct.pack('f', float(c)) for c in '0 0 0 1'.split(' ')) # specular1 is unused by any model formats but required for lighting material
 
                     if eff.find('emission/color') != None:
-                        out.writelines(struct.pack('f', float((c))) for c in eff.find('emission/color').text.split(' ')) # emission colour
+                        out.writelines(struct.pack('f', float(c)) for c in eff.find('emission/color').text.split(' ')) # emission colour
                     else:
-                        out.writelines(struct.pack('f', float((c))) for c in '0 0 0 1'.split(' ')) # default colour
+                        out.writelines(struct.pack('f', float(c)) for c in '0 0 0 1'.split(' ')) # default colour
+                    
+                    if eff.find('diffuse/texture') is not None:
+                        print(samplers[eff.find('diffuse/texture').attrib['texture']])
+                        # out.write(bytes(tex[samplers[eff.find('diffuse/texture').attrib['texture']]], 'utf-8'))
+                        out.write((0).to_bytes(1))
+                    
                     
 
 def writeobjs(inp: et.Element, out: io.BufferedWriter) -> None:
