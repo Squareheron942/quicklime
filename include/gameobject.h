@@ -8,7 +8,8 @@ class GameObject {
     public:
     entt::registry &reg;
     // std::vector<Script*> scripts;
-    Script* scripts[2];
+    std::vector<Script*> scripts;
+    // Script* scripts[2];
     entt::entity id;
     GameObject(entt::registry& registry) : reg(registry), id(registry.create()) {}
     operator entt::entity() { return id; }

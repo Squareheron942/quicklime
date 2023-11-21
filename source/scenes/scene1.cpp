@@ -20,27 +20,16 @@
 #include "slmdlloader.h"
 #include "console.h"
 #include "sl_time.h"
-// #include "movement_script.h"
 #include "componentmanager.h"
 #include "script1.h"
+#include "movement_script.h"
+#include "stats.h"
 
 #define vertex_list_count (sizeof(vertex_list)/sizeof(vertex_list[0]))
 
 #define M_RAD 0.01745329252f
 
 static unsigned int *numvertices = nullptr, numgroups = 0;
-// static char text[128];
-
-void drawText(float x, float y, float z, float scale, const char* value) {
-	C2D_Prepare();
-    C2D_TextBuf buf=C2D_TextBufNew(4096);
-    C2D_Text text;
-    C2D_TextParse(&text, buf, value);
-    C2D_TextOptimize(&text);
-    C2D_DrawText(&text, 0, x, y, z, scale, scale);
-	C2D_Flush();
-    C2D_TextBufDelete(buf);
-}
 
 // Helper function for loading a texture from memory
 bool loadTextureFromMem(C3D_Tex* tex, C3D_TexCube* cube, const void* data, size_t size)
@@ -48,7 +37,8 @@ bool loadTextureFromMem(C3D_Tex* tex, C3D_TexCube* cube, const void* data, size_
 	Tex3DS_Texture t3x = Tex3DS_TextureImport(data, size, tex, cube, false);
 	if (!t3x){
 		printf("didn't find it");
-		return false;}
+		return false;
+	}
 
 	// Delete the t3x object since we don't need it
 	Tex3DS_TextureFree(t3x);
@@ -70,75 +60,17 @@ bool loadTextureFromFile(C3D_Tex* tex, C3D_TexCube* cube, const char* path, bool
 		return true;
     }
 
-int draw(entt::registry registry, entt::entity object) {
-	// Mesh<vertex> *mesh = registry.try_get<Mesh<vertex>>(object); 
-	// if (!mesh) return 1;
-	// material *mat = registry.try_get<material>(object);
-	// if (!mat) return 2;
-
-	// void* vbo_data = linearAlloc()
-
-
-	return 0;
-}
-
-void printmesh(const Mesh *mesh) {
-	if (mesh == NULL) return;
-	#if CONSOLE_ENABLED
-	for (int i = 0; i < mesh->numVerts; i++) printf("%u. pos %f %f %f\n", i, ((vertex*)mesh->vertices)[i].position[0], ((vertex*)mesh->vertices)[i].position[1], ((vertex*)mesh->vertices)[i].position[2]);
-	#endif
-}
-
-void printmesh(const void *mesh, const int n) {
-	if (mesh == NULL) return;
-	#if CONSOLE_ENABLED
-	for (int i = 0; i < n; i++) printf("%u. pos %f %f %f\n", i, ((vertex*)mesh)[i].position[0], ((vertex*)mesh)[i].position[1], ((vertex*)mesh)[i].position[2]);
-	#endif
-}
-
-char* getfiletext(const char* path)
-{
-	FILE* f = fopen(path, "r");
-	char* buffer;
-	std::ifstream t;
-	int length;
-	t.open(path);      // open input file
-	t.seekg(0, std::ios::end);    // go to the end
-	length = t.tellg();           // report location (this is the length)
-	t.seekg(0, std::ios::beg);    // go back to the beginning
-	buffer = new char[length];    // allocate memory for a buffer of appropriate dimension
-	t.read(buffer, length);       // read the whole file into the buffer
-	t.close(); 
-	if (f)
-	{
-		
-		fgets(buffer, length, f);
-		fclose(f);
-	}
-	return buffer;
-}
-
-Scene1::Scene1() : Scene("Scene 1"), cube(objects.create()), camera(objects.create()), script1object(objects), obj(mdlLoader::load("romfs:/cube.slmdl", objects)) {
-	objects.emplace<transform>(cube);
-	objects.emplace<transform>(camera);
-
-	// printf("Script1 registered: %s\n", Script1_component ? "true" : "false");
-
-	ComponentManager::addComponent("transform", objects, script1object.id);
-	// ComponentManager::addScript("Script1", script1object);
-	// ComponentManager::addScript("MovementScript", script1object);
-	// script1object.scripts[0] = ComponentManager::addScript("Script1", objects, script1object.id);
-	// if (script1object.scripts[0]) script1object.scripts[0]->Start();
-	script1object.scripts[0] = ComponentManager::addScript("MovementScript", objects, script1object.id);
-	script1object.scripts[0]->Start();
+Scene1::Scene1() : Scene("Scene 1"), script1object(objects), obj(mdlLoader::load("romfs:/cube.slmdl", objects)) {
 	
-	transform *cubepos = objects.try_get<transform>(cube), *campos = objects.try_get<transform>(script1object);
-
-	cubepos->position = {0.0f, -1.0f, 0.0f};
-	campos->position = {0, 0, -4};
+	// add components and scripts
+	ComponentManager::addComponent("transform", script1object);
+	ComponentManager::addComponent("mesh", script1object);
+	
+	ComponentManager::addScript("MovementScript", script1object);
+	ComponentManager::addScript("Script1", script1object);
+	if (script1object.scripts[0]) script1object.scripts[0]->Start();
+	
 	mesh = fast_obj_read("romfs:/plaza.obj");
-
-	// printmesh(obj->mesh());
 
 	if (mesh->face_count != 0) {
 		numgroups = mesh->group_count;
@@ -217,9 +149,6 @@ Scene1::Scene1() : Scene("Scene 1"), cube(objects.create()), camera(objects.crea
 	C3D_LightEnvBind(&lightEnv);
 	C3D_LightEnvMaterial(&lightEnv, &lmat);
 
-	// if (objects.try_get<Script1>(cube)) objects.try_get<Script1>(cube)->Update();
-	// else printf("didn't find it\n");
-
 	LightLut_Phong(&lut_Light, 300);
 	C3D_LightEnvLut(&lightEnv, GPU_LUT_D0, GPU_LUTINPUT_LN, false, &lut_Light);
 
@@ -232,35 +161,22 @@ Scene1::Scene1() : Scene("Scene 1"), cube(objects.create()), camera(objects.crea
 }
 
 void Scene1::update() {
-	transform *cam = objects.try_get<transform>(camera);
+	transform *cam = objects.try_get<transform>(script1object);
+
+	for (Script* script : script1object.scripts) 
+		script->Update();
 	
-	offsetX += 0.01f;
-	offsetY += 0.01f;
-	offset2 += 0.005f;
-	if (controls::getHeld("dup")) angleY += 1;
-	if (controls::getHeld("ddown")) angleY -= 1;
-	if (controls::getHeld("dright")) angleX += 0.1f;
-	if (controls::getHeld("dleft")) angleX -= 0.1f;
-	if (controls::getHeld("a")) distance += 0.1f;
-	if (controls::getDown("y")) controls::resetGyro({0, 0, 0});
 
-	// for (Script* script : script1object.scripts) {
-	// 	script->Update();
-	// }
-	script1object.scripts[0]->Update();
 
-	// 
-	// printf("\x1b[29;1Hp=%2.1f %2.1f %2.1f r=%2.1f %2.1f %2.1f\n", campos->position.x, campos->position.y, campos->position.z, campos->rotation.x, campos->rotation.y, campos->rotation.z);
-	// printf("\x1b[29;1Hp=%d,%d at=%d dTime: %1.2f \n", controls::circlePos().dx, controls::circlePos().dy, (unsigned char)angleY, C3D_GetProcessingTime());
-	// printf("%f %f\n", sinf(angle) * dTime, cosf(angle) * dTime);
+	_drawcalls = numgroups;
+	_frametime = Time::deltaTime * 1000;
+	_fps = 1.0f / Time::deltaTime;
+	_x = cam->position.x;
+	_y = cam->position.y;
+	_z = cam->position.z;
 
-	Console::setFPS(1.0f / Time::deltaTime);
-	Console::setFrameTime(Time::deltaTime * 1000);
-	Console::setDrawCalls(numgroups);
-	Console::setPosition(cam->position.x, cam->position.y, cam->position.z);
-	Console::updateMemUsage();
-
-	// snprintf(text, 128, "fps: %u", fps);
+	if (controls::getDown("select")) Console::nextMenu();
+	Console::update();
 };
 
 
