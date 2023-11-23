@@ -70,14 +70,10 @@ Scene1::Scene1() : Scene("Scene 1"), root(objects), script1object(objects) {
 	transform defaultpos({1, 0, 4, 0});
 	ComponentManager::addComponent("transform", script1object, &defaultpos);
 	ComponentManager::addComponent("mesh", script1object);
-	
-	Console::log(script1object.name.c_str());
 
 	ComponentManager::addScript("MovementScript", script1object);
-
-	Console::log(script1object.name.c_str());
-
 	ComponentManager::addScript("Script1", script1object);
+	
 	for (Script* script : script1object.scripts)
 		script->Start();
 	
