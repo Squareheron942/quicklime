@@ -1,4 +1,13 @@
 #include "script.h"
+#include "gameobject.h"
+#include <string>
 
-Script::Script(entt::registry &_parent_c, entt::entity _parent_id) : parentComponents(_parent_c), parentID(_parent_id) {}
-void Script::SetEnabled(bool enabled) {this->enabled = enabled;}
+GameObject* Script::find(std::string object) {
+    return owner->find(object);
+}
+
+Script::Script(GameObject& _owner) : parentComponents(_owner.reg), parentID(_owner.id), owner(&_owner) {}
+
+void Script::SetEnabled(bool enabled) {
+    this->enabled = enabled;
+}
