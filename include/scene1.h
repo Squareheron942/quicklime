@@ -15,8 +15,6 @@ class Scene1 : public Scene {
     void update() override;
     void drawTop(float iod) override;
     void drawBottom() override;
-	entt::registry objects;
-	GameObject root;
 
 	// all this is from the hardcoded rendering I have rn, will need to be removed
 	GameObject script1object;
@@ -50,10 +48,7 @@ class Scene1 : public Scene {
     void* vbo_data;
     void** vbo_data2;
     C3D_Tex bottom_tex, top_tex;
-    C3D_BufInfo bufCube, bufCube2, *bufPlaza;
-    float offsetX = 0.0, offsetY = 0.0, angleX = 0.0, distance = 0.0, offset2 = 0.0;
-    unsigned char angleY = 0;
-    C3D_FVec camPos;
+    C3D_BufInfo *bufPlaza;
 	vertex** meshes = nullptr;
 	C3D_LightEnv lightEnv;
 	C3D_Light light;

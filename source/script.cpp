@@ -9,5 +9,10 @@ GameObject* Script::find(std::string object) {
 Script::Script(GameObject& _owner) : parentComponents(_owner.reg), parentID(_owner.id), owner(&_owner) {}
 
 void Script::SetEnabled(bool enabled) {
+    bool wasenabled = this->enabled;
     this->enabled = enabled;
+    // only call onEnable() if the enabled state actually changed
+    if (enabled && !wasenabled) OnEnable();
+    // same here
+    else if (wasenabled && !enabled) OnDisable();
 }

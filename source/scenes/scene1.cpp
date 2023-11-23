@@ -60,20 +60,19 @@ bool loadTextureFromFile(C3D_Tex* tex, C3D_TexCube* cube, const char* path, bool
 		return true;
     }
 
-Scene1::Scene1() : Scene("Scene 1"), root(objects), script1object(objects) {
+Scene1::Scene1() : Scene("Scene 1"), script1object(objects) {
 	
-	root.name = "root";
 	script1object.name = "script1object";
 	root.addChild(script1object);
 
-	// add components and scripts
+	// add components and scripts (components before scripts)
 	transform defaultpos({1, 0, 4, 0});
 	ComponentManager::addComponent("transform", script1object, &defaultpos);
 	ComponentManager::addComponent("mesh", script1object);
 
 	ComponentManager::addScript("MovementScript", script1object);
 	ComponentManager::addScript("Script1", script1object);
-	
+
 	for (Script* script : script1object.scripts)
 		script->Start();
 	
@@ -168,21 +167,9 @@ Scene1::Scene1() : Scene("Scene 1"), root(objects), script1object(objects) {
 }
 
 void Scene1::update() {
-	transform *cam = objects.try_get<transform>(script1object);
-
 	for (Script* script : script1object.scripts) 
 		script->Update();
-	
 
-
-	_drawcalls = numgroups;
-	_frametime = Time::deltaTime * 1000;
-	_fps = 1.0f / Time::deltaTime;
-	_x = cam->position.x;
-	_y = cam->position.y;
-	_z = cam->position.z;
-
-	if (controls::getDown("select")) Console::nextMenu();
 	Console::update();
 };
 
@@ -203,12 +190,10 @@ void Scene1::drawTop(float iod)
 	// Calculate the modelView matrix
 	C3D_Mtx modelView;
 
-	for (unsigned int i = 0; i < 1; i++) {
+	for (unsigned int i = 0; i < numgroups; i++) {
 		C3D_LightEnvBind(&lightEnv);
 
 		C3D_SetBufInfo(&bufPlaza[i]);
-
-		// C3D_SetBufInfo(obj->mesh()->buf);
 
 		C3D_TexBind(0, &bottom_tex);
 		C3D_TexBind(1, &bottom_tex);
@@ -234,34 +219,17 @@ void Scene1::drawTop(float iod)
 		// C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightVec,     0.0f, 0.0f, -1.0f, 0.0f);
 		// C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightHalfVec, 0.0f, 0.0f, -1.0f, 0.0f);
 		// C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightClr,     1.0f, 1.0f,  1.0f, 1.0f);
-		// C3D_FVUnifSet(GPU_VERTEX_SHADER, texcoord_offsets,     offsetX * 0.1f, offsetY * 0.1f,  offset2 * 0.1f, 1.0f);
 		
-		// obj->draw(&view);
 
 		// // Draw the VBO
 		C3D_DrawArrays(GPU_TRIANGLES, 0, numvertices[i]);
-		// C3D_DrawArrays(GPU_TRIANGLES, 0, obj->mesh()->numVerts / 3);
+		_drawcalls++;
 	}
 }
 
 
 
-void Scene1::drawBottom() {
-
-	// Draw the 2d scene
-	// drawText(8, 8, 1, 1, text);
-	
-	// if (tb) {
-	// 	char* text; 
-	// 	// sprintf(text, "RAM Usage:%lu", (osGetMemRegionUsed(MEMREGION_APPLICATION) * 100) / osGetMemRegionSize(MEMREGION_APPLICATION));
-	// 	C2D_TextParse(&t, tb, "text");
-
-	// 	C2D_Prepare();
-	// 	C2D_DrawText(&t, 0.0f, 8.0f, 8.0f, 1.0f, 1.0f, 1.0f);
-	// 	C2D_Flush();
-	// } 
-	
-}
+void Scene1::drawBottom() {}
 
 Scene1::~Scene1() {
 	// Free the texture
@@ -269,8 +237,7 @@ Scene1::~Scene1() {
 	C3D_TexDelete(&top_tex);
 
 	// Free the VBO
-	linearFree(vbo_data);
-	linearFree(vbo_data2);
+	for (unsigned int i = 0; i < numgroups; i++) linearFree(meshes[i]);
 
 	delete[] meshes;
 

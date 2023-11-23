@@ -12,6 +12,7 @@ class Script {
 
     protected:
     GameObject* owner;
+    bool enabled = true;
     template<class T> inline T *GetComponent() {
         return parentComponents.try_get<T>(parentID);
     }
@@ -20,9 +21,11 @@ class Script {
 
     public:
     Script(GameObject& owner);
-    bool enabled = true;
     void SetEnabled(bool enabled);
-    virtual void Start(void) = 0;
-    virtual void Update(void) = 0;
-    virtual void FixedUpdate(void) = 0;
+    virtual void Start(void) {};
+    virtual void Update(void) {};
+    virtual void FixedUpdate(void) {};
+    virtual void LateUpdate(void) {};
+    virtual void OnDisable(void) {};
+    virtual void OnEnable(void) {};
 };
