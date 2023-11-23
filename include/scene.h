@@ -1,10 +1,15 @@
 #pragma once
 #include <stdio.h>
 #include <string>
+#include "gameobject.h"
+#include <entt.hpp>
 
 class Scene {
     public:
         std::string name;
+        entt::registry objects;
+	    GameObject root;
+
         virtual ~Scene() {
             // printf("Scene \"%s\" destroyed.\n", name.c_str());
         }
@@ -15,7 +20,8 @@ class Scene {
         virtual void drawBottom() = 0;
 
     protected:
-        Scene(std::string name) : name(name) {
+        Scene(std::string name) : name(name), root(objects) {
+            root.name = "root";
             // printf("Scene \"%s\" created.\n", name.c_str());
         }
 };
