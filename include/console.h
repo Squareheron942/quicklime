@@ -36,7 +36,8 @@ namespace {
     enum CONSOLE_LOG_LEVEL {
         LOG_LEVEL_LOW,
         LOG_LEVEL_WARN,
-        LOG_LEVEL_ERROR
+        LOG_LEVEL_ERROR,
+        LOG_LEVEL_SUCCESS
     };
 }
 
@@ -68,6 +69,10 @@ class Console {
             case LOG_LEVEL_ERROR:
                 unformatted = new char[snprintf(NULL, 0, "\e[2K\e[1;31m[ERROR]\e[22m %s\e[0m", text) + 1];
                 sprintf(unformatted, "\e[2K\e[1;31m[ERROR]\e[22m %s\e[0m", text);
+                break;
+            case LOG_LEVEL_SUCCESS:
+                unformatted = new char[snprintf(NULL, 0, "\e[2K\e[1;31m[SUCCESS]\e[22m %s\e[0m", text) + 1];
+                sprintf(unformatted, "\e[2K\e[1;32m[SUCCESS]\e[22m %s\e[0m", text);
                 break;
         }
 
@@ -122,6 +127,13 @@ class Console {
         va_list arg;
         va_start(arg, text);
         basic_log(LOG_LEVEL_ERROR, text, arg);
+        va_end(arg);
+    };
+
+    static inline void success(const char* text, ...) {
+        va_list arg;
+        va_start(arg, text);
+        basic_log(LOG_LEVEL_SUCCESS, text, arg);
         va_end(arg);
     };
 

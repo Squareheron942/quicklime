@@ -17,9 +17,10 @@ class Script1 : public Script {
     void Start() {
         n_iter = 0;
         Console::log("Script1 started\n");
+
         s = find("script1object");
         if (!s) Console::warn("did not find it for some reason");
-        else Console::log("script1object found WWWWWWWWW");
+        else Console::success("script1object found WWWWWWWWW");
     };
 
     void Update() {
