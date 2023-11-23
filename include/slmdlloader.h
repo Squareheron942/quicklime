@@ -55,8 +55,8 @@ namespace mdlLoader
         #if CONSOLE_ENABLED
             for (int i = 0; i < numVerts; i++) Console::log("%u p%0.1f %0.1f %0.1f n%0.1f %0.1f %0.1f t%0.1f %0.1f\n", i, ((vertex*)vertices)[i].position[0], ((vertex*)vertices)[i].position[1], ((vertex*)vertices)[i].position[2], ((vertex*)vertices)[i].normal[0], ((vertex*)vertices)[i].normal[1], ((vertex*)vertices)[i].normal[2], ((vertex*)vertices)[i].texcoord[0], ((vertex*)vertices)[i].texcoord[1]);
         #endif
-        Mesh *mesh = new Mesh(vertices, numVerts, sizevert);
-        object3d *object = new object3d(reg, mesh, m);
+        mesh *Mesh = new mesh(vertices, numVerts, sizevert);
+        object3d *object = new object3d(reg, Mesh, m);
         return object;
     }
     

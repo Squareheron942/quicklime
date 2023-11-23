@@ -60,15 +60,26 @@ bool loadTextureFromFile(C3D_Tex* tex, C3D_TexCube* cube, const char* path, bool
 		return true;
     }
 
-Scene1::Scene1() : Scene("Scene 1"), script1object(objects), obj(mdlLoader::load("romfs:/cube.slmdl", objects)) {
+Scene1::Scene1() : Scene("Scene 1"), root(objects), script1object(objects) {
 	
+	root.name = "root";
+	script1object.name = "script1object";
+	root.addChild(script1object);
+
 	// add components and scripts
-	ComponentManager::addComponent("transform", script1object);
+	transform defaultpos({1, 0, 4, 0});
+	ComponentManager::addComponent("transform", script1object, &defaultpos);
 	ComponentManager::addComponent("mesh", script1object);
 	
+	Console::log(script1object.name.c_str());
+
 	ComponentManager::addScript("MovementScript", script1object);
+
+	Console::log(script1object.name.c_str());
+
 	ComponentManager::addScript("Script1", script1object);
-	if (script1object.scripts[0]) script1object.scripts[0]->Start();
+	for (Script* script : script1object.scripts)
+		script->Start();
 	
 	mesh = fast_obj_read("romfs:/plaza.obj");
 
@@ -191,7 +202,7 @@ void Scene1::drawTop(float iod)
 	Mtx_RotateZ(&view, campos->rotation.z, true); // zxy rotation order, default in unity
 	Mtx_RotateX(&view, campos->rotation.x, true);
 	Mtx_RotateY(&view, campos->rotation.y, true);
-	Mtx_Translate(&view, -campos->position.x, campos->position.y, campos->position.z, true);
+	Mtx_Translate(&view, -campos->position.x, -campos->position.y, -campos->position.z, true);
 
 	// Calculate the modelView matrix
 	C3D_Mtx modelView;

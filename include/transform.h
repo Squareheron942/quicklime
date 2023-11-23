@@ -3,13 +3,23 @@
 #include <citro3d.h>
 
 class transform {
-
     public:
         C3D_FVec position;
         C3D_FQuat rotation;
         C3D_FVec scale;
-        transform() : position({0, 0, 0, 1}), rotation({1, 0, 0, 0}), scale({1, 1, 1, 1}) {}; // sets position, rotation, and scale to 0
+        transform() : position({1, 0, 0, 0}), rotation({1, 0, 0, 0}), scale({1, 1, 1, 1}) {}; // sets position, rotation, and scale to do nothing
         
+        // constructor to be used when data created by componentmanager
+        transform(void* data) : position({0, 0, 0, 1}), rotation({1, 0, 0, 0}), scale({1, 1, 1, 1}) {
+            if (data) {
+                position = (*(transform*)data).position;
+                rotation = (*(transform*)data).rotation;
+                scale = (*(transform*)data).scale;
+            }
+        };
+
+        transform(C3D_FVec position = {1, 0, 0, 0}, C3D_FQuat rotation = {1, 0, 0, 0}, C3D_FVec scale = {1, 1, 1, 1}) : position(position), rotation(rotation), scale(scale) {};
+
         /**
          * @brief Adds offset to current position
         */

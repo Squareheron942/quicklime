@@ -22,7 +22,6 @@ class MovementScript : public Script {
         lerpTimer = 0.f;
         yrot = 0.f;
         t = GetComponent<transform>();
-        t->position = {0, 0, -4};
     }
 
     void Update() {
@@ -36,8 +35,8 @@ class MovementScript : public Script {
 
         float s = sinf(-yrot), c = cosf(-yrot);
 
-        t->position.x -= x * c - y * s;
-        t->position.z += x * s + y * c;
+        t->position.x += x * c - y * s;
+        t->position.z -= x * s + y * c;
         t->position.y += (controls::getHeld("L") ? 0.64 : controls::getHeld("R") ? -0.64 : 0) * Time::deltaTime;
 
         if (controls::getDown("a")) Console::log("A pressed");

@@ -81,6 +81,7 @@
         "iostream": "cpp",
         "istream": "cpp",
         "mutex": "cpp",
-        "system_error": "cpp"
+        "system_error": "cpp",
+        "forward_list": "cpp"
     }
 }
