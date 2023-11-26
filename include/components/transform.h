@@ -2,6 +2,8 @@
 
 #include <citro3d.h>
 
+class GameObject;
+
 class transform {
     public:
         C3D_FVec position;
@@ -10,7 +12,7 @@ class transform {
         transform() : position({1, 0, 0, 0}), rotation({1, 0, 0, 0}), scale({1, 1, 1, 1}) {}; // sets position, rotation, and scale to do nothing
         
         // constructor to be used when data created by componentmanager
-        transform(void* data) : position({0, 0, 0, 1}), rotation({1, 0, 0, 0}), scale({1, 1, 1, 1}) {
+        transform(GameObject& parent, void* data) : position({1, 0, 0, 0}), rotation({1, 0, 0, 0}), scale({1, 1, 1, 1}) {
             if (data) {
                 position = (*(transform*)data).position;
                 rotation = (*(transform*)data).rotation;

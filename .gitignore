@@ -4,3 +4,4 @@
 **.elf
 **/build
 **.lst
+**.DS_Store

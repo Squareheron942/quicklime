@@ -13,14 +13,12 @@ class ComponentManager {
     ComponentManager() {}
     public:
     template<typename T> static Script* createScriptInstance(GameObject& owner) { return new T(owner); }
-    template<typename T> static void createComponentInstance(entt::registry& _parent_c, entt::entity _parent_id, void* data) { _parent_c.emplace<T>(_parent_id, data); }
+    template<typename T> static void createComponentInstance(GameObject& obj, void* data) { obj.reg.emplace<T>(obj.id, obj, data); }
     
     template<typename T> static bool registerComponent(const char* name) {
         if constexpr (std::is_base_of_v<Script, T>) {
-            // Console::log("Added script %s", name);
             getScriptMap()[name] = ComponentManager::createScriptInstance<T>;
         } else {
-            // Console::log("Added component %s", name);
             getComponentMap()[name] = ComponentManager::createComponentInstance<T>;
         }
         return true;
@@ -31,7 +29,7 @@ class ComponentManager {
             Console::error("Unknown component %s", name);
             return false;
         }
-        getComponentMap()[name](obj.reg, obj.id, data);
+        getComponentMap()[name](obj, data);
         return true;
     }
 
@@ -50,8 +48,8 @@ class ComponentManager {
             static std::unordered_map<const char*, Script*(*)(GameObject&)> map;
             return map;
         }
-        static std::unordered_map<const char*, void(*)(entt::registry&, entt::entity, void*)>& getComponentMap() {
-            static std::unordered_map<const char*, void(*)(entt::registry&, entt::entity, void*)> map;
+        static std::unordered_map<const char*, void(*)(GameObject&, void*)>& getComponentMap() {
+            static std::unordered_map<const char*, void(*)(GameObject&, void*)> map;
             return map;
         }
 };

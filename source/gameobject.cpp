@@ -1,5 +1,30 @@
 #include "gameobject.h"
 #include "console.h"
+#include "script.h"
+
+void GameObject::Awake() {
+    for (Script* s : scripts) {
+        s->Awake();
+        s->SetEnabled(true);
+    }
+}
+
+void GameObject::Start() {
+    for (Script* s : scripts) if (s->enabled) s->Start();
+}
+
+void GameObject::Update() {
+    for (Script* s : scripts) if (s->enabled) s->Update();
+}
+
+void GameObject::LateUpdate() {
+    for (Script* s : scripts) if (s->enabled) s->LateUpdate();
+}
+
+void GameObject::FixedUpdate() {
+    for (Script* s : scripts) if (s->enabled) s->FixedUpdate();
+}
+
 
 GameObject* GameObject::r_search(std::string name) {
     GameObject* out = NULL;
