@@ -28,16 +28,16 @@ class MovementScript : public Script {
         angularRate g_rate = controls::gyroRate();
         lerpTimer -= Time::deltaTime;
 
-        yrot -= (abs(g_rate.z) > controls::gyroDeadZone() ? g_rate.z : 0) * Time::deltaTime * MS_DEG_RAD * controls::gyroSensitivity();
+        yrot = t->eulerAngles().y;
 
         float x = (abs(controls::circlePos().dx) > 20 ? controls::circlePos().dx : 0) * Time::deltaTime * 0.005f;
         float y = (abs(controls::circlePos().dy) > 20 ? controls::circlePos().dy : 0) * Time::deltaTime * 0.005f;
 
-        float s = sinf(-yrot), c = cosf(-yrot);
+        float s = sinf(yrot), c = cosf(yrot);
 
-        t->position.x += x * c - y * s;
+        t->position.x -= x * c - y * s;
         t->position.z -= x * s + y * c;
-        t->position.y += (controls::getHeld("L") ? 0.64 : controls::getHeld("R") ? -0.64 : 0) * Time::deltaTime;
+        t->position.y -= (controls::getHeld("L") ? 0.64 : controls::getHeld("R") ? -0.64 : 0) * Time::deltaTime;
 
         if (controls::getDown("a")) Console::log("A pressed");
         if (controls::getDown("b")) Console::log("B pressed");

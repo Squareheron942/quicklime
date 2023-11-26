@@ -13,6 +13,8 @@ namespace {
     };
 }
 
+class GameObject;
+
 class mesh {
     public:
     // Configure attributes for use with the vertex shader
@@ -22,7 +24,7 @@ class mesh {
     char vertsize;
     void *vertices;
 
-    mesh(void* data) {
+    mesh(GameObject& parent, void* data) {
         if (data) {
             mesh_data d = *(mesh_data*)data;
             numVerts = d.numVerts;

@@ -24,6 +24,7 @@
 #include "script1.h"
 #include "movement_script.h"
 #include "stats.h"
+#include "camera.h"
 
 #define vertex_list_count (sizeof(vertex_list)/sizeof(vertex_list[0]))
 
@@ -73,8 +74,7 @@ Scene1::Scene1() : Scene("Scene 1"), script1object(objects) {
 	ComponentManager::addScript("MovementScript", script1object);
 	ComponentManager::addScript("Script1", script1object);
 
-	for (Script* script : script1object.scripts)
-		script->Start();
+	r_act_on_objects(&root, &GameObject::Awake); // call awake() on every gameobject and enable them (to self disable do it when this is called)
 	
 	mesh = fast_obj_read("romfs:/plaza.obj");
 
@@ -164,11 +164,16 @@ Scene1::Scene1() : Scene("Scene 1"), script1object(objects) {
 	C3D_LightColor(&light, 0.992, 0.984, 0.827);
 	C3D_LightPosition(&light, &lightVec);
 
+
+	r_act_on_objects(&root, &GameObject::Start); // start all scripts
 }
 
 void Scene1::update() {
-	for (Script* script : script1object.scripts) 
-		script->Update();
+	r_act_on_objects(&root, &GameObject::Update); // call update() on every gameobject (propagates from root)
+
+	// whatever other per frame logic stuff will get called here
+
+	r_act_on_objects(&root, &GameObject::LateUpdate); // call lateupdate() on every gameobject (propagates from root). Used to ensure stuff like cameras move only when everything else is done moving
 
 	Console::update();
 };
@@ -177,15 +182,10 @@ void Scene1::update() {
 
 void Scene1::drawTop(float iod)
 {
-	Mtx_PerspStereoTilt(&projection, C3D_AngleFromDegrees(80.0f), C3D_AspectRatioTop, 0.01f, 1000.0f, iod, 2.0f, false);
+	Mtx_PerspStereoTilt(&projection, C3D_AngleFromDegrees(55.0f), C3D_AspectRatioTop, 0.01f, 1000.0f, iod, 2.0f, false);
 
-	transform *campos = objects.try_get<transform>(script1object);
-	C3D_Mtx view;
-	Mtx_Identity(&view);
-	Mtx_RotateZ(&view, campos->rotation.z, true); // zxy rotation order, default in unity
-	Mtx_RotateX(&view, campos->rotation.x, true);
-	Mtx_RotateY(&view, campos->rotation.y, true);
-	Mtx_Translate(&view, -campos->position.x, -campos->position.y, -campos->position.z, true);
+	C3D_Mtx view = *objects.try_get<transform>(script1object);
+	
 
 	// Calculate the modelView matrix
 	C3D_Mtx modelView;

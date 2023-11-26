@@ -5,14 +5,19 @@
 #include <entt.hpp>
 
 class Scene {
+    protected:
+        void r_act_on_objects(GameObject* root, void(GameObject::*action)()) {
+            for (GameObject* child : root->children) {
+                (child->*action)();
+                r_act_on_objects(child, action);
+            }
+        }
     public:
         std::string name;
         entt::registry objects;
 	    GameObject root;
 
-        virtual ~Scene() {
-            // printf("Scene \"%s\" destroyed.\n", name.c_str());
-        }
+        virtual ~Scene() {}
 
         virtual void update() = 0;
         virtual void fixedUpdate() {};
@@ -22,6 +27,5 @@ class Scene {
     protected:
         Scene(std::string name) : name(name), root(objects) {
             root.name = "root";
-            // printf("Scene \"%s\" created.\n", name.c_str());
         }
 };

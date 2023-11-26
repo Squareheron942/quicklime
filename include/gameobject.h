@@ -9,18 +9,25 @@
 class Script;
 
 class GameObject {
-    std::forward_list<GameObject*> children;
-    GameObject* parent;
 
     GameObject* r_search(std::string name);
 
     public:
+    std::forward_list<GameObject*> children;
+    GameObject* parent;
     entt::registry &reg;
     std::list<Script*> scripts;
     entt::entity id;
     std::string name;
     GameObject(entt::registry& registry) : reg(registry), id(registry.create()) {}
     operator entt::entity() { return id; }
+
+    void Start(void);
+    void Update(void);
+    void FixedUpdate(void);
+    void LateUpdate(void);
+    void Awake(void);
+
     /**
      * @brief Adds child to self
      * 

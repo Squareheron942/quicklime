@@ -25,6 +25,8 @@ class Script1 : public Script {
         else Console::success("script1object found WWWWWWWWW");
 
         t = GetComponent<transform>();
+
+        if (!t) Console::warn("Transform component not found by Script1");
     };
 
     void Update() {
@@ -36,9 +38,7 @@ class Script1 : public Script {
         _z = t->position.z;
 
         if (controls::getDown("select")) Console::nextMenu();
-    
-        if (!t)
-            Console::warn("Transform component not found by Script1");
+
         if (controls::getDown("a")) {
             n_iter++;
             Console::log("script1 update number %u\n", n_iter);
