@@ -2,6 +2,7 @@
 #include "material.h"
 #include "fragvshader_shbin.h"
 #include "3ds.h"
+#include "materialmanager.h"
 
 namespace {
     struct ink_args {
@@ -210,3 +211,5 @@ class ink : public material {
         C3D_LightEnvBumpMode(&lightEnv, GPU_BUMP_NOT_USED);
     }
 };
+
+MATERIAL_REGISTER(ink)

@@ -9,12 +9,9 @@ class Script {
     entt::registry &parentComponents;
     entt::entity parentID;
     
-
     protected:
     GameObject* owner;
-    template<class T> inline T *GetComponent() {
-        return parentComponents.try_get<T>(parentID);
-    }
+    template<class T> inline T *GetComponent() { return parentComponents.try_get<T>(parentID); }
 
     GameObject* find(std::string object);
 

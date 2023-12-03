@@ -1,13 +1,23 @@
-// #include "entt.hpp"
-// #include "componentmanager.h"
-// #include "script.h"
-// #include <unordered_map>
+#include "entt.hpp"
+#include "componentmanager.h"
+#include "gameobject.h"
+#include "console.h"
+#include "script.h"
 
-// std::unordered_map<const char*, Script*(*)(entt::registry&, entt::entity)> ComponentManager::map;
+bool ComponentManager::addComponent(const char* name, GameObject& obj, void* data) {
+    if (getComponentMap().find(name) == getComponentMap().end()) {
+        Console::error("Unknown component %s", name);
+        return false;
+    }
+    getComponentMap()[name](obj, data);
+    return true;
+}
 
-// template<typename T> bool ComponentManager::registerComponent(const char* name) {
-//     map[name] = ComponentManager::createInstance<T>;
-//     return true;
-// }
-
-// template<typename T> Script* ComponentManager::createInstance(entt::registry& _parent_c, entt::entity _parent_id) { return new T(_parent_c, _parent_id);}
+bool ComponentManager::addScript(const char* name, GameObject& obj) {
+    if (getScriptMap().find(name) == getScriptMap().end()) {
+        Console::error("Unknown script %s", name);
+        return false;
+    }
+    obj.scripts.push_back((getScriptMap()[name](obj)));
+    return true;
+}

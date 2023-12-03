@@ -16,10 +16,11 @@ class GameObject {
     std::forward_list<GameObject*> children;
     GameObject* parent;
     entt::registry &reg;
-    std::list<Script*> scripts;
+    std::list<Script*> scripts; // cannot be component since you can't have more than 1 object of type per entity
     entt::entity id;
-    std::string name;
-    GameObject(entt::registry& registry) : reg(registry), id(registry.create()) {}
+    std::string name; // saved in scene file
+    unsigned short layer; // by default on base layer (layer 1)
+    GameObject(entt::registry& registry) : reg(registry), id(registry.create()), layer(0x1) {}
     operator entt::entity() { return id; }
 
     void Start(void);
@@ -27,6 +28,17 @@ class GameObject {
     void FixedUpdate(void);
     void LateUpdate(void);
     void Awake(void);
+
+    template<typename T>
+    inline void addComponent(T &component) {
+        reg.emplace_or_replace<T>(id);
+        reg.get<T>(id) = component;
+    }
+
+    template<typename T>
+    inline T* getComponent() {
+        return reg.try_get<T>(id);
+    }
 
     /**
      * @brief Adds child to self
