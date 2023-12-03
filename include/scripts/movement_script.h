@@ -22,6 +22,7 @@ class MovementScript : public Script {
         lerpTimer = 0.f;
         yrot = 0.f;
         t = GetComponent<transform>();
+        if (!t) Console::warn("no transform");
     }
 
     void Update() {
