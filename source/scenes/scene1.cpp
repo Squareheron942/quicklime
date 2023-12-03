@@ -61,7 +61,7 @@ bool loadTextureFromFile(C3D_Tex* tex, C3D_TexCube* cube, const char* path, bool
 		return true;
     }
 
-Scene1::Scene1() : Scene("Scene 1"), script1object(objects) {
+Scene1::Scene1() : Scene("Scene1"), script1object(objects), moveobject(objects) {
 	
 	script1object.name = "script1object";
 	root.addChild(script1object);
