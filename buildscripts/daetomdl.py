@@ -16,7 +16,7 @@ def writeheader(inp: et.Element, out: io.BufferedWriter, path: str) -> None:
     writematerials(inp, path)
     writeobjs(inp, out)
 
-# writes C3D_Mtx type thingy to file which represents material
+# writes C3D_Mtx type thingy to file which represents material (used for default fragment lit shader)
 def writematerials(inp: et.Element, path: str) -> None:
     tex = {}
     for image in inp.findall('library_images/image'):
@@ -37,7 +37,7 @@ def writematerials(inp: et.Element, path: str) -> None:
                         elif param.find('sampler2D/source') is not None:
                             samplers[param.attrib['sid']] = param.find('sampler2D/source').text
                             print(param.find('sampler2D/source').text)
-                    
+                    out.write(("fragment_lit\0").encode("utf-8"))
                     eff = effect.find('profile_COMMON/technique/phong')
                     if eff == None:
                         eff = effect.find('profile_COMMON/technique/lambert')
@@ -99,22 +99,22 @@ def process(args):
                     with open(model, 'r') as src:
                         nummdl = 1
                         mdl = et.parse(src).getroot()
-                        if args.mirrorpath:
-                            if not os.path.exists(os.path.splitext(os.path.join(args.romfs, modelfolder, modelfile))[0] + '.slmdl'):
-                                os.makedirs(os.path.join(args.romfs, modelfolder))
-                            with open(os.path.splitext(os.path.join(args.romfs, modelfolder, modelfile))[0] + '.slmdl', 'wb') as m:
-                                # print(m.name)
-                                convfile(mdl, m, nummdl, os.path.join(args.romfs, modelfolder))
-                        else:
-                            with open(os.path.splitext(os.path.basename(model))[0] + '.slmdl', 'wb') as m:
-                                convfile(mdl, m, nummdl, args.romfs)
+                        # if args.mirrorpath:
+                        #     if not os.path.exists(os.path.splitext(os.path.join(args.romfs, modelfolder, modelfile))[0] + '.slmdl'):
+                        #         os.makedirs(os.path.join(args.romfs, modelfolder))
+                        #     with open(os.path.splitext(os.path.join(args.romfs, modelfolder, modelfile))[0] + '.slmdl', 'wb') as m:
+                        #         # print(m.name)
+                        #         convfile(mdl, m, nummdl, os.path.join(args.romfs, modelfolder))
+                        # else:
+                        #     with open(os.path.splitext(os.path.basename(model))[0] + '.slmdl', 'wb') as m:
+                        #         convfile(mdl, m, nummdl, args.romfs)
 
 
     if 'mirrorpath' in args:
         print("mirroring path")
     print(args.romfs)
     pass
-
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='DAE model parser')
     parser.add_argument('-r', '--romfs', required=True, help='romfs folder path')

@@ -37,17 +37,17 @@ VERSION			:=  v0.0.0.8
 TARGET			:=	$(notdir $(CURDIR))
 PYTHON      	:=  python3
 BUILD			:=	build
-SOURCES			:=	source source/scenes
+SOURCES			:=	source source/scenes source/vshaders 
 DATA			:=	data
 MODEL			:=  data/scene1/models
-INCLUDES		:=	include entt include/materials include/scripts include/components
+INCLUDES		:=	include entt include/materials include/scripts include/components include/deprecated
 GRAPHICS		:=	gfx
 GFXBUILD		:=	$(BUILD)
 ROMFS		    :=	romfs
 APP_TITLE       := 	Splatoon Legends
 APP_DESCRIPTION := 	$(VERSION)
 APP_AUTHOR		:= 	nontendo
-EXTTOOL     	:=  @$(PYTHON) buildscripts/daetomdl.py --romfs $(ROMFS) --models $(MODEL) --mirrorpath 
+EXTTOOL     	:=  @$(PYTHON) buildscripts/build.py --romfs $(ROMFS) --models $(MODEL) --mirrorpath 
 GFXBUILD		:=	$(ROMFS)/gfx
 
 #---------------------------------------------------------------------------------

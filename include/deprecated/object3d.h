@@ -24,7 +24,7 @@ class object3d {
 	~object3d() {
         delete reg.try_get<mesh>(id);
         delete reg.try_get<C3D_Mtx>(id);
-        if (reg.orphan(id)) reg.storage<entt::entity>().erase(id);;
+        if (reg.orphan(id)) reg.storage<entt::entity>().erase(id);
 	}
 
     mesh *Mesh() {
