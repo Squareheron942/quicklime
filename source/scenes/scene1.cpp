@@ -10,11 +10,9 @@
 #include "transform.h"
 #include <entt.hpp>
 #include "controls.h"
-#include "fast_obj.h"
 #include <vector>
 #include <iostream>
 #include <fstream>
-#include "objgl.h"
 #include "mesh.h"
 #include "material.h"
 #include "slmdlloader.h"
@@ -27,6 +25,11 @@
 #include "camera.h"
 
 #define vertex_list_count (sizeof(vertex_list)/sizeof(vertex_list[0]))
+
+#define SC1_DISPLAY_TRANSFER_FLAGS \
+	(GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(0) | GX_TRANSFER_RAW_COPY(0) | \
+	GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \
+	GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
 
 #define M_RAD 0.01745329252f
 
@@ -63,20 +66,36 @@ bool loadTextureFromFile(C3D_Tex* tex, C3D_TexCube* cube, const char* path, bool
 
 Scene1::Scene1() : Scene("Scene1"), script1object(objects), moveobject(objects) {
 	
-	script1object.name = "script1object";
-	root.addChild(script1object);
+	
 
-	// add components and scripts (components before scripts)
-	transform defaultpos({1, 0, 4, 0});
+	
+
+	// add components and scripts (components before scripts so the scripts can actually grab them properly)
+	transform defaultpos({1, 0, 0, 0});
 	ComponentManager::addComponent("transform", script1object, &defaultpos);
 	ComponentManager::addComponent("mesh", script1object);
+	ComponentManager::addComponent("transform", moveobject, &defaultpos);
+	ComponentManager::addComponent("Camera", moveobject);
 
-	ComponentManager::addScript("MovementScript", script1object);
+	Camera::mainTop = moveobject.getComponent<Camera>();
+
+	ComponentManager::addScript("MovementScript", moveobject);
 	ComponentManager::addScript("Script1", script1object);
+
+	if (Camera::mainTop) Camera::mainTop->objects.push_front(&script1object);
+	else Console::warn("No top camera");
+	
+	mdlLoader::addModel("romfs:/data/scene1/models/cube.slmdl", script1object);
+	
+	script1object.name = "script1object";
+	moveobject.name = "moveobject";
+	root.addChild(script1object);
+	root.addChild(moveobject);
 
 	r_act_on_objects(&root, &GameObject::Awake); // call awake() on every gameobject and enable them (to self disable do it when this is called)
 	
 	mesh = fast_obj_read("romfs:/plaza.obj");
+	::mesh *scmesh = script1object.getComponent<::mesh>();
 
 	if (mesh->face_count != 0) {
 		numgroups = mesh->group_count;
@@ -114,6 +133,10 @@ Scene1::Scene1() : Scene("Scene1"), script1object(objects), moveobject(objects) 
 				}
 			}
 		}
+		
+
+		scmesh->vertices = meshes[0];
+		scmesh->numVerts = numvertices[0];
 	}
 	
 	// Load the vertex shader, create a shader program and bind it
@@ -122,14 +145,14 @@ Scene1::Scene1() : Scene("Scene1"), script1object(objects), moveobject(objects) 
 	shaderProgramSetVsh(&program, &vshader_dvlb->DVLE[0]);
 	C3D_BindProgram(&program);
 
-	// Get the location of the uniforms
+	// // Get the location of the uniforms
 	uLoc_projection   = shaderInstanceGetUniformLocation(program.vertexShader, "projection");
 	uLoc_modelView    = shaderInstanceGetUniformLocation(program.vertexShader, "modelView");
-	// uLoc_lightVec     = shaderInstanceGetUniformLocation(program.vertexShader, "lightVec");
-	// uLoc_lightHalfVec = shaderInstanceGetUniformLocation(program.vertexShader, "lightHalfVec");
-	// uLoc_lightClr     = shaderInstanceGetUniformLocation(program.vertexShader, "lightClr");
-	// uLoc_material     = shaderInstanceGetUniformLocation(program.vertexShader, "material");
-	// texcoord_offsets  = shaderInstanceGetUniformLocation(program.vertexShader, "texcoordoffsets");
+	// // uLoc_lightVec     = shaderInstanceGetUniformLocation(program.vertexShader, "lightVec");
+	// // uLoc_lightHalfVec = shaderInstanceGetUniformLocation(program.vertexShader, "lightHalfVec");
+	// // uLoc_lightClr     = shaderInstanceGetUniformLocation(program.vertexShader, "lightClr");
+	// // uLoc_material     = shaderInstanceGetUniformLocation(program.vertexShader, "material");
+	// // texcoord_offsets  = shaderInstanceGetUniformLocation(program.vertexShader, "texcoordoffsets");
 
 	// Configure attributes for use with the vertex shader
 	C3D_AttrInfo* attrInfo = C3D_GetAttrInfo();
@@ -145,11 +168,14 @@ Scene1::Scene1() : Scene("Scene1"), script1object(objects), moveobject(objects) 
 		BufInfo_Add(&bufPlaza[i], meshes[i], sizeof(vertex), 3, 0x210);
 	}
 
-	// Load the texture and bind it to the first texture unit
-	if (!loadTextureFromFile(&bottom_tex, NULL, "romfs:/gfx/kitten.t3x", true))
-		svcBreak(USERBREAK_PANIC);
-	C3D_TexSetFilter(&bottom_tex, GPU_LINEAR, GPU_NEAREST);
-	C3D_TexSetWrap(&bottom_tex, GPU_REPEAT, GPU_REPEAT);
+	BufInfo_Init(scmesh->buf);
+	BufInfo_Add(scmesh->buf, meshes[0], sizeof(vertex), 3, 0x210);
+
+	// // Load the texture and bind it to the first texture unit
+	// if (!loadTextureFromFile(&bottom_tex, NULL, "romfs:/gfx/kitten.t3x", true))
+	// 	svcBreak(USERBREAK_PANIC);
+	// C3D_TexSetFilter(&bottom_tex, GPU_LINEAR, GPU_NEAREST);
+	// C3D_TexSetWrap(&bottom_tex, GPU_REPEAT, GPU_REPEAT);
 
 	C3D_LightEnvInit(&lightEnv);
 	C3D_LightEnvBind(&lightEnv);
@@ -178,53 +204,43 @@ void Scene1::update() {
 	Console::update();
 };
 
-
-
 void Scene1::drawTop(float iod)
 {
-	Mtx_PerspStereoTilt(&projection, C3D_AngleFromDegrees(55.0f), C3D_AspectRatioTop, 0.01f, 1000.0f, iod, 2.0f, false);
+	// for (unsigned int i = 0; i < numgroups; i++) {
+	C3D_LightEnvBind(&lightEnv);
 
-	C3D_Mtx view = *objects.try_get<transform>(script1object);
-	
+	// 	C3D_SetBufInfo(&bufPlaza[i]);
 
-	// Calculate the modelView matrix
-	C3D_Mtx modelView;
+	// 	C3D_TexBind(0, &bottom_tex);
+	// 	C3D_TexBind(1, &bottom_tex);
 
-	for (unsigned int i = 0; i < numgroups; i++) {
-		C3D_LightEnvBind(&lightEnv);
-
-		C3D_SetBufInfo(&bufPlaza[i]);
-
-		C3D_TexBind(0, &bottom_tex);
-		C3D_TexBind(1, &bottom_tex);
-
-		C3D_TexEnv* env = C3D_GetTexEnv(0);
-		C3D_TexEnvInit(env);
-		C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_PRIMARY_COLOR, GPU_FRAGMENT_PRIMARY_COLOR);
-		C3D_TexEnvFunc(env, C3D_Both, GPU_ADD_MULTIPLY);
-		env = C3D_GetTexEnv(1);
-		C3D_TexEnvInit(env);
-		C3D_TexEnvSrc(env, C3D_Both, GPU_PREVIOUS, GPU_FRAGMENT_SECONDARY_COLOR);
-		C3D_TexEnvFunc(env, C3D_Both, GPU_ADD);
+	// 	C3D_TexEnv* env = C3D_GetTexEnv(0);
+	// 	C3D_TexEnvInit(env);
+	// 	C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_PRIMARY_COLOR, GPU_FRAGMENT_PRIMARY_COLOR);
+	// 	C3D_TexEnvFunc(env, C3D_Both, GPU_ADD_MULTIPLY);
+	// 	env = C3D_GetTexEnv(1);
+	// 	C3D_TexEnvInit(env);
+	// 	C3D_TexEnvSrc(env, C3D_Both, GPU_PREVIOUS, GPU_FRAGMENT_SECONDARY_COLOR);
+	// 	C3D_TexEnvFunc(env, C3D_Both, GPU_ADD);
 		
 
-		Mtx_Identity(&modelView);
-		Mtx_Multiply(&modelView, &view, &modelView);
+	// 	Mtx_Identity(&modelView);
+	// 	Mtx_Multiply(&modelView, &view, &modelView);
 		
 
-		// // Update the uniforms
-		C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &projection);
-		C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView,  &modelView);
-		// C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_material,   &material);
-		// C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightVec,     0.0f, 0.0f, -1.0f, 0.0f);
-		// C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightHalfVec, 0.0f, 0.0f, -1.0f, 0.0f);
-		// C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightClr,     1.0f, 1.0f,  1.0f, 1.0f);
-		
+	// Update the uniforms
+	// C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &projection);
+	// C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView,  &view);
+	// 	// C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_material,   &material);
+	// 	// C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightVec,     0.0f, 0.0f, -1.0f, 0.0f);
+	// 	// C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightHalfVec, 0.0f, 0.0f, -1.0f, 0.0f);
+	// 	// C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_lightClr,     1.0f, 1.0f,  1.0f, 1.0f);
+	Camera::mainTop->Render(); 
 
-		// // Draw the VBO
-		C3D_DrawArrays(GPU_TRIANGLES, 0, numvertices[i]);
-		_drawcalls++;
-	}
+	// 	// // Draw the VBO
+	// 	C3D_DrawArrays(GPU_TRIANGLES, 0, numvertices[i]);
+	// 	_drawcalls++;
+	// }
 }
 
 
@@ -233,15 +249,15 @@ void Scene1::drawBottom() {}
 
 Scene1::~Scene1() {
 	// Free the texture
-	C3D_TexDelete(&bottom_tex);
-	C3D_TexDelete(&top_tex);
+	// C3D_TexDelete(&bottom_tex);
+	// C3D_TexDelete(&top_tex);
 
-	// Free the VBO
-	for (unsigned int i = 0; i < numgroups; i++) linearFree(meshes[i]);
+	// // Free the VBO
+	// for (unsigned int i = 0; i < numgroups; i++) linearFree(meshes[i]);
 
-	delete[] meshes;
+	// delete[] meshes;
 
-	// Free the shader program
-	shaderProgramFree(&program);
-	DVLB_Free(vshader_dvlb);
+	// // Free the shader program
+	// shaderProgramFree(&program);
+	// DVLB_Free(vshader_dvlb);
 }
