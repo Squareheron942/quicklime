@@ -138,6 +138,7 @@ class transform {
 
         inline operator C3D_Mtx() {
             C3D_Mtx m, rot;
+            
             Mtx_FromQuat(&rot, rotation);
             Mtx_Identity(&m);
             

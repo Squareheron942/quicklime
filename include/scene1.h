@@ -8,7 +8,7 @@
 #include "fast_obj.h"
 #include "gameobject.h"
 
-class Scene1 : Scene {
+class Scene1 : public Scene {
     public: 
     Scene1();
     ~Scene1() override;
@@ -36,19 +36,6 @@ class Scene1 : Scene {
 		{ 0.0f, 0.0f, 0.0f }, //emission
 	};
 
-    int uLoc_projection, uLoc_modelView;
-    int uLoc_lightVec, uLoc_lightHalfVec, uLoc_lightClr, uLoc_material, texcoord_offsets;
-    C3D_Mtx projection;
-    fastObjMesh* mesh;
-    DVLB_s* vshader_dvlb;
-    shaderProgram_s program;
-	
-    C3D_TexEnv* env;
-    void* vbo_data;
-    void** vbo_data2;
-    C3D_Tex bottom_tex, top_tex;
-    C3D_BufInfo *bufPlaza;
-	vertex** meshes = nullptr;
 	C3D_LightEnv lightEnv;
 	C3D_Light light;
 	C3D_LightLut lut_Light;

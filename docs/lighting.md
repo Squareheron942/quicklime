@@ -4,6 +4,7 @@ Well basically lights are goofy on 3DS:
 
 The diffuse and ambient lighting colors are determined by a data member that also includes the emmission and specular colors (which are specific to each object).
 
+Max of 8 lights possible, they will be a component (like basically everything else)
 
 Plus, you can select the light color itself, which also affects the colors
 
