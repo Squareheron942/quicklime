@@ -1,36 +1,62 @@
-# [MODEL NAME] FORMAT
+# SL model format
 
-## Binary
+Each file represents a single 3D object as well as the name of the material to dictate how it is drawn
 
-Each file represents a group of 3D objects as well as the materials to draw them with
+## Sections
 
-### Sections
+### Header
 
-#### Header
+Contains:
 
-Total size
-Number of objects
+Vertex size
+Number of vertices
+Number of attributes
+"Permutation": how vertex attributes map to shader registers
+Extra information on attributes
+Number of bones
+Bone array in binary format (specifically formatted as 2 vectors for position and rotation)
 
-#### Data
 
-##### Materials
+#### Materials
 
-Specify a vshader
-Specify a material class by name, give it the parameters needed through the binary data section
+Specify a material file by name, which must be in the same directory and be named `<name>.slmtl`
 
 Example:
 
+```
+data
+└───scene1
+│   │   scene1.scene
+│   │
+│   └───models
+│       │   cube.slmdl
+│       │   cubemat.slmtl
+│       │   ...
+│   
+└───scene2
+    │   scene2.scene
+    │   ...
+```
 
+`cube.slmdl` will have the name `cubemat` stored in it, which will then search for the file `cubemat.slmtl`.
 
-##### Objects
+##### Material files
 
-Number of vertices
+`.slmdl` files contain the material name and the data to give it. The former is just a null terminated c style string, which maps to one of the existing material classes. 
 
-struct vertex { float position[3]; float texcoord[2]; float normal[3]; };
+The rest of the file entirely depends on the material chosen but usually contains binary data like color information as well as texture file names.
 
-Each file is basically just the binary representation of that, repeated for each vertex
+##### Textures
+
+Textures, due to a limitation of tex3DS, need to all have unique names, as they must all be stored in one folder with no name conflicts. 
+
+#### Object section
+
+This section is basically just the binary representation of an array of vertices, following the layout given in the header
 
 So:
+
+With a vertex laid out as { position[3], texcoord[2], normal[3]} (32 bytes long)
 
 bytes 0-3 represent (vertex 0).position[0]
 bytes 4-7 represent (vertex 0).position[1]
