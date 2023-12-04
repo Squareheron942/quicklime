@@ -8,7 +8,6 @@
 #include "defines.h"
 #include "sl_time.h"
 #include "console.h"
-#include <citro2d.h>
 #include "config.h"
 
 #define CLEAR_COLOR 0x3477ebFF
@@ -22,7 +21,7 @@
 
 void sceneExit(void)
 {
-	SceneManager::currentScene.reset();
+	// SceneManager::currentScene.reset();
 	HIDUSER_DisableGyroscope();
 	romfsExit();
 }
@@ -52,6 +51,13 @@ void printfile(const char* path)
 #include "entt.hpp"
 #include "componentmanager.h"
 
+C3D_RenderTarget* targetWide = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
+
+void test() {
+	C3D_RenderTargetSetOutput(targetWide,  GFX_TOP, GFX_LEFT,  DISPLAY_TRANSFER_FLAGS);
+	C3D_RenderTargetClear(targetWide, C3D_CLEAR_ALL, CLEAR_COLOR, 0);
+	C3D_FrameDrawOn(targetWide);
+}
 
 int main()
 {
@@ -62,13 +68,12 @@ int main()
 		consoleInit(GFX_BOTTOM, NULL);
 	#endif
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
-	C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
 
 	romfsInit();
 
 	Console::log("Running on %c3DS", osGetApplicationMemType() > 5 ? 'N' : 'O');
 
-	SceneManager::load<Scene1>();
+	
 
 	cfguInit();
 	CFGU_GetSystemModel((u8*)&config::model);
@@ -90,16 +95,19 @@ int main()
 	if (config::wideIsUnsupported) Console::log("Wide mode unsupported, disabling");
 	else Console::log("Wide mode supported, enabling");
 
-	// Initialize the render target
-	C3D_RenderTarget* targetWide  = C3D_RenderTargetCreate(240, 400 * (config::wideIsUnsupported ? 1 : 2), GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8); // double width fbuf when wide mode is used
-	C3D_RenderTarget* targetLeft  = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
-	C3D_RenderTarget* targetRight = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
-	C3D_RenderTargetSetOutput(targetRight, GFX_TOP, GFX_RIGHT, DISPLAY_TRANSFER_FLAGS);
+	Scene1 s;
+
 	
-	#if BOTTOM_SCREEN_ENABLED
-		C3D_RenderTarget* targetBottom = C3D_RenderTargetCreate(240, 320, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
-		C3D_RenderTargetSetOutput(targetBottom, GFX_BOTTOM, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
-	#endif
+	// Initialize the render target
+	// C3D_RenderTarget* targetWide  = C3D_RenderTargetCreate(240, 400 * (config::wideIsUnsupported ? 1 : 2), GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8); // double width fbuf when wide mode is used
+	// C3D_RenderTarget* targetLeft  = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
+	// C3D_RenderTarget* targetRight = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
+	// C3D_RenderTargetSetOutput(targetRight, GFX_TOP, GFX_RIGHT, DISPLAY_TRANSFER_FLAGS);
+	
+	// #if BOTTOM_SCREEN_ENABLED
+	// 	C3D_RenderTarget* targetBottom = C3D_RenderTargetCreate(240, 320, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
+	// 	C3D_RenderTargetSetOutput(targetBottom, GFX_BOTTOM, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
+	// #endif
 
 	HIDUSER_EnableGyroscope();
 
@@ -108,44 +116,48 @@ int main()
 	{
 		controls::update();
 
-		float slider = osGet3DSliderState();
-		float iod = slider/3;
+		// float slider = osGet3DSliderState();
+		// float iod = slider/3;
 
 		
-		if (controls::getDown("start"))
+		if (hidKeysDown() & KEY_START)
 			break; // break in order to return to hbmenu
 
-		SceneManager::currentScene->update();
+		// SceneManager::currentScene->update();
+		s.update();
 		Time::Update();
 		// Render the scene
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
 			
-
-			if (iod > 0.0f)
-			{
-				gfxSet3D(true);
-				C3D_RenderTargetSetOutput(targetLeft,  GFX_TOP, GFX_LEFT,  DISPLAY_TRANSFER_FLAGS);
-				C3D_RenderTargetClear(targetLeft, C3D_CLEAR_ALL, CLEAR_COLOR, 0);
-				C3D_FrameDrawOn(targetLeft);
-				SceneManager::currentScene->drawTop(-iod);
-				C3D_RenderTargetClear(targetRight, C3D_CLEAR_ALL, CLEAR_COLOR, 0);
-				C3D_FrameDrawOn(targetRight);
-				SceneManager::currentScene->drawTop(iod);
-			} else {
-				gfxSetWide(!config::wideIsUnsupported); // only enable if supported
-				C3D_RenderTargetSetOutput(targetWide,  GFX_TOP, GFX_LEFT,  DISPLAY_TRANSFER_FLAGS);
-				C3D_RenderTargetClear(targetWide, C3D_CLEAR_ALL, CLEAR_COLOR, 0);
-				C3D_FrameDrawOn(targetWide);
-				SceneManager::currentScene->drawTop(iod);
-			}
-				
-			
-			#if BOTTOM_SCREEN_ENABLED
-            C3D_RenderTargetClear(targetBottom, C3D_CLEAR_ALL, 0x000000, 0);
-			C3D_FrameDrawOn(targetBottom);
-			C2D_SceneTarget(targetBottom);
-            SceneManager::currentScene->drawBottom();
-			#endif
+		
+			// if (iod > 0.0f)
+			// {
+			// 	// gfxSet3D(true);
+			// 	// C3D_RenderTargetSetOutput(targetLeft,  GFX_TOP, GFX_LEFT,  DISPLAY_TRANSFER_FLAGS);
+			// 	// C3D_RenderTargetClear(targetLeft, C3D_CLEAR_ALL, CLEAR_COLOR, 0);
+			// 	// C3D_FrameDrawOn(targetLeft);
+			// 	// SceneManager::currentScene->drawTop(-iod);
+			// 	// C3D_RenderTargetClear(targetRight, C3D_CLEAR_ALL, CLEAR_COLOR, 0);
+			// 	// C3D_FrameDrawOn(targetRight);
+			// 	// SceneManager::currentScene->drawTop(iod);
+			// } else {
+			//	// gfxSetWide(!config::wideIsUnsupported); // only enable if supported
+			//	// C3D_RenderTargetSetOutput(targetWide,  GFX_TOP, GFX_LEFT,  DISPLAY_TRANSFER_FLAGS);
+			//	// C3D_RenderTargetClear(targetWide, C3D_CLEAR_ALL, CLEAR_COLOR, 0);
+			//	// C3D_FrameDrawOn(targetWide);
+			// 	// SceneManager::currentScene->drawTop(iod);
+			// }
+			// SceneManager::currentScene->drawTop(0);
+			s.drawTop(0);
+			// C3D_RenderTargetSetOutput(targetWide,  GFX_TOP, GFX_LEFT,  DISPLAY_TRANSFER_FLAGS);
+			// C3D_RenderTargetClear(targetWide, C3D_CLEAR_ALL, CLEAR_COLOR, 0);
+			// C3D_FrameDrawOn(targetWide);
+			// #if BOTTOM_SCREEN_ENABLED
+            // C3D_RenderTargetClear(targetBottom, C3D_CLEAR_ALL, 0x000000, 0);
+			// C3D_FrameDrawOn(targetBottom);
+			// C2D_SceneTarget(targetBottom);
+            // SceneManager::currentScene->drawBottom();
+			// #endif
 
 		C3D_FrameEnd(0);
 	}
