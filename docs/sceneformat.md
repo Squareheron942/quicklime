@@ -30,4 +30,4 @@ Basically just acts as the parameters for constructing an object, always formatt
 - binary data
 - right curly bracket
 
-Use a hex editor to write this part out
+Use a hex editor to write this part out, eventually will be replaced when a proper editor gets made (if ever)
