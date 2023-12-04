@@ -8,13 +8,13 @@ Each file represents a single 3D object as well as the name of the material to d
 
 Contains:
 
-Vertex size
-Number of vertices
-Number of attributes
-"Permutation": how vertex attributes map to shader registers
-Extra information on attributes
-Number of bones
-Bone array in binary format (specifically formatted as 2 vectors for position and rotation)
+- Vertex size
+- Number of vertices
+- Number of attributes
+- "Permutation": how vertex attributes map to shader registers
+- Extra information on attributes (TBD)
+- Number of bones
+- Bone array in binary format (specifically formatted as 2 vectors for position and rotation)
 
 
 #### Materials
@@ -58,17 +58,17 @@ So:
 
 With a vertex laid out as { position[3], texcoord[2], normal[3]} (32 bytes long)
 
-bytes 0-3 represent (vertex 0).position[0]
-bytes 4-7 represent (vertex 0).position[1]
-bytes 8-11 represent (vertex 0).position[2]
+- bytes 0-3 represent (vertex 0).position[0]
+- bytes 4-7 represent (vertex 0).position[1]
+- bytes 8-11 represent (vertex 0).position[2]
 
-bytes 12-15 represent (vertex 0).texcoord[0]
-bytes 16-19 represent (vertex 0).texcoord[1]
+- bytes 12-15 represent (vertex 0).texcoord[0]
+- bytes 16-19 represent (vertex 0).texcoord[1]
 
-bytes 20-23 represent (vertex 0).normal[0]
-bytes 24-27 represent (vertex 0).normal[1]
-bytes 28-31 represent (vertex 0).normal[2]
+- bytes 20-23 represent (vertex 0).normal[0]
+- bytes 24-27 represent (vertex 0).normal[1]
+- bytes 28-31 represent (vertex 0).normal[2]
 
-bytes 32-63 represent vertex 1
+- bytes 32-63 represent vertex 1
 
 etc...
