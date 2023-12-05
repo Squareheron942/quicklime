@@ -6,11 +6,14 @@
 #include <stdarg.h>
 #include "stats.h"
 #include "controls.h"
+#include "sl_time.h"
 
 #define FPS_X 0
 #define FPS_Y 2
-#define FRAME_X 15
-#define FRAME_Y 2
+#define CPU_X 9
+#define CPU_Y 2
+#define GPU_X 19
+#define GPU_Y 2
 #define POS_X 0
 #define POS_Y 3
 #define DRAW_X 0
@@ -136,36 +139,32 @@ class Console {
         basic_log(LOG_LEVEL_SUCCESS, text, arg);
         va_end(arg);
     };
-
-    static inline void setFPS(int fps = _fps) {
+    static inline void setFrameTime() {
         #if CONSOLE_ENABLED
-        printf("\e[s\e[%u;%uHFPS: %u\e[u", FPS_Y, FPS_X, fps);
-        #endif
-    }
-    static inline void setFrameTime(float frametime = _frametime) {
-        #if CONSOLE_ENABLED
-        printf("\e[s\e[%u;%uHFrame Time: %.2f ms\e[u", FRAME_Y, FRAME_X, frametime);
+        printf("\e[s\e[%u;%uHFPS: %.0f       \e[u", FPS_Y, FPS_X, 1.f/Time::deltaTime);
+        printf("\e[s\e[%u;%uHCPU: %.2f       \e[u", CPU_Y, CPU_X, C3D_GetProcessingTime());
+        printf("\e[s\e[%u;%uHGPU: %.2f       \e[u", GPU_Y, GPU_X, C3D_GetDrawingTime());
         #endif
     }
 
     static inline void setPosition(int x = _x, int y = _y, int z = _z) {
         #if CONSOLE_ENABLED
-        printf("\e[s\e[%u;%uHPosition: %d %d %d\e[u", POS_Y, POS_X, x, y, z);
+        printf("\e[s\e[%u;%uHPosition: %d %d %d         \e[u", POS_Y, POS_X, x, y, z);
         #endif
     }
 
     static inline void setDrawCalls(int dc = _drawcalls) {
         #if CONSOLE_ENABLED
-        printf("\e[s\e[%u;%uHDraw Calls: %u\e[u", DRAW_Y, DRAW_X, dc);
+        printf("\e[s\e[%u;%uHDraw Calls: %u         \e[u", DRAW_Y, DRAW_X, dc);
         #endif
     }
 
     static inline void updateMemUsage() {
         #if CONSOLE_ENABLED
-        printf("\e[s\e[%u;%uHAll RAM Usage: %lu/%lu MiB\e[u", MEM_Y, MEM_X, osGetMemRegionUsed(MEMREGION_ALL)/1048576, (osGetMemRegionSize(MEMREGION_ALL))/1048576); // 124 on old, 228 on new;
-        printf("\e[s\e[%u;%uHApplication RAM Usage: %lu/%lu MiB\e[u", MEM_Y + 1, MEM_X, osGetMemRegionUsed(MEMREGION_APPLICATION)/1048576, (osGetMemRegionSize(MEMREGION_APPLICATION))/1048576); // mode 0 64mb, mode 2 96mb, mode 3 80mb, mode 4 72mb, mode 5 32mb, NEW: mode 6/8 124mb, mode 7 178mb
-        printf("\e[s\e[%u;%uHSystem RAM Usage: %lu/%lu MiB\e[u", MEM_Y + 2, MEM_X, osGetMemRegionUsed(MEMREGION_SYSTEM)/1048576, (osGetMemRegionSize(MEMREGION_SYSTEM))/1048576); // mode 0 44mb, mode 2 12mb, mode 3 28mb, mode 4 36mb, mode 5 76mb, mode 6/8 100mb, mode 7 46mb
-        printf("\e[s\e[%u;%uHBase RAM Usage: %lu/%lu MiB\e[u", MEM_Y + 3, MEM_X, osGetMemRegionUsed(MEMREGION_BASE)/1048576, (osGetMemRegionSize(MEMREGION_BASE))/1048576); // 20mb on old, 32mb on new
+        printf("\e[s\e[%u;%uHAll RAM Usage: %lu/%lu MiB         \e[u", MEM_Y, MEM_X, osGetMemRegionUsed(MEMREGION_ALL)/1048576, (osGetMemRegionSize(MEMREGION_ALL))/1048576); // 124 on old, 228 on new;
+        printf("\e[s\e[%u;%uHApplication RAM Usage: %lu/%lu MiB         \e[u", MEM_Y + 1, MEM_X, osGetMemRegionUsed(MEMREGION_APPLICATION)/1048576, (osGetMemRegionSize(MEMREGION_APPLICATION))/1048576); // mode 0 64mb, mode 2 96mb, mode 3 80mb, mode 4 72mb, mode 5 32mb, NEW: mode 6/8 124mb, mode 7 178mb
+        printf("\e[s\e[%u;%uHSystem RAM Usage: %lu/%lu MiB         \e[u", MEM_Y + 2, MEM_X, osGetMemRegionUsed(MEMREGION_SYSTEM)/1048576, (osGetMemRegionSize(MEMREGION_SYSTEM))/1048576); // mode 0 44mb, mode 2 12mb, mode 3 28mb, mode 4 36mb, mode 5 76mb, mode 6/8 100mb, mode 7 46mb
+        printf("\e[s\e[%u;%uHBase RAM Usage: %lu/%lu MiB         \e[u", MEM_Y + 3, MEM_X, osGetMemRegionUsed(MEMREGION_BASE)/1048576, (osGetMemRegionSize(MEMREGION_BASE))/1048576); // 20mb on old, 32mb on new
         #endif
     }
 
@@ -181,7 +180,6 @@ class Console {
             case MENU_STATS:
                 setFrameTime();
                 setDrawCalls();
-                setFPS();
                 setPosition();
                 updateMemUsage();
                 #if CONSOLE_ENABLED

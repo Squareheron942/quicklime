@@ -5,6 +5,7 @@
 #include "mesh.h"
 #include "entt.hpp"
 #include "fragmentlit.h"
+#include "vertex.h"
 
 namespace objLoader {
     inline bool addModel(const char* path, GameObject& obj) {
@@ -24,9 +25,9 @@ namespace objLoader {
                 fastObjIndex mi = Mesh->indices[grp.index_offset + idx];
                 vmesh[idx] = {
                     {
-                        Mesh->positions[3 * mi.p + 0], 
-                        Mesh->positions[3 * mi.p + 1], 
-                        Mesh->positions[3 * mi.p + 2]
+                        Mesh->positions[3 * mi.p + 0] * 0.01f, 
+                        Mesh->positions[3 * mi.p + 1] * 0.01f, 
+                        Mesh->positions[3 * mi.p + 2] * 0.01f
                     }, 
                     {
                         Mesh->texcoords[2 * mi.t + 0], 
@@ -41,10 +42,10 @@ namespace objLoader {
                 idx++;
             }
         }
-        obj.reg.emplace_or_replace<mesh>(obj.id);
+        obj.reg.emplace_or_replace<mesh>(obj.id, vmesh, numvertices, (unsigned char)sizeof(vertex), 3.402823466e+38f); // placeholder radius of max float value, this should effectively disable culling
         mesh* scmesh = obj.getComponent<mesh>();
         if (!scmesh) return false;
-        object.reg.emplace_or_replace<MeshRenderer>(obj.id, obj, new fragment_lit());
+        obj.reg.emplace_or_replace<MeshRenderer>(obj.id, obj, new fragment_lit(NULL));
         scmesh->vertices = vmesh;
         scmesh->numVerts = numvertices;
         return true;

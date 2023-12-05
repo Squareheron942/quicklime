@@ -20,19 +20,13 @@ class Script1 : public Script {
         n_iter = 0;
         Console::log("Script1 started\n");
 
-        s = find("script1object");
-        if (!s) Console::warn("did not find it for some reason");
-        else Console::success("script1object found WWWWWWWWW");
+        s = find("moveobject");
 
-        t = GetComponent<transform>();
-
-        if (!t) Console::warn("Transform component not found by Script1");
+        t = s->getComponent<transform>();
     };
 
     void Update() {
 
-        _frametime = Time::deltaTime * 1000;
-        _fps = 1.0f / Time::deltaTime;
         _x = t->position.x;
         _y = t->position.y;
         _z = t->position.z;

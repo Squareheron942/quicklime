@@ -59,9 +59,7 @@ int main()
 	if (config::isOnCitra) Console::error("Citra detected");
 	Console::log("Model detected: %u", config::model);
 	Console::log("Language detected: %u", config::lang);
-	Console::log("Region detected: %u", config::region);
-	if (config::wideIsUnsupported) Console::log("Wide mode unsupported, disabling");
-	else Console::log("Wide mode supported, enabling");
+	Console::log("Region detected: %u", config::region);;
 
 	SceneManager::load<Scene1>();
 

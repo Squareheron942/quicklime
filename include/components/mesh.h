@@ -16,11 +16,12 @@ class mesh {
     int numVerts;
     char vertsize;
     void *vertices;
+    float radius;
     material* mat;
 
     mesh(GameObject& parent, void* data);
 
-    mesh(void* vertices, int numVerts, unsigned char vertsize);
+    mesh(void* vertices, unsigned int numVerts, unsigned char vertsize, float radius);
     
     ~mesh();
 };

@@ -1,6 +1,12 @@
 # SL model format
 
-Each file represents a single 3D object as well as the name of the material to dictate how it is drawn
+Each file represents a single 3D object as well as the name of the material to dictate how it is drawn.
+
+Models must be centred on (0, 0, 0):
+
+This means if you have for example a cube, it should be positioned so that the centre of the cube is at (0, 0, 0).
+
+This should just be as close as possible, if it's not perfect it likely won't cause issues but the further away it is the weirder it will look with frustum culling. To have an object default as offset from (0, 0, 0), set its position in the scene file instead. The model converter script might do the first part for you (depends if i implement it) but the second part is entirely on the dev to do. If I ever have a UI thing, it should make it pretty obvious that this needs doing
 
 ## Sections
 
@@ -12,6 +18,7 @@ Contains:
 - Number of vertices
 - Number of attributes
 - "Permutation": how vertex attributes map to shader registers
+- Radius of bounding sphere (used for frustum culling)
 - Extra information on attributes (TBD)
 - Number of bones
 - Bone array in binary format (specifically formatted as 2 vectors for position and rotation)
