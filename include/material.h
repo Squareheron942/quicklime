@@ -2,8 +2,6 @@
 
 #include "color.h"
 #include "citro3d.h"
-#include "vshader_shbin.h"
-#include "tex3ds.h"
 
 class material {
     protected:

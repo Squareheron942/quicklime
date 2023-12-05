@@ -103,9 +103,8 @@ Camera::Camera(GameObject& parent, void* args) {
 
 void Camera::Render() {
     
-    C3D_Mtx projection, view;
+    C3D_Mtx projection;
     Mtx_Identity(&projection);
-    Mtx_Identity(&view);
     float iod = 0;
     if (stereo && !orthographic) iod = iodMapFunc(osGet3DSliderState()); // only calculate if actually necessary
     bool useWide = highRes && !(iod > 0.f);
@@ -143,35 +142,110 @@ void Camera::Render() {
         );
     else // perspective but no 3D
         Mtx_PerspTilt(&projection, C3D_AngleFromDegrees(fovY), aspectRatio, nearClip, farClip, false);
-
-    Mtx_PerspStereoTilt(
-        &projection, 
-        C3D_AngleFromDegrees(fovY), 
-        aspectRatio, 
-        nearClip, farClip,
-        -iod, focalLength,
-        false
-    );
-
     
     
     gfxSetWide(useWide); // Enable wide mode if wanted and if not rendering in stereo
 
-    // actually render stuff for left eye
-
     transform* trans = parent->getComponent<transform>();
     
-    if (trans) {
-        C3D_Mtx view = *trans;
-        for (GameObject* obj : objects) {
-            if (!obj) continue;
-            if (!(obj->layer & cullingMask)) continue; // skip culled objects
+    if (!trans) return; // if no transform, the scene can't be rendered. there should always be a transform but the check is here just in case
 
-            Renderer* renderer = NULL;
+    C3D_Mtx view = *trans;
+    
+    // actually render stuff for left eye
 
-            if (!(renderer = (Renderer*)obj->getComponent<MeshRenderer>())) continue;
-            renderer->render(view, projection);
-        }
+    Mtx_Multiply(&projection, &projection, &view); // create view projection matrix, much faster since it saves a ton of matrix multiplications and is also useful for frustum culling
+
+    std::forward_list<GameObject*> culledList;
+
+    // calculate frustum normals
+
+    C3D_FVec pos = trans->position;
+    C3D_FVec topN, botN, leftN, rightN, nearN, farN;
+
+    nearN.x = projection.r[2].c[0] + projection.r[3].c[0];
+    nearN.y = projection.r[2].c[1] + projection.r[3].c[1];
+    nearN.z = projection.r[2].c[2] + projection.r[3].c[2];
+
+    farN.x = -projection.r[2].c[0] + projection.r[3].c[0];
+    farN.y = -projection.r[2].c[1] + projection.r[3].c[1];
+    farN.z = -projection.r[2].c[2] + projection.r[3].c[2];
+
+
+    botN.x = projection.r[1].c[0] + projection.r[3].c[0];
+    botN.y = projection.r[1].c[1] + projection.r[3].c[1];
+    botN.z = projection.r[1].c[2] + projection.r[3].c[2];
+
+    topN.x = -projection.r[1].c[0] + projection.r[3].c[0];
+    topN.y = -projection.r[1].c[1] + projection.r[3].c[1];
+    topN.z = -projection.r[1].c[2] + projection.r[3].c[2];
+
+
+    leftN.x = projection.r[0].c[0] + projection.r[3].c[0];
+    leftN.y = projection.r[0].c[1] + projection.r[3].c[1];
+    leftN.z = projection.r[0].c[2] + projection.r[3].c[2];
+
+    rightN.x = -projection.r[0].c[0] + projection.r[3].c[0];
+    rightN.y = -projection.r[0].c[1] + projection.r[3].c[1];
+    rightN.z = -projection.r[0].c[2] + projection.r[3].c[2];
+    
+    // normalize frustum normals
+    float invnearM = 1/sqrtf(nearN.x*nearN.x + nearN.y*nearN.y + nearN.z*nearN.z);
+    float invfarM = 1/sqrtf(farN.x*farN.x + farN.y*farN.y + farN.z*farN.z);
+    float invtopM = 1/sqrtf(topN.x*topN.x + topN.y*topN.y + topN.z*topN.z);
+    float invbotM = 1/sqrtf(botN.x*botN.x + botN.y*botN.y + botN.z*botN.z);
+    float invleftM = 1/sqrtf(leftN.x*leftN.x + leftN.y*leftN.y + leftN.z*leftN.z);
+    float invrightM = 1/sqrtf(rightN.x*rightN.x + rightN.y*rightN.y + rightN.z*rightN.z);
+
+    nearN.x *= invnearM;
+    nearN.y *= invnearM;
+    nearN.z *= invnearM;
+
+    farN.x *= invfarM;
+    farN.y *= invfarM;
+    farN.z *= invfarM;
+
+    topN.x *= invtopM;
+    topN.y *= invtopM;
+    topN.z *= invtopM;
+
+    botN.x *= invbotM;
+    botN.y *= invbotM;
+    botN.z *= invbotM;
+
+    leftN.x *= invleftM;
+    leftN.y *= invleftM;
+    leftN.z *= invleftM;
+
+    rightN.x *= invrightM;
+    rightN.y *= invrightM;
+    rightN.z *= invrightM;
+
+
+    // culling prepass
+    for (GameObject* obj : objects) {
+        mesh* m = NULL;
+        if (!obj) continue; // skip null objects, there shouldn't be any so I think it can be removed, and I can't remove it from the list at this step so it might end up being kinda slow
+        if (!(obj->layer & cullingMask)) continue; // skip culled objects
+        if (!(m = obj->getComponent<mesh>())) continue; // skip objects with no mesh
+        if (!obj->getComponent<MeshRenderer>()) continue; // skip objects with no renderer
+
+        transform* t = obj->getComponent<transform>();
+        C3D_FVec p = FVec3_Subtract(t->position, pos);
+
+        bool left = m->radius > FVec3_Dot(leftN, p);
+        bool right = m->radius > FVec3_Dot(rightN, p);
+        bool back = m->radius > FVec3_Dot(farN, p);
+        bool front = m->radius > FVec3_Dot(nearN, p);
+        bool top = m->radius > FVec3_Dot(topN, p);
+        bool bot = m->radius > FVec3_Dot(botN, p);
+
+        if (!(left + right + back + front + top + bot)) continue; // if not in any then skip it (this means it is outside the frustum)
+        culledList.push_front(obj);
+    }
+
+    for (GameObject* obj : culledList) {
+        obj->getComponent<MeshRenderer>()->render(projection); 
     }
 
 
@@ -186,22 +260,15 @@ void Camera::Render() {
             iod, focalLength, 
             false
         );
+
+        Mtx_Multiply(&projection, &projection, &view); // create view projection matrix, much faster since it saves a ton of matrix multiplications
+
         C3D_RenderTargetClear(target[1], C3D_CLEAR_ALL, bgcolor, 0);
         C3D_FrameDrawOn(target[1]);
 
-        // actually render stuff here for 2nd eye
-        if (trans) {
-            C3D_Mtx view = *trans;
-            for (GameObject* obj : objects) {
-                if (!obj) continue;
-                if (!(obj->layer & cullingMask)) continue; // skip culled objects
-
-                Renderer* renderer = NULL;
-
-                if (!(renderer = (Renderer*)obj->getComponent<MeshRenderer>())) continue; 
-
-                renderer->render(view, projection);       
-            }
+        // render objects
+        for (GameObject* obj : culledList) {
+            obj->getComponent<MeshRenderer>()->render(projection); 
         }
     }
 }

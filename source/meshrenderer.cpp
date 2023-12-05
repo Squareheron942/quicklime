@@ -18,7 +18,7 @@ MeshRenderer::MeshRenderer(GameObject& parent, material* mat) : parent(&parent),
 
 }
 
-void MeshRenderer::render(C3D_Mtx& view, C3D_Mtx& projection) {
+void MeshRenderer::render(C3D_Mtx& projection) {
     mesh* m = parent->getComponent<mesh>();
     assert(m != nullptr);
 
@@ -26,9 +26,7 @@ void MeshRenderer::render(C3D_Mtx& view, C3D_Mtx& projection) {
     
     C3D_Mtx model = *parent->getComponent<transform>(); // always will have a transform by default
 
-    Mtx_Multiply(&view, &model, &view);
-
-    mat->setMaterial(&view, &projection);
+    mat->setMaterial(&model, &projection);
 
     // Draw the VBO
     C3D_DrawArrays(GPU_TRIANGLES, 0, m->numVerts);

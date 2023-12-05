@@ -1,4 +1,5 @@
 #include "material.h"
+#include "tex3ds.h"
 
 material::~material() {}
 
