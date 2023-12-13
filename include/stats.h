@@ -1,4 +1,4 @@
 #pragma once
 
-static unsigned int _drawcalls;
-static float _x, _y, _z;
+static unsigned int _drawcalls = 0;
+static float _x = 0, _y = 0, _z = 0;

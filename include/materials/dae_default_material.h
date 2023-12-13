@@ -1,19 +1,19 @@
 #pragma once
 #include "material.h"
-#include "fragvshader_shbin.h"
+#include "fragvshader_dae_shbin.h" // for per-fragment lighting that is expecting dae models
 #include "3ds.h"
 #include "materialmanager.h"
 #include "lights.h"
 
 namespace {
-    struct fragment_lit_args {
-        const C3D_Material mat;
+    struct dae_default_material_args {
+        const float ambient[4], diffuse[4], specular0[4], specular1[4], emission[4];
         // const char* texpath; // can't have strings in here since variable length, need to parse them separately
     };
 }
 
 
-class fragment_lit : public material {
+class dae_default_material : public material {
     public:
     C3D_Tex tex;
     C3D_Material mat;
@@ -21,7 +21,7 @@ class fragment_lit : public material {
 	shaderProgram_s program;
     int uLoc_projection, uLoc_modelView;
 	C3D_LightLut lut_Light;
-    fragment_lit(FILE* args) noexcept {
+    dae_default_material(FILE* args) noexcept {
         mat = { // default settings that work mostly fine for anything
             { 0.1f, 0.1f, 0.1f }, //ambient
             { 0.4f, 0.4f, 0.4f }, //diffuse
@@ -30,7 +30,7 @@ class fragment_lit : public material {
             { 0.0f, 0.0f, 0.0f }, //emission
         };
         char texpath[255];
-        vshader_dvlb = DVLB_ParseFile((u32*)fragvshader_shbin, fragvshader_shbin_size);
+        vshader_dvlb = DVLB_ParseFile((u32*)fragvshader_dae_shbin, fragvshader_dae_shbin_size);
         shaderProgramInit(&program);
         shaderProgramSetVsh(&program, &vshader_dvlb->DVLE[0]);
         uLoc_projection   = shaderInstanceGetUniformLocation(program.vertexShader, "projection");
@@ -41,25 +41,26 @@ class fragment_lit : public material {
         C3D_LightEnvLut(&lights::lightenv, GPU_LUT_D0, GPU_LUTINPUT_LN, false, &lut_Light);
 
         if (!loadTextureFromFile(&tex, NULL, "romfs:/gfx/kitten.t3x", true)) // also a placeholder 
-            Console::warn("unable to load texture");
+            Console::warn("unable to load kitten backup texture");
         C3D_TexSetFilter(&tex, GPU_LINEAR, GPU_NEAREST);
         C3D_TexSetWrap(&tex, GPU_REPEAT, GPU_REPEAT); 
 
         if (args) {
-            fragment_lit_args m_args = {0};
+            dae_default_material_args m_args = {0};
             // mat = m_args.mat;  // not yet used while i figure out the model converter stuff
-            fread(&m_args, sizeof(fragment_lit_args), 1, args);
-            fgets(texpath, 255, args);
+            fread(&m_args, sizeof(dae_default_material_args), 1, args);
+            freadstr(args, texpath, 255);
             std::string path = texpath;
-            if (!loadTextureFromFile(&tex, NULL, ("romfs:/gfx/" + path + ".t3x").c_str(), true)) // also a placeholder 
+            if (!loadTextureFromFile(&tex, NULL, ("romfs:/gfx/" + path + ".t3x").c_str(), true)) // should load into vram which is potentially an issue for space reasons? 
                 Console::warn("unable to load texture");
+            Console::warn("Tried to load %s", ("romfs:/gfx/" + path + ".t3x").c_str());
             C3D_TexSetFilter(&tex, GPU_LINEAR, GPU_NEAREST);
-            C3D_TexSetWrap(&tex, GPU_REPEAT, GPU_REPEAT); 
+            C3D_TexSetWrap(&tex, GPU_REPEAT, GPU_REPEAT);
         }
         
     }
 
-    ~fragment_lit() {
+    ~dae_default_material() {
         shaderProgramFree(&program);
         DVLB_Free(vshader_dvlb);
     }
@@ -76,6 +77,8 @@ class fragment_lit : public material {
 
         C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, projection);
         C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView,  modelview);
+
+        C3D_CullFace(GPU_CULL_NONE);
     }
 
     void resetMaterial() override {
@@ -84,4 +87,4 @@ class fragment_lit : public material {
     }
 };
 
-MATERIAL_REGISTER(fragment_lit)
+MATERIAL_REGISTER(dae_default_material)
