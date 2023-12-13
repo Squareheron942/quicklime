@@ -42,7 +42,12 @@ namespace objLoader {
                 idx++;
             }
         }
-        obj.reg.emplace_or_replace<mesh>(obj.id, vmesh, numvertices, (unsigned char)sizeof(vertex), 3.402823466e+38f); // placeholder radius of max float value, this should effectively disable culling
+
+        unsigned char attrnum = 3; // pos, tc0, normal
+        unsigned char attrsize[3] = {3, 2, 3}; // pos 3, tc0 2, normal 3
+        unsigned char attrtype[3] = {3, 3, 3}; // float, float, float
+
+        obj.reg.emplace_or_replace<mesh>(obj.id, vmesh, numvertices, (unsigned char)sizeof(vertex), 3.402823466e+38f, attrnum, attrtype, attrsize); // placeholder radius of max float value, this should effectively disable culling
         mesh* scmesh = obj.getComponent<mesh>();
         if (!scmesh) return false;
         obj.reg.emplace_or_replace<MeshRenderer>(obj.id, obj, new fragment_lit(NULL));

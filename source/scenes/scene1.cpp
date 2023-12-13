@@ -27,21 +27,19 @@
 
 Scene1::Scene1() : Scene("Scene1"), script1object(objects), moveobject(objects) {
 	// set up lighting first, before any of the material setup happens
-	C3D_LightEnvInit(&lightenv);
-	C3D_LightEnvBind(&lightenv);
+	C3D_LightEnvInit(&lights::lightenv);
+	C3D_LightEnvBind(&lights::lightenv);
 
 	C3D_FVec lightVec = FVec4_New(0.0f, 0.0f, -0.5f, 1.0f);
 
-	C3D_LightInit(&light, &lightenv);
+	C3D_LightInit(&light, &lights::lightenv);
 	C3D_LightColor(&light, 0.992, 0.984, 0.827);
 	C3D_LightPosition(&light, &lightVec);
 
 	// add components and scripts (components before scripts so the scripts can actually grab them properly)
-	transform defaultpos({1, 0, 0, 0});
-	transform campos({1, -1, 0, 0});
-	ComponentManager::addComponent("transform", script1object, &defaultpos);
+	ComponentManager::addComponent("transform", script1object);
 	ComponentManager::addComponent("mesh", script1object);
-	ComponentManager::addComponent("transform", moveobject, &campos);
+	ComponentManager::addComponent("transform", moveobject);
 	ComponentManager::addComponent("Camera", moveobject);
 
 	Camera::mainTop = moveobject.getComponent<Camera>();
@@ -52,9 +50,9 @@ Scene1::Scene1() : Scene("Scene1"), script1object(objects), moveobject(objects) 
 	if (Camera::mainTop) Camera::mainTop->objects.push_front(&script1object);
 	else Console::warn("No top camera");
 	
-	// mdlLoader::addModel("romfs:/data/scene1/models/cube.slmdl", script1object);
+	mdlLoader::addModel("romfs:/data/scene2/models/base1__GroundAsphaltCrackPlaza_base1__GroundAsphaltCrackPlaza.0.slmdl", script1object); // cube object
 
-	objLoader::addModel("romfs:/plaza.obj", script1object);
+	// objLoader::addModel("romfs:/", script1object);
 	
 	script1object.name = "script1object";
 	moveobject.name = "moveobject";

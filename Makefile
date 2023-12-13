@@ -33,13 +33,13 @@ include $(DEVKITARM)/3ds_rules
 #     - <libctru folder>/default_icon.png
 #---------------------------------------------------------------------------------
 
-VERSION			:=  v0.0.0.9
+VERSION			:=  v0.0.1.0
 TARGET			:=	$(notdir $(CURDIR))
 PYTHON      	:=  python3
 BUILD			:=	build
 SOURCES			:=	source source/scenes source/vshaders 
 DATA			:=	data
-MODEL			:=  data/scene1/models
+MODEL			:=  data/scene1/models data/scene2/models
 INCLUDES		:=	include entt include/materials include/scripts include/components include/deprecated
 GRAPHICS		:=	gfx
 GFXBUILD		:=	$(BUILD)
@@ -47,7 +47,7 @@ ROMFS		    :=	romfs
 APP_TITLE       := 	Splatoon Legends
 APP_DESCRIPTION := 	$(VERSION)
 APP_AUTHOR		:= 	nontendo
-EXTTOOL     	:=  @$(PYTHON) buildscripts/build.py --romfs $(ROMFS) --models $(MODEL) --mirrorpath 
+EXTTOOL     	:=  @$(PYTHON) buildscripts/build.py --romfs $(ROMFS) --models $(MODEL) --mirrorpath --build $(BUILD)
 GFXBUILD		:=	$(ROMFS)/gfx
 
 #---------------------------------------------------------------------------------

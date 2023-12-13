@@ -23,6 +23,7 @@ class Script1 : public Script {
         s = find("moveobject");
 
         t = s->getComponent<transform>();
+        t->scale = {{1, 0.01f, 0.01f, 0.01f}};
     };
 
     void Update() {

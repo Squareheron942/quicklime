@@ -154,7 +154,9 @@ void Camera::Render() {
     
     // actually render stuff for left eye
 
-    Mtx_Multiply(&projection, &projection, &view); // create view projection matrix, much faster since it saves a ton of matrix multiplications and is also useful for frustum culling
+    C3D_Mtx vp;
+
+    Mtx_Multiply(&vp, &projection, &view); // create view projection matrix, much faster since it saves a ton of matrix multiplications and is also useful for frustum culling
 
     std::forward_list<GameObject*> culledList;
 
@@ -163,31 +165,31 @@ void Camera::Render() {
     C3D_FVec pos = trans->position;
     C3D_FVec topN, botN, leftN, rightN, nearN, farN;
 
-    nearN.x = projection.r[2].c[0] + projection.r[3].c[0];
-    nearN.y = projection.r[2].c[1] + projection.r[3].c[1];
-    nearN.z = projection.r[2].c[2] + projection.r[3].c[2];
+    nearN.x = vp.r[2].c[0] + vp.r[3].c[0];
+    nearN.y = vp.r[2].c[1] + vp.r[3].c[1];
+    nearN.z = vp.r[2].c[2] + vp.r[3].c[2];
 
-    farN.x = -projection.r[2].c[0] + projection.r[3].c[0];
-    farN.y = -projection.r[2].c[1] + projection.r[3].c[1];
-    farN.z = -projection.r[2].c[2] + projection.r[3].c[2];
-
-
-    botN.x = projection.r[1].c[0] + projection.r[3].c[0];
-    botN.y = projection.r[1].c[1] + projection.r[3].c[1];
-    botN.z = projection.r[1].c[2] + projection.r[3].c[2];
-
-    topN.x = -projection.r[1].c[0] + projection.r[3].c[0];
-    topN.y = -projection.r[1].c[1] + projection.r[3].c[1];
-    topN.z = -projection.r[1].c[2] + projection.r[3].c[2];
+    farN.x = -vp.r[2].c[0] + vp.r[3].c[0];
+    farN.y = -vp.r[2].c[1] + vp.r[3].c[1];
+    farN.z = -vp.r[2].c[2] + vp.r[3].c[2];
 
 
-    leftN.x = projection.r[0].c[0] + projection.r[3].c[0];
-    leftN.y = projection.r[0].c[1] + projection.r[3].c[1];
-    leftN.z = projection.r[0].c[2] + projection.r[3].c[2];
+    botN.x = vp.r[1].c[0] + vp.r[3].c[0];
+    botN.y = vp.r[1].c[1] + vp.r[3].c[1];
+    botN.z = vp.r[1].c[2] + vp.r[3].c[2];
 
-    rightN.x = -projection.r[0].c[0] + projection.r[3].c[0];
-    rightN.y = -projection.r[0].c[1] + projection.r[3].c[1];
-    rightN.z = -projection.r[0].c[2] + projection.r[3].c[2];
+    topN.x = -vp.r[1].c[0] + vp.r[3].c[0];
+    topN.y = -vp.r[1].c[1] + vp.r[3].c[1];
+    topN.z = -vp.r[1].c[2] + vp.r[3].c[2];
+
+
+    leftN.x = vp.r[0].c[0] + vp.r[3].c[0];
+    leftN.y = vp.r[0].c[1] + vp.r[3].c[1];
+    leftN.z = vp.r[0].c[2] + vp.r[3].c[2];
+
+    rightN.x = -vp.r[0].c[0] + vp.r[3].c[0];
+    rightN.y = -vp.r[0].c[1] + vp.r[3].c[1];
+    rightN.z = -vp.r[0].c[2] + vp.r[3].c[2];
     
     // normalize frustum normals
     float invnearM = 1/sqrtf(nearN.x*nearN.x + nearN.y*nearN.y + nearN.z*nearN.z);
@@ -244,33 +246,33 @@ void Camera::Render() {
         culledList.push_front(obj);
     }
 
+    // render objects
     for (GameObject* obj : culledList) {
-        obj->getComponent<MeshRenderer>()->render(projection); 
+        obj->getComponent<MeshRenderer>()->render(view, projection); 
     }
 
 
-    if (stereo && iod > 0.0f) {
-        gfxSet3D(true);
-        C3D_RenderTargetSetOutput(target[1], GFX_TOP, GFX_RIGHT, CAM_DISPLAY_TRANSFER_FLAGS); 
-        Mtx_PerspStereoTilt(
-            &projection, 
-            C3D_AngleFromDegrees(fovY), 
-            C3D_AspectRatioTop, 
-            nearClip, farClip, 
-            iod, focalLength, 
-            false
-        );
+    if (!(stereo && iod > 0.0f)) return; // stop after first eye is drawn unless 3d is enabled
 
-        Mtx_Multiply(&projection, &projection, &view); // create view projection matrix, much faster since it saves a ton of matrix multiplications
+    gfxSet3D(true);
+    C3D_RenderTargetSetOutput(target[1], GFX_TOP, GFX_RIGHT, CAM_DISPLAY_TRANSFER_FLAGS); 
+    Mtx_PerspStereoTilt(
+        &projection, 
+        C3D_AngleFromDegrees(fovY), 
+        C3D_AspectRatioTop, 
+        nearClip, farClip, 
+        iod, focalLength, 
+        false
+    );
 
-        C3D_RenderTargetClear(target[1], C3D_CLEAR_ALL, bgcolor, 0);
-        C3D_FrameDrawOn(target[1]);
+    C3D_RenderTargetClear(target[1], C3D_CLEAR_ALL, bgcolor, 0);
+    C3D_FrameDrawOn(target[1]);
 
-        // render objects
-        for (GameObject* obj : culledList) {
-            obj->getComponent<MeshRenderer>()->render(projection); 
-        }
+    // render objects
+    for (GameObject* obj : culledList) {
+        obj->getComponent<MeshRenderer>()->render(view, projection); 
     }
+    
 }
 
 COMPONENT_REGISTER(Camera)

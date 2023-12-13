@@ -3,6 +3,7 @@
 #include "fragvshader_shbin.h"
 #include "3ds.h"
 #include "materialmanager.h"
+#include "lights.h"
 
 namespace {
     struct ink_args {
@@ -26,7 +27,6 @@ namespace {
 class ink : public material {
     public:
     C3D_LightLut lut_Phong;
-    C3D_LightEnv lightEnv; // remove this when lighting stuff file added (or just shared stuff)
     C3D_Tex team1tex, team2tex, team1mask, team2mask;
     C3D_Mtx ink1mat, ink2mat; // separate so that each ink can have a different specular color etc
     DVLB_s *vshader_dvlb;
@@ -111,15 +111,8 @@ class ink : public material {
         colors[2] = 0x40f68042; // normals angled at approx 15º from vertical
         colors[3] = 0x80ff8080; // have 2 up vectors to make it more bright
 
-
-
         ProcTexColorLut_Write(&pt_clr, colors, 0, INK_NUM_COLORS);
         C3D_ProcTexColorLutBind(&pt_clr);
-
-
-        // set lighting
-        LightLut_Phong(&lut_Phong, specular); // update the specularity value
-	    C3D_LightEnvLut(&lightEnv, GPU_LUT_D0, GPU_LUTINPUT_LN, false, &lut_Phong);
 
         // set alpha test cutoff for sharp edges
         // C3D_AlphaTest(true, GPU_GREATER, alpha);
@@ -150,9 +143,9 @@ class ink : public material {
         C3D_TexEnvSrc(env, C3D_Both, GPU_PREVIOUS, GPU_FRAGMENT_PRIMARY_COLOR, GPU_FRAGMENT_SECONDARY_COLOR);
         C3D_TexEnvFunc(env, C3D_RGB, GPU_MULTIPLY_ADD);
 
-        C3D_LightEnvBumpNormalZ(&lightEnv, true);
-        C3D_LightEnvBumpMode(&lightEnv, GPU_BUMP_AS_BUMP);
-        C3D_LightEnvBumpSel(&lightEnv, 3);
+        C3D_LightEnvBumpNormalZ(&lights::lightenv, true);
+        C3D_LightEnvBumpMode(&lights::lightenv, GPU_BUMP_AS_BUMP);
+        C3D_LightEnvBumpSel(&lights::lightenv, 3);
 
         u32 colors2[INK_NUM_COLORS];
         colors2[3] = colors[0];
@@ -193,9 +186,9 @@ class ink : public material {
         C3D_TexEnvSrc(env, C3D_Both, GPU_PREVIOUS, GPU_FRAGMENT_PRIMARY_COLOR, GPU_FRAGMENT_SECONDARY_COLOR);
         C3D_TexEnvFunc(env, C3D_RGB, GPU_MULTIPLY_ADD);
 
-        C3D_LightEnvBumpNormalZ(&lightEnv, true);
-        C3D_LightEnvBumpMode(&lightEnv, GPU_BUMP_AS_BUMP);
-        C3D_LightEnvBumpSel(&lightEnv, 3);
+        C3D_LightEnvBumpNormalZ(&lights::lightenv, true);
+        C3D_LightEnvBumpMode(&lights::lightenv, GPU_BUMP_AS_BUMP);
+        C3D_LightEnvBumpSel(&lights::lightenv, 3);
     }
 
     void resetMaterial() override {
@@ -208,7 +201,9 @@ class ink : public material {
         env = C3D_GetTexEnv(3);
         C3D_TexEnvInit(env);
 
-        C3D_LightEnvBumpMode(&lightEnv, GPU_BUMP_NOT_USED);
+        C3D_LightEnvBumpNormalZ(&lights::lightenv, false);
+        C3D_LightEnvBumpMode(&lights::lightenv, GPU_BUMP_NOT_USED);
+        C3D_LightEnvBumpSel(&lights::lightenv, 0);
     }
 };
 

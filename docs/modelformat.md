@@ -17,7 +17,7 @@ Contains:
 - Vertex size
 - Number of vertices
 - Number of attributes
-- "Permutation": how vertex attributes map to shader registers
+- Attribute types and sizes
 - Radius of bounding sphere (used for frustum culling)
 - Extra information on attributes (TBD)
 - Number of bones

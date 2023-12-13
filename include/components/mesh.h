@@ -11,8 +11,8 @@ class GameObject;
 class mesh {
     public:
     // Configure attributes for use with the vertex shader
-	C3D_AttrInfo* attrInfo;
-    C3D_BufInfo* buf;
+	C3D_AttrInfo attrInfo;
+    C3D_BufInfo buf;
     int numVerts;
     char vertsize;
     void *vertices;
@@ -21,7 +21,7 @@ class mesh {
 
     mesh(GameObject& parent, void* data);
 
-    mesh(void* vertices, unsigned int numVerts, unsigned char vertsize, float radius);
+    mesh(void* vertices, unsigned int numVerts, unsigned char vertsize, float radius, unsigned char attrnum, unsigned char attrtypes[], unsigned char attrlen[]);
     
     ~mesh();
 };

@@ -8,7 +8,18 @@ namespace {
         char vertsize = 0;
         void *vertices = NULL;
         float radius = 0;
+        unsigned char attrnum = 0; // number of attributes
+        unsigned char attrtypes[16]; // type of attribute
+        unsigned char attrlen[16]; // number of elements for each attribute
     };
+
+    u64 permut_from_num_attr(u8 n) {
+        u64 perm = 0;
+        for (u8 i = 0; i < n; i++) {
+            perm |= (i << (4 * i));
+        } // for each attrib add the corresponding number (for 3 attribs, should make 0x210 aka 528)
+        return perm;
+    }
 }
 
 mesh::mesh(GameObject& parent, void* data) {
@@ -23,26 +34,25 @@ mesh::mesh(GameObject& parent, void* data) {
     GSPGPU_FlushDataCache(vertices, vertsize * numVerts); // make sure the data is in ram and not CPU cache
     
     // Configure attributes for use with the vertex shader
-    attrInfo = C3D_GetAttrInfo();
-    AttrInfo_Init(attrInfo);
-    AttrInfo_AddLoader(attrInfo, 0, GPU_FLOAT, 3); // v0=position
-    AttrInfo_AddLoader(attrInfo, 1, GPU_FLOAT, 2); // v1=texcoord
-    AttrInfo_AddLoader(attrInfo, 2, GPU_FLOAT, 3); // v2=normal
-    buf = C3D_GetBufInfo();
-    BufInfo_Init(buf);
-    BufInfo_Add(buf, d.vertices, d.vertsize, 3, 0x210);
+    AttrInfo_Init(&attrInfo);
+    for (int i = 0; i < d.attrnum; i++) 
+        AttrInfo_AddLoader(&attrInfo, i, (GPU_FORMATS)d.attrtypes[i], d.attrlen[i]);
+
+    BufInfo_Init(&buf);
+    BufInfo_Add(&buf, vertices, vertsize, d.attrnum, permut_from_num_attr(d.attrnum)); // put the attributes in the default registers (this is actually broken and weird and does not work properly)
 }
 
-mesh::mesh(void* vertices, unsigned int numVerts, unsigned char vertsize, float radius) : numVerts(numVerts), vertsize(vertsize), vertices(vertices), radius(radius) {
+mesh::mesh(void* vertices, unsigned int numVerts, unsigned char vertsize, float radius, unsigned char attrnum, unsigned char attrtypes[], unsigned char attrlen[]) : numVerts(numVerts), vertsize(vertsize), vertices(vertices), radius(radius) {
+    // make sure the vertex data is in ram and not CPU cache
+    GSPGPU_FlushDataCache(vertices, vertsize * numVerts); 
+    
     // Configure attributes for use with the vertex shader
-    attrInfo = C3D_GetAttrInfo();
-    AttrInfo_Init(attrInfo);
-    AttrInfo_AddLoader(attrInfo, 0, GPU_FLOAT, 3); // v0=position
-    AttrInfo_AddLoader(attrInfo, 1, GPU_FLOAT, 2); // v1=texcoord
-    AttrInfo_AddLoader(attrInfo, 2, GPU_FLOAT, 3); // v2=normal
-    buf = C3D_GetBufInfo();
-    BufInfo_Init(buf);
-    BufInfo_Add(buf, vertices, vertsize, 3, 0x210);
+    AttrInfo_Init(&attrInfo);
+    for (int i = 0; i < attrnum; i++)
+        AttrInfo_AddLoader(&attrInfo, i, (GPU_FORMATS)attrtypes[i], attrlen[i]);
+
+    BufInfo_Init(&buf);
+    BufInfo_Add(&buf, vertices, vertsize, attrnum, permut_from_num_attr(attrnum));
 }
 
 mesh::~mesh() {

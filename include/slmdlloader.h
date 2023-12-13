@@ -5,7 +5,6 @@
 #include "mesh.h"
 #include "material.h"
 #include "vertex.h"
-#include "object3d.h"
 #include "defines.h"
 #include "entt.hpp"
 #include "console.h"
@@ -14,6 +13,7 @@
 #include "fragmentlit.h"
 #include "bone.h"
 #include "meshrenderer.h"
+#include "dae_default_material.h"
 
 namespace {
     static int freadstr(FILE* fid, char* str, size_t max_size)
@@ -74,7 +74,10 @@ namespace mdlLoader
             Console::error("Wrong magic word '%c%c%c', 'mdl' expected (file pointer at position %p)", str[0], str[1], str[2], (void*)ftell(f));
             return NULL;
         }
+        
+        // read header info
 
+        // get material name
         char m_path[255], o_path[255];
         freadstr(f, m_path, 254); // get name of file from here
         snprintf(o_path, 255, "%s%s.slmtl", b_path, m_path); // max path size 255
@@ -82,6 +85,24 @@ namespace mdlLoader
 
         material* mat = parseMat(mf);
         
+        unsigned int numVerts = 0; 
+        unsigned char sv = 0;
+        float radius = 0.f;
+        unsigned char attrnum, attrtypes[16], attrlen[16];
+
+        // read next data
+        fread(&numVerts, sizeof(int), 1, f);
+        fread(&sv, sizeof(char), 1, f);
+        fread(&attrnum, sizeof(char), 1, f);
+        fread(&attrtypes, sizeof(char), attrnum, f);
+        fread(&attrlen, sizeof(char), attrnum, f);
+        fread(&radius, sizeof(float), 1, f);
+
+        radius = 3.402823466e+38f;
+
+        
+
+        // read obj section
         fread(str, sizeof(char), 3, f);
 
         // read obj section
@@ -92,23 +113,15 @@ namespace mdlLoader
 
         bone* bones = parseBones(f);
 
-        unsigned int numVerts = 0; unsigned char sv = 0;char id = 0;float radius = 0.f;
-
-
-        fread(&id, sizeof(char), 1, f);
-        fread(&numVerts, sizeof(int), 1, f);
-        fread(&sv, sizeof(char), 1, f);
-        fread(&radius, sizeof(float), 1, f);
-
         const size_t sizevert = sv;
 
         Console::log("vs %lu nv %u", sizevert, numVerts);
         
         void* vertices = linearAlloc(numVerts * sizevert);
-        Console::log("starting read at %p\n", (void*)ftell(f));
         fread(vertices, sizevert, numVerts, f);
-        // for (unsigned int i = 0; i < numVerts; i++) Console::log("%u p%0.1f %0.1f %0.1f n%0.1f %0.1f %0.1f t%0.1f %0.1f\n", i, ((vertex*)vertices)[i].position[0], ((vertex*)vertices)[i].position[1], ((vertex*)vertices)[i].position[2], ((vertex*)vertices)[i].normal[0], ((vertex*)vertices)[i].normal[1], ((vertex*)vertices)[i].normal[2], ((vertex*)vertices)[i].texcoord[0], ((vertex*)vertices)[i].texcoord[1]);
-        object.reg.emplace_or_replace<mesh>(object.id, vertices, numVerts, sv, radius);
+        // typedef struct {float position[3]; float normal[3]; float texcoord[2];} daevert;
+        // for (unsigned int i = 0; i < numVerts; i++) Console::log("%u t%0.1f %0.1f\n", i, ((daevert*)vertices)[i].texcoord[0], ((daevert*)vertices)[i].texcoord[1]);
+        object.reg.emplace_or_replace<mesh>(object.id, vertices, numVerts, sv, radius, attrnum, attrtypes, attrlen);
         object.reg.emplace_or_replace<MeshRenderer>(object.id, object, mat);
 
         return true;

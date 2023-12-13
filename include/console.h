@@ -200,6 +200,5 @@ class Console {
                 #endif
                 break;
         }
-        _drawcalls = 0;
     }
 };
