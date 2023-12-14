@@ -50,10 +50,10 @@ class ink : public material {
 
 
             // load textures
-            ink1hastex = loadTextureFromFile(&team1tex, NULL, tex1path, false);
-            ink2hastex = loadTextureFromFile(&team2tex, NULL, tex2path, false);
-            loadTextureFromFile(&team1mask, NULL, mask1path, false);
-            loadTextureFromFile(&team2mask, NULL, mask2path, false);
+            // ink1hastex = loadTextureFromFile(&team1tex, NULL, tex1path, false);
+            // ink2hastex = loadTextureFromFile(&team2tex, NULL, tex2path, false);
+            // loadTextureFromFile(&team1mask, NULL, mask1path, false);
+            // loadTextureFromFile(&team2mask, NULL, mask2path, false);
 
             C3D_TexSetFilter(&team1tex, GPU_LINEAR, GPU_NEAREST);
             C3D_TexSetFilter(&team2tex, GPU_LINEAR, GPU_NEAREST);

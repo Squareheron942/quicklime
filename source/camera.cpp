@@ -103,6 +103,8 @@ Camera::Camera(GameObject& parent, void* args) {
 
 void Camera::Render() {
     
+    stats::_drawcalls++;
+    // Console::log("Drawcalls: %u", stats::_drawcalls);
     C3D_Mtx projection;
     Mtx_Identity(&projection);
     float iod = 0;

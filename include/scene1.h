@@ -16,7 +16,7 @@ class Scene1 : public Scene {
     void drawTop(float iod) override;
     void drawBottom() override;
 	// all this is from the hardcoded rendering I have rn, will need to be removed
-	GameObject script1object, moveobject;
+	GameObject script1object, moveobject, testobj;
 
 	C3D_Light light;
 };

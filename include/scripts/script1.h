@@ -23,14 +23,14 @@ class Script1 : public Script {
         s = find("moveobject");
 
         t = s->getComponent<transform>();
-        t->scale = {{1, 0.01f, 0.01f, 0.01f}};
+        t->scale = {{1, 0.01f, 0.01f, 0.01f}}; // model from blender is 100x the size it should be
     };
 
     void Update() {
 
-        _x = t->position.x;
-        _y = t->position.y;
-        _z = t->position.z;
+        stats::_x = t->position.x;
+        stats::_y = t->position.y;
+        stats::_z = t->position.z;
 
         if (controls::getDown("select")) Console::nextMenu();
 

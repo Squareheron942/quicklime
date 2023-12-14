@@ -65,9 +65,16 @@ namespace mdlLoader
     inline bool addModel(const char path[], GameObject& object) {
         char b_path[255];
         strcpy(b_path, path);
-        *(strrchr(b_path, '/') + 1) = 0; // get parent folder path by looking for last '/' and putting a null after it
+        *(strrchr(b_path, '/') + 1) = 0; // get parent folder path by looking for last '/' and putting a null after it (basically just changes the end of the string to be immediately after the /)
 
         FILE *f = fopen(path, "r");
+
+        if (!f) {
+            Console::error("Error: model not found");
+            Console::error(path);
+            return false;
+        }
+
         char str[3] = "";
         fread(str, sizeof(char), 3, f);
         if (str[0] != 'm' || str[1] != 'd' || str[2] != 'l') {

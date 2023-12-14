@@ -147,13 +147,13 @@ class Console {
         #endif
     }
 
-    static inline void setPosition(int x = _x, int y = _y, int z = _z) {
+    static inline void setPosition(int x = stats::_x, int y = stats::_y, int z = stats::_z) {
         #if CONSOLE_ENABLED
         printf("\e[s\e[%u;%uHPosition: %d %d %d         \e[u", POS_Y, POS_X, x, y, z);
         #endif
     }
 
-    static inline void setDrawCalls(int dc = _drawcalls) {
+    static inline void setDrawCalls(int dc = stats::_drawcalls) {
         #if CONSOLE_ENABLED
         printf("\e[s\e[%u;%uHDraw Calls: %u         \e[u", DRAW_Y, DRAW_X, dc);
         #endif

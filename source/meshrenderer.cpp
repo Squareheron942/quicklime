@@ -37,7 +37,7 @@ void MeshRenderer::render(C3D_Mtx& view, C3D_Mtx& projection) {
     mat->resetMaterial();
 
     #if DEBUG
-    _drawcalls++; // increment internal counter for debugging info
+    stats::_drawcalls++; // increment internal counter for debugging info
     #endif
 }
 
