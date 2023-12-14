@@ -14,7 +14,7 @@ def writematerials(inp: et.Element, path: str) -> list:
     for image in inp.findall('library_images/image'):
         tex[image.attrib['id']] = image.find('init_from').text
     for mat in inp.findall('library_materials/material'):
-        with open(os.path.join(path, mat.attrib['name']) + '.slmtl', 'wb') as out:
+        with open(os.path.join(path, mat.attrib['name']) + '.slmtl', 'wb+') as out:
             print(out.name)
             effect = inp.find('library_effects/effect[@id="' + mat.find('instance_effect').attrib['url'].split('#')[1] + '"]')
             inputs = {}
@@ -185,18 +185,6 @@ def writeobjs(inp: et.Element, path: str) -> None:
                         case _:
                             pass
 
-
-
-
-
-
-
-
-
-
-
-
-
 def process(args):
     global file_edit_times
     if os.path.isfile(os.path.join(args.build, 'mdl_edit_times.json')):
@@ -210,6 +198,8 @@ def process(args):
                     model = os.path.join(root, modelfile)
                     if model not in file_edit_times or file_edit_times[model] != os.path.getmtime(model):
                         print(model)
+                        if not os.path.isdir("romfs/" + modelfolder):
+                            os.makedirs("romfs/" + modelfolder)
                         with open(model, 'r') as src:
                             xmlstring = src.read()
                             xmlstring = re.sub(r'\sxmlns="[^"]+"', '', xmlstring, count=1) # remove namespace definition from file
@@ -228,6 +218,8 @@ def add_args(parser: argparse.ArgumentParser):
     parser.add_argument('-r', '--romfs', required=True, help='romfs folder path')
     parser.add_argument('-m', '--models', required=True, nargs='+', help='source model path')
     parser.add_argument('-mp', '--mirrorpath', required=False, help='mirror the source path in romfs', action="store_true")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='DAE model parser for SL engine')
     add_args(parser)

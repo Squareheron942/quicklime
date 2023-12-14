@@ -56,6 +56,7 @@ mesh::mesh(void* vertices, unsigned int numVerts, unsigned char vertsize, float 
 }
 
 mesh::~mesh() {
+    Console::log("mesh deleted");
     linearFree(vertices); 
 }
 
