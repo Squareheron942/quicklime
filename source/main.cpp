@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "scenemanager.h"
+#include "sceneloader.h"
 #include "scene1.h"
 #include "controls.h"
 #include "defines.h"
@@ -59,11 +60,13 @@ int main()
 	if (config::isOnCitra) Console::error("Citra detected");
 	Console::log("Model detected: %u", config::model);
 	Console::log("Language detected: %u", config::lang);
-	Console::log("Region detected: %u", config::region);;
+	Console::log("Region detected: %u", config::region);
 
-	SceneManager::load<Scene1>();
+	SceneManager::currentScene = SceneLoader::load("scene1");
 
-	HIDUSER_EnableGyroscope();
+	// SceneManager::load<Scene1>();
+
+	HIDUSER_EnableGyroscope(); 
 
 	// Main loop
 	while (aptMainLoop())
@@ -78,7 +81,7 @@ int main()
 		// Render the scene
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
 
-		SceneManager::currentScene->drawTop(0);
+		SceneManager::currentScene->drawTop();
 
 		C3D_FrameEnd(0);
 	}

@@ -10,7 +10,7 @@ namespace {
     };
 }
 
-SpotLight::SpotLight(void* args) {
+SpotLight::SpotLight(const void* args) {
     spotlight_args formatted_args;
     if (args) formatted_args = *(spotlight_args*)args;
     C3D_LightSpotEnable(&_light, true);

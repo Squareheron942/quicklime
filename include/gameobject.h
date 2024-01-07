@@ -1,7 +1,7 @@
 #pragma once
 
 #include "entt.hpp"
-#include <forward_list>
+#include <vector>
 #include <string>
 #include <sstream>
 #include "console.h"
@@ -13,8 +13,8 @@ class GameObject {
     GameObject* r_search(std::string name);
 
     public:
-    std::forward_list<GameObject*> children;
-    GameObject* parent;
+    std::vector<GameObject*> children;
+    GameObject* parent = NULL;
     entt::registry &reg;
     std::list<Script*> scripts; // cannot be component since you can't have more than 1 object of type per entity
     entt::entity id;
@@ -47,7 +47,7 @@ class GameObject {
      */
     inline void addChild(GameObject& object) {
         object.setParent(*this);
-        children.push_front(&object);
+        children.push_back(&object);
     }
 
     /**
@@ -56,8 +56,18 @@ class GameObject {
      * @param object GameObject to remove
      */
     inline void removeChild(GameObject& object) { 
-        children.remove(&object);
+        children.erase(std::remove(children.begin(), children.end(), &object), children.end());
         object.parent = NULL;
+    }
+
+    /**
+     * @brief Removes object from list of children
+     * 
+     * @param object GameObject to remove
+     */
+    inline void removeChild(GameObject* object) { 
+        children.erase(std::remove(children.begin(), children.end(), object), children.end());
+        object->parent = NULL;
     }
 
     inline void setParent(GameObject& object) { 

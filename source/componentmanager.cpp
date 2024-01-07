@@ -3,9 +3,13 @@
 #include "gameobject.h"
 #include "console.h"
 #include "script.h"
+#include <iostream>
 
-bool ComponentManager::addComponent(const char* name, GameObject& obj, void* data) {
+bool ComponentManager::addComponent(const char* name, GameObject& obj, const void* data) {
     if (getComponentMap().find(name) == getComponentMap().end()) {
+        for(const auto& elem : getComponentMap())
+            std::cout << elem.first << ", "; // print all keys
+        std::cout << std::endl;
         Console::error("Unknown component %s", name);
         return false;
     }

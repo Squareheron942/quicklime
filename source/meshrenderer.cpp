@@ -10,7 +10,7 @@
 #include "stats.h"
 #include "defines.h"
 
-MeshRenderer::MeshRenderer(GameObject& parent, void* args) : parent(&parent), mat((material*)args) {
+MeshRenderer::MeshRenderer(GameObject& parent, const void* args) : parent(&parent), mat((material*)args) {
 
 }
 

@@ -8,59 +8,46 @@
 #include <algorithm>
 
 namespace controls {
-    // namespace // makes these inaccessible outside this namespace
-    // {
-    //     #define M_RAD 0.01745329252f
-    //     inline u32 kDown = 0, kHeld = 0, kUp = 0, kRepeat = 0;
-    //     inline angularRate gRate;
-    //     inline C3D_FVec gPos = {0, 0, 0};
-    //     inline circlePosition cPos, csPos;
-    //     inline std::unordered_map<std::string, unsigned int> mappings {
-    //         {"A", KEY_A},
-    //         {"B", KEY_B},
-    //         {"SELECT", KEY_SELECT},
-    //         {"START", KEY_START},
-    //         {"DRIGHT", KEY_DRIGHT},
-    //         {"DLEFT", KEY_DLEFT},
-    //         {"DUP", KEY_DUP},
-    //         {"DDOWN", KEY_DDOWN},
-    //         {"R", KEY_R},
-    //         {"L", KEY_L}, 
-    //         {"X", KEY_X}, // 10
-    //         {"Y", KEY_Y}, // 11
-    //         {"ZL", KEY_ZL}, // 14
-    //         {"ZR", KEY_ZR}, // 15
-    //         {"TOUCH", KEY_TOUCH}, // 20
-    //         {"CSRIGHT", KEY_CSTICK_RIGHT}, // 24
-    //         {"CSLEFT", KEY_CSTICK_LEFT}, // 25
-    //         {"CSUP", KEY_CSTICK_UP}, // 26
-    //         {"CSDOWN", KEY_CSTICK_DOWN}, // 27
-    //         {"CRIGHT", KEY_CPAD_UP}, // 28
-    //         {"CLEFT", 0x1d}, // 29
-    //         {"CUP", 0x1e}, // 30
-    //         {"CDOWN", 0x1f}, // 31
-    //         {"UP", KEY_DUP | KEY_CPAD_UP},
-    //         {"DOWN", 0x18},
-    //         {"LEFT", 0x19},
-    //         {"RIGHT", 0x1a},
-    //         {"A", 0x1d},
-    //         {"A", 0x1c},
-    //         {"A", 0x1d},
-    //         {"A", 0x1e},
-    //         {"A", 0x1f},
-    //     };
-    // };
-
+    // mapping for key name
+    enum class key : unsigned char {
+        KEY_A               = 0,
+        KEY_B               = 1,
+        KEY_X               = 2,
+        KEY_Y               = 3,
+        KEY_SELECT          = 4,
+        KEY_START           = 5,
+        KEY_DPAD_RIGHT      = 6,
+        KEY_DPAD_LEFT       = 7,
+        KEY_DPAD_UP         = 8,
+        KEY_DPAD_DOWN       = 9,
+        KEY_L               = 10,
+        KEY_R               = 11,
+        KEY_ZL              = 12,
+        KEY_ZR              = 13,
+        KEY_CSTICK_UP       = 14,
+        KEY_CSTICK_DOWN     = 15,
+        KEY_CSTICK_LEFT     = 16,
+        KEY_CSTICK_RIGHT    = 17,
+        KEY_CPAD_UP         = 18,
+        KEY_CPAD_DOWN       = 19,
+        KEY_CPAD_LEFT       = 20,
+        KEY_CPAD_RIGHT      = 21,
+        KEY_UP              = 22,
+        KEY_DOWN            = 23,
+        KEY_LEFT            = 24,
+        KEY_RIGHT           = 25,
+        KEY_TOUCH           = 26
+    };
 
     void update();
 
-    bool getDown(std::string inputName);
+    bool getDown(key inputName);
 
-    bool getRepeat(std::string inputName);
+    bool getRepeat(key inputName);
 
-    bool getHeld(std::string inputName);
+    bool getHeld(key inputName);
 
-    bool getUp(std::string inputName);
+    bool getUp(key inputName);
 
     /**
      * @returns The internal gyro angular rate (in deg/s)
@@ -88,5 +75,6 @@ namespace controls {
     const circlePosition cStickPos();
 
     float gyroDeadZone(), gyroSensitivity();
-    void setGyroDeadZone(float min_radius), setGyroSensitivity(float multiplier);
+    void setGyroDeadZone(float min_radius), 
+        setGyroSensitivity(float multiplier);
 };

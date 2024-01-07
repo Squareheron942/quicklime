@@ -38,11 +38,11 @@ class MovementScript : public Script {
 
         t->position.x -= x * c - y * s;
         t->position.z -= x * s + y * c;
-        t->position.y -= (controls::getHeld("L") ? 0.64 : controls::getHeld("R") ? -0.64 : 0) * Time::deltaTime;
+        t->position.y -= (controls::getHeld(controls::key::KEY_L) ? 0.64 : controls::getHeld(controls::key::KEY_R) ? -0.64 : 0) * Time::deltaTime;
 
-        if (controls::getDown("a")) Console::log("A pressed");
-        if (controls::getDown("b")) Console::log("B pressed");
-        if (controls::getDown("y")) lerpTimer = 0.5f; // time in seconds to take when recentering
+        if (controls::getDown(controls::key::KEY_A)) Console::log("A pressed");
+        if (controls::getDown(controls::key::KEY_B)) Console::log("B pressed");
+        if (controls::getDown(controls::key::KEY_Y)) lerpTimer = 0.5f; // time in seconds to take when recentering
         
         if (lerpTimer > 0.3) t->rotation = transform::slerp({1, 0, 0, 0}, t->rotation, lerpTimer); // lerp towards player direction instefd
 

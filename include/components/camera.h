@@ -1,7 +1,7 @@
 #pragma once
 
 #include <citro3d.h>
-#include <forward_list>
+#include <vector>
 
 class GameObject;
 
@@ -30,10 +30,10 @@ public:
     RenderType type;
     C3D_RenderTarget* target[3] = {NULL, NULL, NULL}; // 2 targets in case of stereoscopic view, plus one for if wide view is also enabled (since it's a different resolution)
     static Camera *mainTop, *mainBottom; // main cameras for top and bottom screen respectively
-    std::forward_list<GameObject*> objects;
+    std::vector<GameObject*>* objects;
     float aspectRatio;
     unsigned short cullingMask; // sees all 16 layers by default
-    Camera(GameObject& parent, void* args);
+    Camera(GameObject& parent, const void* args);
     
     void Render();
 };

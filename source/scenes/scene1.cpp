@@ -25,7 +25,7 @@
 #include "stats.h"
 #include "camera.h"
 
-Scene1::Scene1() : Scene("Scene1"), script1object(objects), moveobject(objects), testobj(objects) {
+Scene1::Scene1() : Scene("Scene1"), script1object(reg), moveobject(reg), testobj(reg) {
 	// set up lighting first, before any of the material setup happens
 	C3D_LightEnvInit(&lights::lightenv);
 	C3D_LightEnvBind(&lights::lightenv);
@@ -49,10 +49,12 @@ Scene1::Scene1() : Scene("Scene1"), script1object(objects), moveobject(objects),
 	ComponentManager::addScript("MovementScript", moveobject);
 	ComponentManager::addScript("Script1", script1object);
 
-	if (Camera::mainTop) Camera::mainTop->objects.push_front(&script1object);
+	Camera::mainTop->objects = new std::vector<GameObject*>;
+
+	if (Camera::mainTop) Camera::mainTop->objects->push_back(&script1object);
 	else Console::warn("No top camera");
 
-	if (Camera::mainTop) Camera::mainTop->objects.push_front(&testobj);
+	if (Camera::mainTop) Camera::mainTop->objects->push_back(&testobj);
 	
 	mdlLoader::addModel("romfs:/assets/scene2/models/Body__KitsuneBody_Body__KitsuneBody.001.slmdl", script1object); // test object
 	mdlLoader::addModel("romfs:/assets/scene2/models/Body__KitsuneBody_Body__KitsuneBody.001.slmdl", testobj); // test object
@@ -60,31 +62,32 @@ Scene1::Scene1() : Scene("Scene1"), script1object(objects), moveobject(objects),
 	script1object.name = "script1object";
 	moveobject.name = "moveobject";
 	testobj.name = "testobj";
-	root.addChild(script1object);
-	root.addChild(moveobject);
-	root.addChild(testobj);
+	root = new GameObject(reg);
+	root->addChild(script1object);
+	root->addChild(moveobject);
+	root->addChild(testobj);
 	
 
-	r_act_on_objects(&root, &GameObject::Awake); // call awake() on every gameobject and enable them (to self disable do it when this is called)
+	r_act_on_objects(root, &GameObject::Awake); // call awake() on every gameobject and enable them (to self disable do it when this is called)
 
 	
 
 
-	r_act_on_objects(&root, &GameObject::Start); // start all scripts
+	r_act_on_objects(root, &GameObject::Start); // start all scripts
 }
 
 void Scene1::update() {
-	r_act_on_objects(&root, &GameObject::Update); // call update() on every gameobject (propagates from root)
+	r_act_on_objects(root, &GameObject::Update); // call update() on every gameobject (propagates from root)
 
 	// whatever other per frame logic stuff will get called here
 
-	r_act_on_objects(&root, &GameObject::LateUpdate); // call lateupdate() on every gameobject (propagates from root). Used to ensure stuff like cameras move only when everything else is done moving
+	r_act_on_objects(root, &GameObject::LateUpdate); // call lateupdate() on every gameobject (propagates from root). Used to ensure stuff like cameras move only when everything else is done moving
 
     
 	Console::update();
 };
 
-void Scene1::drawTop(float iod)
+void Scene1::drawTop()
 {
 	Camera::mainTop->Render(); 
 }

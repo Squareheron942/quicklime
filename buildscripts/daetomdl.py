@@ -43,7 +43,7 @@ def writematerials(inp: et.Element, path: str) -> list:
                 out.writelines(struct.pack('f', float(c)) for c in eff.find('specular/color').text.split(' ')) # specular colour
             else:
                 out.writelines(struct.pack('f', float(c)) for c in '0.8 0.8 0.8 1'.split(' ')) # default specular color is near white
-
+ 
             out.writelines(struct.pack('f', float(c)) for c in '0 0 0 1'.split(' ')) # specular1 is unused by any model formats but required for lighting material
 
             if eff.find('emission/color') != None:
@@ -51,6 +51,12 @@ def writematerials(inp: et.Element, path: str) -> list:
             else:
                 out.writelines(struct.pack('f', float(c)) for c in '0 0 0 1'.split(' ')) # default emission is zero
             
+            if eff.find('transparent/color') != None:
+                out.writelines(struct.pack('f', float(c)) for c in eff.find('transparent/color').text.split(' ')) # transparent colour
+                out.write((0).to_bytes(4)) # tells the material it is transparent
+            else:
+                out.writelines(struct.pack('f', float(c)) for c in '0 0 0 1'.split(' ')) # default transparency is opaque
+                out.write((1).to_bytes(4)) # tells the material it is opaque
             if eff.find('diffuse/texture') is not None:
                 try:
                     out.write(bytes(os.path.splitext(tex[effect.find('profile_COMMON/newparam[@sid="' + samplers[eff.find('diffuse/texture').attrib['texture']] + '"]/surface/init_from').text])[0], 'utf-8'))
@@ -130,7 +136,7 @@ def writeobjs(inp: et.Element, path: str) -> None:
     geoms = inp.findall('library_geometries/geometry')
     # parse the scene section (since it's the only place where the material is specified)
     for node in inp.findall('library_visual_scenes/visual_scene/node'): # iterate through all nodes in the first scene (i'm going to ignore having multiple scenes because just why) 
-        with open(os.path.join(path, node.attrib['name']) + '.slmdl', 'wb+') as m:
+        with open(os.path.join(path, node.attrib['name']) + '.slmdl', 'wb+') as m: 
             geom = inp.find('library_geometries/geometry[@id="' + node.find('instance_geometry').attrib['url'].split('#')[1] + '"]') # get the geometry tag
             avgpos = writeheader(inp, node, m, geom) # creates the header and also calculates the center of the object for us
             m.write(("obj").encode('utf-8')) # start of object stuff
@@ -185,7 +191,7 @@ def writeobjs(inp: et.Element, path: str) -> None:
                         case _:
                             pass
 
-def process(args):
+def process(args: argparse.Namespace):
     global file_edit_times
     if os.path.isfile(os.path.join(args.build, 'mdl_edit_times.json')):
         with open(os.path.join(args.build, 'mdl_edit_times.json'), 'r') as times:

@@ -114,7 +114,7 @@ class Console {
     
     static inline void log(const char* text, ...) {
         va_list arg;
-        va_start(arg, text);
+        va_start(arg, text); 
         basic_log(LOG_LEVEL_LOW, text, arg);
         va_end(arg);
     };
@@ -176,6 +176,7 @@ class Console {
     }
 
     static inline void update() {
+        if (controls::getDown(controls::key::KEY_SELECT)) nextMenu();
         switch (menu) {
             case MENU_STATS:
                 setFrameTime();

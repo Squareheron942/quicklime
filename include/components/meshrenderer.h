@@ -12,7 +12,7 @@ class MeshRenderer : public Renderer {
 
     public:
 
-    MeshRenderer(GameObject& parent, void* args);
+    MeshRenderer(GameObject& parent, const void* args);
     MeshRenderer(GameObject& parent, material* mat);
 
     virtual void render(C3D_Mtx& view, C3D_Mtx& projection);
