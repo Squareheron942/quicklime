@@ -11,10 +11,10 @@
 class Scene1 : public Scene {
     public: 
     Scene1();
-    ~Scene1() override;
-    void update() override;
-    void drawTop(float iod) override;
-    void drawBottom() override;
+    ~Scene1();
+    void update();
+    void drawTop();
+    void drawBottom();
 	// all this is from the hardcoded rendering I have rn, will need to be removed
 	GameObject script1object, moveobject, testobj;
 

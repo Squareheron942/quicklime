@@ -115,7 +115,7 @@ class ink : public material {
         C3D_ProcTexColorLutBind(&pt_clr);
 
         // set alpha test cutoff for sharp edges
-        // C3D_AlphaTest(true, GPU_GREATER, alpha);
+        C3D_AlphaTest(true, GPU_GREATER, 128);
 
         C3D_TexBind(0, &team1mask);
         C3D_TexBind(1, &team1tex);

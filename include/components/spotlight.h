@@ -6,5 +6,5 @@
 class SpotLight : public Light {
     SpotLight() {}
     public:
-    SpotLight(void* params);
+    SpotLight(const void* params);
 };

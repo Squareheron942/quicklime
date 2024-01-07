@@ -9,7 +9,7 @@
 
 namespace {
     struct t3xcfg_t {
-        bool vram : 1 = true; // defaults to not in VRAM since less space there
+        bool vram : 1 = false; // defaults to not in VRAM since less space there
         GPU_TEXTURE_FILTER_PARAM magFilter : 1 = GPU_LINEAR, minFilter: 1 = GPU_NEAREST;
         GPU_TEXTURE_WRAP_PARAM wrapS: 2 = GPU_REPEAT, wrapT: 2 = GPU_REPEAT;
     };
@@ -26,16 +26,19 @@ material::~material() {}
 
 std::optional<std::shared_ptr<Texture>> material::loadTextureFromFile(std::string name) {
     Console::log("texture requested");
+    if (name.size() == 0) name = "blank"; // no texture, load backup cat
     if (loadedMats.find(name) == loadedMats.end()) {
         FILE* f = fopen(("romfs:/gfx/" + name + ".t3x").c_str(), "r");
         if (!f) f = fopen("romfs:/gfx/kitten.t3x", "r"); // texture not found, load backup cat
 
         FILE* cfg = fopen(("romfs:/gfx/" + name + ".t3xcfg").c_str(), "r");
+        
         t3xcfg_t texcfg;
 
         if (cfg) fread(&texcfg, sizeof(t3xcfg_t), 1, cfg);
 
-        Texture* tex = new Texture();
+        Texture* tex = new Texture(name);
+        Console::log(name.c_str());
 
         loadedMats[name] = tex;
 

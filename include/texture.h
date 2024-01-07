@@ -9,7 +9,7 @@ class Texture {
     std::string name;
     C3D_Tex tex;
     C3D_TexCube cube;
-    Texture() {
+    Texture(std::string name) : name(name) {
         Console::log("texture created");
     }
 };

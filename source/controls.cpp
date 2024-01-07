@@ -8,6 +8,7 @@
 #include "sl_time.h"
 
 namespace controls {
+
     namespace // makes these inaccessible outside this namespace
     {
         #define M_RAD 0.01745329252f
@@ -16,34 +17,36 @@ namespace controls {
         C3D_FVec gPos = {0, 0, 0};
         circlePosition cPos, csPos;
         float gyro_s = 0.5f, gyro_d = 10.f;
-        std::unordered_map<std::string, unsigned int> mappings {
-            {"A", KEY_A},
-            {"B", KEY_B},
-            {"SELECT", KEY_SELECT},
-            {"START", KEY_START},
-            {"DRIGHT", KEY_DRIGHT},
-            {"DLEFT", KEY_DLEFT},
-            {"DUP", KEY_DUP},
-            {"DDOWN", KEY_DDOWN},
-            {"R", KEY_R},
-            {"L", KEY_L}, 
-            {"X", KEY_X}, // 10
-            {"Y", KEY_Y}, // 11
-            {"ZL", KEY_ZL}, // 14
-            {"ZR", KEY_ZR}, // 15
-            {"TOUCH", KEY_TOUCH}, // 20
-            {"CSRIGHT", KEY_CSTICK_RIGHT}, // 24
-            {"CSLEFT", KEY_CSTICK_LEFT}, // 25
-            {"CSUP", KEY_CSTICK_UP}, // 26
-            {"CSDOWN", KEY_CSTICK_DOWN}, // 27
-            {"CRIGHT", KEY_CPAD_RIGHT}, // 28
-            {"CLEFT", KEY_CPAD_LEFT}, // 29
-            {"CUP", KEY_CPAD_UP}, // 30
-            {"CDOWN", KEY_CPAD_DOWN}, // 31
-            {"UP", KEY_DUP | KEY_CPAD_UP},
-            {"DOWN", KEY_DOWN | KEY_CPAD_DOWN},
-            {"LEFT", KEY_DLEFT | KEY_CPAD_LEFT},
-            {"RIGHT",KEY_DRIGHT | KEY_CPAD_RIGHT}
+        // TODO Replace with enum and array
+
+        unsigned int mappings[27] = {
+            KEY_A,
+            KEY_B,
+            KEY_X,
+            KEY_Y,
+            KEY_SELECT,
+            KEY_START,
+            KEY_DRIGHT,
+            KEY_DLEFT,
+            KEY_DUP,
+            KEY_DDOWN,
+            KEY_L,
+            KEY_R,
+            KEY_ZL,
+            KEY_ZR,
+            KEY_CSTICK_UP,
+            KEY_CSTICK_DOWN,
+            KEY_CSTICK_LEFT,
+            KEY_CSTICK_RIGHT,
+            KEY_CPAD_UP,
+            KEY_CPAD_DOWN,
+            KEY_CPAD_LEFT,
+            KEY_CPAD_RIGHT,
+            KEY_DUP | KEY_CPAD_UP,
+            KEY_DOWN | KEY_CPAD_DOWN,
+            KEY_DLEFT | KEY_CPAD_LEFT,
+            KEY_DRIGHT | KEY_CPAD_RIGHT,
+            KEY_TOUCH
         };
     };
 
@@ -67,33 +70,18 @@ namespace controls {
         gPos.z += gRate.z * Time::deltaTime * M_RAD;
     }
 
-    bool getDown(std::string inputName) {
-        std::transform(inputName.begin(), inputName.end(), inputName.begin(), [](unsigned char c){ return std::toupper(c); });
-        return kDown & mappings.at(inputName);
-    }
+    bool getDown(key inputName) { return kDown & mappings[(unsigned char)inputName]; }
 
-    bool getRepeat(std::string inputName) {
-        std::transform(inputName.begin(), inputName.end(), inputName.begin(), [](unsigned char c){ return std::toupper(c); });
-        return kRepeat & mappings.at(inputName); 
-    }
+    bool getRepeat(key inputName) { return kRepeat & mappings[(unsigned char)inputName]; }
 
-    bool getHeld(std::string inputName) {
-        std::transform(inputName.begin(), inputName.end(), inputName.begin(), [](unsigned char c){ return std::toupper(c); });
-        return kHeld & mappings.at(inputName); 
-    }
+    bool getHeld(key inputName) { return kHeld & mappings[(unsigned char)inputName]; }
 
-    bool getUp(std::string inputName) {
-        std::transform(inputName.begin(), inputName.end(), inputName.begin(), [](unsigned char c){ return std::toupper(c); });
-        return kUp & mappings.at(inputName); 
-    }
+    bool getUp(key inputName) { return kUp & mappings[(unsigned char)inputName]; }
 
     /**
      * Sets the mapping of a key name to a hid key value
     */
-    void setMapping(std::string keyName, unsigned int mapping) { 
-        std::transform(keyName.begin(), keyName.end(), keyName.begin(), [](unsigned char c){ return std::toupper(c); });
-        mappings.at(keyName) = mapping; 
-    }
+    void setMapping(key keyName, unsigned int mapping) { mappings[(unsigned char)keyName] = mapping; }
 
     /**
      * @returns The internal gyro angular rate (in deg/s)

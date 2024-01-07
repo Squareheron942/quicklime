@@ -89,6 +89,8 @@ GameObject* GameObject::find(std::string name) {
     } else // find anywhere
     {
         GameObject* root = this;
+        if (!root) 
+            for(;;);
         while (root->parent) root = root->parent; // get root of all objects (that way we don't need to store this at all times)
 
         int i = 0;

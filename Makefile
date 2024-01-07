@@ -37,25 +37,28 @@ VERSION			:=  v0.0.1.0
 TARGET			:=	$(notdir $(CURDIR))
 PYTHON      	:=  python3
 BUILD			:=	build
-SOURCES			:=	source source/scenes source/vshaders 
-DATA			:=	assets
-MODEL			:=  assets/scene1/models assets/scene2/models
-INCLUDES		:=	include entt include/materials include/scripts include/components include/deprecated
+TEMPSOURCE		:= 	tempsource
+SOURCES			:=	source source/scenes source/vshaders $(TEMPSOURCE)
+DATA			:=	
+MODEL			:=  assets/scene1/models assets/Plaza_standard/models
+TEMPINCLUDE		:=  tempinclude
+INCLUDES		:=	include entt include/materials include/scripts include/components include/deprecated $(TEMPINCLUDE)
 GRAPHICS		:=	gfx
 GFXBUILD		:=	$(BUILD)
 ROMFS		    :=	romfs
 APP_TITLE       := 	Splatoon Legends
 APP_DESCRIPTION := 	$(VERSION)
 APP_AUTHOR		:= 	nontendo
-EXTTOOL     	:=  @$(PYTHON) buildscripts/build.py --romfs $(ROMFS) --models $(MODEL) --mirrorpath --build $(BUILD)
 GFXBUILD		:=	$(ROMFS)/gfx
+ASSETS			:=	assets
+EXTTOOL     	:=  @$(PYTHON) buildscripts/build.py --romfs $(ROMFS) --models $(MODEL) --mirrorpath --build $(BUILD) --include $(TEMPINCLUDE) --gfx $(GRAPHICS) --source $(TEMPSOURCE) --assets $(ASSETS)
 
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
 ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
-CFLAGS	:=	-g -Wall -O2 -mword-relocations \
+CFLAGS	:= -Wall -O2 -mword-relocations \
 			-ffunction-sections \
 			$(ARCH)
 
@@ -167,14 +170,27 @@ ifneq ($(ROMFS),)
 	export _3DSXFLAGS += --romfs=$(CURDIR)/$(ROMFS)
 endif
 
-.PHONY: all clean
+.PHONY: all touchelf romfs clean runexttool
 
 #---------------------------------------------------------------------------------
-all: $(BUILD) $(GFXBUILD) $(DEPSDIR) $(ROMFS_T3XFILES) $(T3XHFILES)
-	$(EXTTOOL)
+all: $(BUILD) runexttool $(GFXBUILD) $(DEPSDIR)  $(ROMFS_T3XFILES)
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
+touchelf:
+	@touch -c $(TARGET).elf
+
+romfs: touchelf all
+
+runexttool: $(TEMPINCLUDE) $(TEMPSOURCE)
+	$(EXTTOOL)
+
 $(BUILD):
+	@mkdir -p $@
+
+$(TEMPINCLUDE):
+	@mkdir -p $@
+
+$(TEMPSOURCE):
 	@mkdir -p $@
 
 ifneq ($(GFXBUILD),$(BUILD))
@@ -190,7 +206,7 @@ endif
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -rf $(BUILD) $(TARGET).3dsx $(OUTPUT).smdh $(TARGET).elf $(GFXBUILD)
+	@rm -rf $(BUILD) $(TARGET).3dsx $(OUTPUT).smdh $(TARGET).elf $(GFXBUILD) $(TEMPINCLUDE) $(TEMPSOURCE)
 # makes sense, make clean will run
 #---------------------------------------------------------------------------------
 $(GFXBUILD)/%.t3x	$(BUILD)/%.h	:	%.t3s

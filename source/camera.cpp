@@ -7,6 +7,7 @@
 #include "componentmanager.h"
 #include "renderer.h"
 #include "meshrenderer.h"
+#include <forward_list>
 
 Camera* Camera::mainTop = NULL;
 Camera* Camera::mainBottom = NULL;
@@ -22,33 +23,39 @@ namespace {
 
     struct cam_args {
         // general camera properties
-        bool wide = true; // whether or not to use the 240x800 mode on supported models
-        RenderType type = RENDER_TYPE_TOPSCREEN; // what to render to
-        float nearClip = 0.1f, farClip = 1000.f;
-        bool ortho = false;
-        unsigned int bgcolor = 0x3477ebFF; // defaults to dark blue
-        unsigned short cull = 0xFFFF; // shows everything
-
+        
+        bool wide = true; // whether or not to use the 240x800 mode on supported models // @0
+        bool ortho = false; // @1
+        unsigned short cull = 0xFFFF; // shows everything // @2
+        
+        RenderType type = RENDER_TYPE_TOPSCREEN; // what to render to // @4
+        
+        float nearClip = 0.1f, farClip = 1000.f; // @8, @12
+        
+        unsigned int bgcolor = 0x3477ebFF; // defaults to dark blue // @16
+        
+        // texture render properties
+        unsigned short resolution; // min 8x8, max 1024x1024 (must be square) @20
 
         // ortho camera properties
-        float height = 24.f;
-        float width = 40.f;
+        float height = 24.f; // @24
+
+        float width = 40.f; // @28
 
         // perspective camera properties
-        bool stereo = true; // whether to use 3D
-        float fovY = 55.f; // default for splatoon human form
+        bool stereo = true; // whether to use 3D // @32
+        float fovY = 55.f; // default for splatoon human form // @36
         /**
          * @brief Dictates how to map the iod input from the slider to the rendering iod
          * @param iod The inputted slider value
          */
-        float(*iodMapFunc)(float) = NULL;
+        float(*iodMapFunc)(float) = NULL; // @40
 
-        // texture render properties
-        unsigned short resolution; // min 8x8, max 1024x1024 (must be square)
+        
     };
 }
 
-Camera::Camera(GameObject& parent, void* args) {
+Camera::Camera(GameObject& parent, const void* args) {
     cam_args c;
     if (args) 
         c = *(cam_args*)args;
@@ -68,6 +75,10 @@ Camera::Camera(GameObject& parent, void* args) {
     } else { // perspective
         fovY = c.fovY;
     }
+    Console::log("nc%1.1f fc%.0f", c.nearClip, c.farClip);
+    Console::log("o%u t%u", c.ortho, c.type);
+    Console::log("c%p b%p", c.cull, c.bgcolor);
+    Console::log("f%.1f h%.0f w%.0f", c.fovY, c.height, c.width);
 
     switch (c.type) {
         case RENDER_TYPE_TOPSCREEN:
@@ -99,6 +110,8 @@ Camera::Camera(GameObject& parent, void* args) {
     }
     
     this->parent = &parent;
+    Camera::mainTop = this;
+    printf("new camera\n");
 }
 
 void Camera::Render() {
@@ -227,7 +240,7 @@ void Camera::Render() {
 
 
     // culling prepass
-    for (GameObject* obj : objects) {
+    for (GameObject* obj : *objects) {
         mesh* m = NULL;
         if (!obj) continue; // skip null objects, there shouldn't be any so I think it can be removed, and I can't remove it from the list at this step so it might end up being kinda slow
         if (!(obj->layer & cullingMask)) continue; // skip culled objects
