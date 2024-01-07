@@ -7,3 +7,5 @@
 **.DS_Store
 buildscripts/__pycache__/
 gfx/
+tempinclude/
+tempsource/
