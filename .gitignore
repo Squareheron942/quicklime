@@ -9,3 +9,4 @@ buildscripts/__pycache__/
 gfx/
 tempinclude/
 tempsource/
+build-log.txt

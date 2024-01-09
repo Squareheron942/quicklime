@@ -11,5 +11,8 @@ class Texture {
     C3D_TexCube cube;
     Texture(std::string name) : name(name) {
         Console::log("texture created");
+        Console::log(name.c_str());
+    }
+    ~Texture() {
     }
 };
