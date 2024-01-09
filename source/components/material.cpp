@@ -13,11 +13,11 @@ namespace {
         GPU_TEXTURE_FILTER_PARAM magFilter : 1 = GPU_LINEAR, minFilter: 1 = GPU_NEAREST;
         GPU_TEXTURE_WRAP_PARAM wrapS: 2 = GPU_REPEAT, wrapT: 2 = GPU_REPEAT;
     };
-    std::unordered_map<std::string, Texture*> loadedMats;
+    std::unordered_map<std::string, Texture*> loadedTex;
     void texdeleter(Texture* tex) {
         if (tex) C3D_TexDelete(&tex->tex);
-        delete loadedMats[tex->name];
-        loadedMats.erase(tex->name);
+        delete loadedTex[tex->name];
+        loadedTex.erase(tex->name);
         Console::log("texture deleted");
     }
 }
@@ -27,7 +27,7 @@ material::~material() {}
 std::optional<std::shared_ptr<Texture>> material::loadTextureFromFile(std::string name) {
     Console::log("texture requested");
     if (name.size() == 0) name = "blank"; // no texture, load backup cat
-    if (loadedMats.find(name) == loadedMats.end()) {
+    if (loadedTex.find(name) == loadedTex.end()) {
         FILE* f = fopen(("romfs:/gfx/" + name + ".t3x").c_str(), "r");
         if (!f) f = fopen("romfs:/gfx/kitten.t3x", "r"); // texture not found, load backup cat
 
@@ -40,7 +40,7 @@ std::optional<std::shared_ptr<Texture>> material::loadTextureFromFile(std::strin
         Texture* tex = new Texture(name);
         Console::log(name.c_str());
 
-        loadedMats[name] = tex;
+        loadedTex[name] = tex;
 
         Tex3DS_Texture t3x = Tex3DS_TextureImportStdio(f, &tex->tex, &tex->cube, texcfg.vram);
         if (!t3x) return {};
@@ -55,7 +55,7 @@ std::optional<std::shared_ptr<Texture>> material::loadTextureFromFile(std::strin
         fclose(f);
         fclose(cfg);
     }
-    return std::shared_ptr<Texture>(loadedMats[name], texdeleter); // if it already exists just return a pointer to it
+    return std::shared_ptr<Texture>(loadedTex[name], texdeleter); // if it already exists just return a pointer to it
 }
 
 bool material::loadTextureFromMem(C3D_Tex* tex, C3D_TexCube* cube, const void* data, size_t size)

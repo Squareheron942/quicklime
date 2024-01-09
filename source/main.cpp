@@ -4,12 +4,14 @@
 
 #include "scenemanager.h"
 #include "sceneloader.h"
-#include "scene1.h"
 #include "controls.h"
 #include "defines.h"
 #include "sl_time.h"
 #include "console.h"
 #include "config.h"
+#include "entt.hpp"
+#include "componentmanager.h"
+#include "scripts.inc"
 
 void sceneExit(void)
 {
@@ -17,31 +19,6 @@ void sceneExit(void)
 	HIDUSER_DisableGyroscope();
 	romfsExit();
 }
-
-void printfile(const char* path)
-{
-	FILE* f = fopen(path, "r");
-	if (f)
-	{
-		char mystring[100];
-		while (fgets(mystring, sizeof(mystring), f))
-		{
-			int a = strlen(mystring);
-			if (mystring[a-1] == '\n')
-			{
-				mystring[a-1] = 0;
-				if (mystring[a-2] == '\r')
-					mystring[a-2] = 0;
-			}
-			puts(mystring);
-		}
-		printf(">>EOF<<\n");
-		fclose(f);
-	}
-}
-
-#include "entt.hpp"
-#include "componentmanager.h"
 
 int main()
 {
@@ -64,9 +41,7 @@ int main()
 
 	SceneManager::currentScene = SceneLoader::load("scene1");
 
-	// SceneManager::load<Scene1>();
-
-	HIDUSER_EnableGyroscope(); 
+	HIDUSER_EnableGyroscope();
 
 	// Main loop
 	while (aptMainLoop())

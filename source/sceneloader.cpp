@@ -36,6 +36,7 @@ std::string readFile(std::string name)
         stream.close();
         return str.str();
     }
+    return "";
 }
 
 std::unique_ptr<Scene> SceneLoader::load(std::string name) {
@@ -56,11 +57,8 @@ std::unique_ptr<Scene> SceneLoader::load(std::string name) {
 
     text.erase(std::remove_if(text.begin(), text.end(), [](unsigned char x) { return std::isspace(x); }), text.end()); // remove all whitespace from text
     
-    
-
     parseSceneTree(out, text); // parse the whole object tree 
     Console::success("finished reading scene file");
-    // printSceneTree(*out->root);
 
     Camera::mainTop->objects = &out->objects;
     

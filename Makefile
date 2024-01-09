@@ -38,7 +38,7 @@ TARGET			:=	$(notdir $(CURDIR))
 PYTHON      	:=  python3
 BUILD			:=	build
 TEMPSOURCE		:= 	tempsource
-SOURCES			:=	source source/scenes source/vshaders $(TEMPSOURCE)
+SOURCES			:=	source $(TEMPSOURCE) source/components
 DATA			:=	
 MODEL			:=  assets/scene1/models assets/Plaza_standard/models
 TEMPINCLUDE		:=  tempinclude
@@ -174,7 +174,7 @@ endif
 
 #---------------------------------------------------------------------------------
 all: $(BUILD) runexttool $(GFXBUILD) $(DEPSDIR)  $(ROMFS_T3XFILES)
-	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
+	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile > build-log.txt
 
 touchelf:
 	@touch -c $(TARGET).elf

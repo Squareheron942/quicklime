@@ -111,7 +111,6 @@ Camera::Camera(GameObject& parent, const void* args) {
     
     this->parent = &parent;
     Camera::mainTop = this;
-    printf("new camera\n");
 }
 
 void Camera::Render() {
