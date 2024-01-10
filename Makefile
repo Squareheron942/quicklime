@@ -40,7 +40,7 @@ BUILD			:=	build
 TEMPSOURCE		:= 	tempsource
 SOURCES			:=	source $(TEMPSOURCE) source/components
 DATA			:=	
-MODEL			:=  assets/scene1/models assets/Plaza_standard/models
+MODEL			:=  assets/scene1/models assets/Plaza_standard/models assets/
 TEMPINCLUDE		:=  tempinclude
 INCLUDES		:=	include entt include/materials include/scripts include/components include/deprecated $(TEMPINCLUDE)
 GRAPHICS		:=	gfx
@@ -57,7 +57,7 @@ EXTTOOL     	:=  @$(PYTHON) buildscripts/build.py --romfs $(ROMFS) --models $(MO
 #---------------------------------------------------------------------------------
 ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
-CFLAGS	:= -Wall -O2 -g -mword-relocations \
+CFLAGS	:= -Wall -O2 -ggdb -mword-relocations \
 			-ffunction-sections \
 			$(ARCH)
 

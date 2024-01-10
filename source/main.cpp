@@ -2,6 +2,8 @@
 #include <citro3d.h>
 #include <string.h>
 
+#include "scripts.inc"
+#include "materials.inc"
 #include "scenemanager.h"
 #include "sceneloader.h"
 #include "controls.h"
@@ -11,7 +13,6 @@
 #include "config.h"
 #include "entt.hpp"
 #include "componentmanager.h"
-#include "scripts.inc"
 
 void sceneExit(void)
 {

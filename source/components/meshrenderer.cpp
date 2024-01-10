@@ -18,7 +18,7 @@ MeshRenderer::MeshRenderer(GameObject& parent, material* mat) : parent(&parent),
 
 }
 
-void MeshRenderer::render(C3D_Mtx& view, C3D_Mtx& projection) {
+void MeshRenderer::render(C3D_Mtx& view, C3D_Mtx& projection, C3D_Mtx* replacement_mv) {
     mesh* m = parent->getComponent<mesh>();
     assert(m != nullptr);
 
@@ -27,7 +27,7 @@ void MeshRenderer::render(C3D_Mtx& view, C3D_Mtx& projection) {
     
     C3D_Mtx model = *parent->getComponent<transform>(); // always will have a transform by default 
 
-    Mtx_Multiply(&view, &view, &model);
+    Mtx_Multiply(&view, &view, replacement_mv ? replacement_mv : &model);
 
     mat->setMaterial(&view, &projection);
 

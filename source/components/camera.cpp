@@ -112,10 +112,14 @@ Camera::Camera(GameObject& parent, const void* args) {
     Camera::mainTop = this;
 }
 
-bool printed = false;
+void transformobjs_r(GameObject* root, C3D_FVec topN, C3D_FVec botN, C3D_FVec leftN, C3D_FVec rightN, C3D_FVec nearN, C3D_FVec farN) {
+
+}
 
 void Camera::Render() {
     
+    culledList.clear(); // remove all the old objects without deallocating the space since 99% of the time it won't need to change the space
+
     stats::_drawcalls++;
     // Console::log("Drawcalls: %u", stats::_drawcalls);
     C3D_Mtx projection;
@@ -172,8 +176,6 @@ void Camera::Render() {
     C3D_Mtx vp;
 
     Mtx_Multiply(&vp, &projection, &view); // create view projection matrix, much faster since it saves a ton of matrix multiplications and is also useful for frustum culling
-
-    std::vector<GameObject*> culledList;
 
     // calculate frustum normals
 
@@ -240,7 +242,8 @@ void Camera::Render() {
 
 
     // culling prepass
-    for (GameObject* obj : *objects) {
+
+    for (GameObject* obj : sceneRoot->children) {
         mesh* m = NULL;
         if (!obj) continue; // skip null objects, there shouldn't be any so I think it can be removed, and I can't remove it from the list at this step so it might end up being kinda slow
         if (!(obj->layer & cullingMask)) continue; // skip culled objects

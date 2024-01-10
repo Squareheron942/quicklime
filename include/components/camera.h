@@ -16,7 +16,11 @@ enum RenderType {
     RENDER_TYPE_TEXTURE = 2
 };
 
+// typedef struct {GameObject* obj; C3D_Mtx view;} icam_obj;
+
 class Camera {
+    // void transformobjs_r(GameObject* obj, C3D_Mtx& parentmodelmtx, C3D_FVec pos, C3D_FVec topN, C3D_FVec botN, C3D_FVec leftN, C3D_FVec rightN, C3D_FVec nearN, C3D_FVec farN);
+
 public:
     GameObject* parent;
     float nearClip, farClip, focalLength = 2.f, fovY, height, width;
@@ -30,7 +34,8 @@ public:
     RenderType type;
     C3D_RenderTarget* target[3] = {NULL, NULL, NULL}; // 2 targets in case of stereoscopic view, plus one for if wide view is also enabled (since it's a different resolution)
     static Camera *mainTop, *mainBottom; // main cameras for top and bottom screen respectively
-    std::vector<GameObject*>* objects;
+    GameObject* sceneRoot;
+    std::vector<GameObject*> culledList;
     float aspectRatio;
     unsigned short cullingMask; // sees all 16 layers by default
     Camera(GameObject& parent, const void* args);

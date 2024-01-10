@@ -4,6 +4,7 @@ image_ext = [".png", ".jpg", ".jpeg"]
 src_ext = [".c", ".cpp", ".pica"]
 hdr_ext = [".h", ".inc", ".hpp"]
 scene_ext = [".scene"]
+mdl_ext = [".slmdl", ".slmtl"]
 
 scripts = []
 materials = [] 
@@ -82,6 +83,20 @@ def process(args: argparse.Namespace):
             shutil.copy(file, os.path.join(args.romfs, 'scenes'))
         file_edit_times[file] = os.path.getmtime(file)
 
+    # copy all user source code files to the correct source code directory
+    subfolders, files = run_fast_scandir(args.assets, src_ext) # copy all source code files to the temporary source code folders
+    for file in files:
+        if not file in file_edit_times or file_edit_times[file] < os.path.getmtime(file):
+            shutil.copy(file, args.source)
+        file_edit_times[file] = os.path.getmtime(file)
+
+    # copy all user model files to the correct directory
+    subfolders, files = run_fast_scandir(args.assets, mdl_ext) # copy all source code files to the temporary source code folders
+    for file in files:
+        if not file in file_edit_times or file_edit_times[file] < os.path.getmtime(file):
+            shutil.copy(file, os.path.join(args.romfs, os.path.dirname(file)))
+        file_edit_times[file] = os.path.getmtime(file)
+
     # copy all headers to include dir
     subfolders, files = run_fast_scandir(args.assets, hdr_ext)
     for file in files:
@@ -104,13 +119,6 @@ def process(args: argparse.Namespace):
     with open(os.path.join(args.include, "materials.inc"), 'w+') as scriptheader:
         scriptheader.write('#pragma once\n')
         scriptheader.writelines(('#include "' + s + '"\n') for s in materials)
-
-    # copy all user source code files to the correct source code directory
-    subfolders, files = run_fast_scandir(args.assets, src_ext) # copy all source code files to the temporary source code folders
-    for file in files:
-        if not file in file_edit_times or file_edit_times[file] < os.path.getmtime(file):
-            shutil.copy(file, args.source)
-        file_edit_times[file] = os.path.getmtime(file)
 
     # copy all image files to gfx folder and add t3s files from the config files (+ create the romfs config file)
     subfolder, files = run_fast_scandir(args.assets, image_ext)
