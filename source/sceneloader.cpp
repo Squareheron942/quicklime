@@ -62,7 +62,7 @@ std::unique_ptr<Scene> SceneLoader::load(std::string name) {
     Console::success("finished reading scene file");
     Console::log("%u objects", out->root->children.size());
 
-    Camera::mainTop->objects = &out->objects;
+    Camera::mainTop->sceneRoot = out->root;
     
     out->awake();
 
@@ -88,7 +88,7 @@ void parseChildren(std::unique_ptr<Scene>& s, GameObject& object, std::string& i
     while(input[0] != ']' && input.size() > 0) {
         GameObject* obj = parseObject(s, input);
         ++n;
-        s->objects.push_back(obj); 
+        s->objects.push_back(obj);
         object.addChild(*s->objects.back());
     }
     input = input.substr(input.find(']') + 1);

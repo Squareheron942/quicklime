@@ -82,22 +82,22 @@ bool material::loadTextureFromMem(C3D_Tex* tex, C3D_TexCube* cube, const void* d
 }
 
 int material::freadstr(FILE* fid, char* str, size_t max_size)
-    {
-        int c;
-        unsigned int count = 0;
-        do {
-            c = fgetc(fid);
-            if (c == EOF) {
-                /* EOF means either an error or end of file but
-                * we do not care which. Clear file error flag
-                * and return -1 */
-                clearerr(fid);
-                return -1;
-            } else {
-                /* Cast c to char */
-                *str = (char) c;
-                count++;
-            }
-        } while ((*(str++) != '\0') && (count < max_size));
-        return count;
-    }
+{
+    int c;
+    unsigned int count = 0;
+    do {
+        c = fgetc(fid);
+        if (c == EOF) {
+            /* EOF means either an error or end of file but
+            * we do not care which. Clear file error flag
+            * and return -1 */
+            clearerr(fid);
+            return -1;
+        } else {
+            /* Cast c to char */
+            *str = (char) c;
+            count++;
+        }
+    } while ((*(str++) != '\0') && (count < max_size));
+    return count;
+}

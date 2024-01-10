@@ -8,11 +8,8 @@
 #include "entt.hpp"
 #include "console.h"
 #include "materialmanager.h"
-#include "ink.h"
-#include "fragmentlit.h"
 #include "bone.h"
 #include "meshrenderer.h"
-#include "dae_default_material.h"
 #include <memory>
 #include <unordered_map>
 

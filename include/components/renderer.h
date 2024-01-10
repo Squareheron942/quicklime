@@ -9,5 +9,5 @@ class Renderer {
     protected:
     Renderer() {}
     public:
-        virtual void render(C3D_Mtx& view, C3D_Mtx& projection) = 0;
+        virtual void render(C3D_Mtx& view, C3D_Mtx& projection, C3D_Mtx* replacement = NULL) = 0;
 };
