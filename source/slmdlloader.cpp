@@ -120,7 +120,7 @@ namespace mdlLoader {
 
         const size_t sizevert = sv;
 
-        Console::log("vs %lu nv %u, rad %f", sizevert, numVerts, radius * 0.01f);
+        // Console::log("vs %lu nv %u, rad %f", sizevert, numVerts, radius * 0.01f);
         
         std::shared_ptr<void> vertices;
         if (loadedVertices.find(path) == loadedVertices.end() || createnew) { // only read data if needed

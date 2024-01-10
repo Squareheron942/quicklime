@@ -28,7 +28,7 @@ int main()
 	#if CONSOLE_ENABLED
 		consoleInit(GFX_BOTTOM, NULL);
 	#endif
-	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
+	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE * 5);
 
 	romfsInit();
 
