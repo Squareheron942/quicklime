@@ -7,7 +7,6 @@
 #include "componentmanager.h"
 #include "renderer.h"
 #include "meshrenderer.h"
-#include <forward_list>
 
 Camera* Camera::mainTop = NULL;
 Camera* Camera::mainBottom = NULL;
@@ -113,6 +112,8 @@ Camera::Camera(GameObject& parent, const void* args) {
     Camera::mainTop = this;
 }
 
+bool printed = false;
+
 void Camera::Render() {
     
     stats::_drawcalls++;
@@ -172,7 +173,7 @@ void Camera::Render() {
 
     Mtx_Multiply(&vp, &projection, &view); // create view projection matrix, much faster since it saves a ton of matrix multiplications and is also useful for frustum culling
 
-    std::forward_list<GameObject*> culledList;
+    std::vector<GameObject*> culledList;
 
     // calculate frustum normals
 
@@ -257,7 +258,7 @@ void Camera::Render() {
         bool bot = m->radius > FVec3_Dot(botN, p);
 
         if (!(left + right + back + front + top + bot)) continue; // if not in any then skip it (this means it is outside the frustum)
-        culledList.push_front(obj);
+        culledList.push_back(obj);
     }
 
     // render objects

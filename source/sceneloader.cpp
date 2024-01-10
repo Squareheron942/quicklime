@@ -58,7 +58,9 @@ std::unique_ptr<Scene> SceneLoader::load(std::string name) {
     text.erase(std::remove_if(text.begin(), text.end(), [](unsigned char x) { return std::isspace(x); }), text.end()); // remove all whitespace from text
     
     parseSceneTree(out, text); // parse the whole object tree 
+    // printSceneTree(*out->root);
     Console::success("finished reading scene file");
+    Console::log("%u objects", out->root->children.size());
 
     Camera::mainTop->objects = &out->objects;
     

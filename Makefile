@@ -33,7 +33,7 @@ include $(DEVKITARM)/3ds_rules
 #     - <libctru folder>/default_icon.png
 #---------------------------------------------------------------------------------
 
-VERSION			:=  v0.0.1.0
+VERSION			:=  v0.0.1.1
 TARGET			:=	$(notdir $(CURDIR))
 PYTHON      	:=  python3
 BUILD			:=	build
@@ -44,7 +44,6 @@ MODEL			:=  assets/scene1/models assets/Plaza_standard/models
 TEMPINCLUDE		:=  tempinclude
 INCLUDES		:=	include entt include/materials include/scripts include/components include/deprecated $(TEMPINCLUDE)
 GRAPHICS		:=	gfx
-GFXBUILD		:=	$(BUILD)
 ROMFS		    :=	romfs
 APP_TITLE       := 	Splatoon Legends
 APP_DESCRIPTION := 	$(VERSION)
@@ -58,7 +57,7 @@ EXTTOOL     	:=  @$(PYTHON) buildscripts/build.py --romfs $(ROMFS) --models $(MO
 #---------------------------------------------------------------------------------
 ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
-CFLAGS	:= -Wall -O2 -mword-relocations \
+CFLAGS	:= -Wall -O2 -g -mword-relocations \
 			-ffunction-sections \
 			$(ARCH)
 
@@ -173,8 +172,8 @@ endif
 .PHONY: all touchelf romfs clean runexttool
 
 #---------------------------------------------------------------------------------
-all: $(BUILD) runexttool $(GFXBUILD) $(DEPSDIR)  $(ROMFS_T3XFILES)
-	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile > build-log.txt
+all: $(BUILD) runexttool .WAIT $(GFXBUILD) $(DEPSDIR)  $(ROMFS_T3XFILES)
+	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile 
 
 touchelf:
 	@touch -c $(TARGET).elf

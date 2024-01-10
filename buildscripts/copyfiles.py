@@ -1,7 +1,12 @@
 import argparse, os, shutil, re, json, ffmpeg
 
+image_ext = [".png", ".jpg", ".jpeg"]
+src_ext = [".c", ".cpp", ".pica"]
+hdr_ext = [".h", ".inc", ".hpp"]
+scene_ext = [".scene"]
+
 scripts = []
-materials = []
+materials = [] 
 
 filter_arg_to_n = {
     "NEAREST": 0,
@@ -56,22 +61,39 @@ def run_fast_scandir(dir, ext):    # dir: str, ext: list
         files.extend(f)
     return subfolders, files
 
-def process(args: argparse.Namespace):
+def make_folder_if_not_exist(path: str) -> None:
+    folder = os.path.dirname(path)
+    if not os.path.exists(folder):
+        os.mkdir(folder)
+
+def process(args: argparse.Namespace): 
+
+    file_edit_times = {}
+    try:
+        with open(os.path.join(args.build, "file_edit_times.json"), 'r') as edit_times:
+            file_edit_times = json.load(edit_times)
+    except:
+        pass
+
     # copy all scene files to romfs
-    subfolders, files = run_fast_scandir(args.assets, [".scene"])
+    subfolders, files = run_fast_scandir(args.assets, scene_ext)
     for file in files:
-        shutil.copy(file, os.path.join(args.romfs, 'scenes'))
+        if not file in file_edit_times or file_edit_times[file] < os.path.getmtime(file):
+            shutil.copy(file, os.path.join(args.romfs, 'scenes'))
+        file_edit_times[file] = os.path.getmtime(file)
 
     # copy all headers to include dir
-    subfolders, files = run_fast_scandir(args.assets, [".h", ".inc", ".hpp"])
+    subfolders, files = run_fast_scandir(args.assets, hdr_ext)
     for file in files:
-        shutil.copy(file, args.include)
+        if not file in file_edit_times or file_edit_times[file] < os.path.getmtime(file):
+            shutil.copy(file, args.include)
         main_class, base_class = find_base_class(file)
         print(main_class + " header")
         if base_class == "Script":
             scripts.append(os.path.basename(file))
         elif base_class == "material":
-            materials.append(os.path.basename(file))
+            materials.append(os.path.basename(file)) 
+        file_edit_times[file] = os.path.getmtime(file)
 
     # compile all user defined scripts into one header
     with open(os.path.join(args.include, "scripts.inc"), 'w+') as scriptheader:
@@ -84,72 +106,88 @@ def process(args: argparse.Namespace):
         scriptheader.writelines(('#include "' + s + '"\n') for s in materials)
 
     # copy all user source code files to the correct source code directory
-    subfolders, files = run_fast_scandir(args.assets, [".c", ".cpp", ".pica"]) # copy all source code files to the temporary source code folders
+    subfolders, files = run_fast_scandir(args.assets, src_ext) # copy all source code files to the temporary source code folders
     for file in files:
-        shutil.copy(file, args.source)
+        if not file in file_edit_times or file_edit_times[file] < os.path.getmtime(file):
+            shutil.copy(file, args.source)
+        file_edit_times[file] = os.path.getmtime(file)
 
     # copy all image files to gfx folder and add t3s files from the config files (+ create the romfs config file)
-    subfolder, files = run_fast_scandir(args.assets, [".png"])
+    subfolder, files = run_fast_scandir(args.assets, image_ext)
     for file in files:
-        if os.path.exists(os.path.splitext(file)[0] + '.texinf'):
-            with open(os.path.splitext(file)[0] + '.texinf', 'r') as config:
-                info = json.load(config)
-                size = 128
-                vram = False
-                compression = "auto"
-                format = "auto-etc1"
-                wrap = {}
-                wrap['S'] = "REPEAT"
-                wrap['T'] = "REPEAT"
-                filter = {}
-                filter["min"] = "NEAREST"
-                filter["mag"] = "LINEAR"
+        infpath = os.path.splitext(file)[0] + '.texinf'
+        if not os.path.exists(infpath):
+            with open(infpath, 'w+') as inf:
+                inf.write("{}")
+        if (file not in file_edit_times) or (file_edit_times[file] < os.path.getmtime(file)) or (infpath not in file_edit_times) or (file_edit_times[infpath] < os.path.getmtime(infpath)):
+            if os.path.exists(infpath):
+                with open(infpath, 'r') as config:
+                    info = json.load(config)
+                    size = 128
+                    vram = False
+                    compression = "auto"
+                    format = "auto-etc1"
+                    wrap = {}
+                    wrap['S'] = "REPEAT"
+                    wrap['T'] = "REPEAT"
+                    filter = {}
+                    filter["min"] = "NEAREST"
+                    filter["mag"] = "LINEAR"
 
-                try:
-                    format = info['format']
-                except KeyError:
-                    pass
-                try:
-                    size = info['size']
-                except KeyError:
-                    pass
-                try:
-                    vram = info['vram']
-                except KeyError:
-                    pass
-                try:
-                    compression = info['compression']
-                except KeyError:
-                    pass
-                try:
-                    wrap = info['wrap']
-                except KeyError:
-                    pass
-                try:
-                    filter = info['filter']
-                except KeyError:
-                    pass
+                    try:
+                        format = info['format']
+                    except KeyError:
+                        pass
+                    try:
+                        size = info['size']
+                    except KeyError:
+                        pass
+                    try:
+                        vram = info['vram']
+                    except KeyError:
+                        pass
+                    try:
+                        compression = info['compression']
+                    except KeyError:
+                        pass
+                    try:
+                        wrap = info['wrap']
+                    except KeyError:
+                        pass
+                    try:
+                        filter = info['filter']
+                    except KeyError:
+                        pass
 
-                arg = 0
+                    arg = 0
 
-                if (vram):
-                    arg |= 1 << 7
-                arg |= filter_arg_to_n[filter['mag']] << 6
-                arg |= filter_arg_to_n[filter['min']] << 5
-                arg |= wrap_arg_to_n[wrap['S']] << 3
-                arg |= wrap_arg_to_n[wrap['T']] << 1
+                    if (vram):
+                        arg |= 1 << 0
+                    arg |= filter_arg_to_n[filter['mag']] << 1
+                    arg |= filter_arg_to_n[filter['min']] << 2
+                    arg |= wrap_arg_to_n[wrap['S']] << 3
+                    arg |= wrap_arg_to_n[wrap['T']] << 5
 
-                with open(os.path.join(args.gfx, os.path.splitext(os.path.basename(file))[0]) + '.t3s', 'w+') as t3s: 
-                    t3s.write(f'-f {format} -z {compression} ')
-                    t3s.write(os.path.basename(file)) # file will be copied into here so it's fine
-                    print(file)
-                    stream = ffmpeg.input(file)
-                    stream = ffmpeg.filter(stream, "scale", size, size)
-                    stream = ffmpeg.output(stream, os.path.join(args.gfx, os.path.basename(file))) 
-                    ffmpeg.run(stream, overwrite_output=True, quiet=True)
-                    # TODO replace hardcoded path with variable
-                    with open(os.path.join(args.romfs, "gfx", os.path.splitext(os.path.basename(file))[0] + '.t3xcfg'), 'wb+') as t3xcfg:
-                        t3xcfg.write((arg).to_bytes(1))
+
+                    
+                    with open(os.path.join(args.gfx, os.path.splitext(os.path.basename(file))[0]) + '.t3s', 'w+') as t3s: 
+                        t3s.write(f'-f {format} -z {compression} ')
+                        t3s.write(os.path.basename(file)) # file will be copied into here so it's fine
+                        print(file)
+                        stream = ffmpeg.input(file)
+                        stream = ffmpeg.filter(stream, "scale", size, size)
+                        stream = ffmpeg.output(stream, os.path.join(args.gfx, os.path.basename(file))) 
+                        ffmpeg.run(stream, overwrite_output=True, quiet=True)
+                        # TODO replace hardcoded path with variable
+
+
+                        make_folder_if_not_exist(os.path.join(args.romfs, "gfx", os.path.splitext(os.path.basename(file))[0] + '.t3xcfg'))
+                        with open(os.path.join(args.romfs, "gfx", os.path.splitext(os.path.basename(file))[0] + '.t3xcfg'), 'wb+') as t3xcfg:
+                            t3xcfg.write((arg).to_bytes(1))
+        file_edit_times[file] = os.path.getmtime(file)
+        file_edit_times[infpath] = os.path.getmtime(infpath)
+        with open(os.path.join(args.build, "file_edit_times.json"), 'w+') as edit_times:
+            json.dump(file_edit_times, edit_times)
 
 
 def add_args(parser: argparse.ArgumentParser):
