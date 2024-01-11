@@ -76,7 +76,7 @@ class Scene {
             C3D_LightEnvInit(&lights::lightenv);
             C3D_LightEnvBind(&lights::lightenv);
 
-            C3D_FVec lightVec = FVec4_New(0.0f, 0.0f, -0.5f, 1.0f);
+            C3D_FVec lightVec = FVec4_New(0.0f, 0.0f, 0.f, 1.0f);
 
             C3D_LightInit(&light, &lights::lightenv);
             C3D_LightColor(&light, 0.992, 0.984, 0.827);

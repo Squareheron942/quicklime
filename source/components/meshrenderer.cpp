@@ -27,9 +27,9 @@ void MeshRenderer::render(C3D_Mtx& view, C3D_Mtx& projection, C3D_Mtx* replaceme
     
     C3D_Mtx model = *parent->getComponent<transform>(); // always will have a transform by default 
 
-    Mtx_Multiply(&view, &view, replacement_mv ? replacement_mv : &model);
+    Mtx_Multiply(&model, &view, replacement_mv ? replacement_mv : &model);
 
-    mat->setMaterial(&view, &projection);
+    mat->setMaterial(&model, &projection);
 
     // Draw the VBO
     C3D_DrawArrays(GPU_TRIANGLES, 0, m->numVerts);
