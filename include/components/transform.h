@@ -31,6 +31,7 @@ class transform {
             position.z += offset.z;
         };
 
+
         /**
          * @brief Rotates entity by `offset` radians
          * 
@@ -142,10 +143,10 @@ class transform {
             Mtx_FromQuat(&rot, rotation);
             Mtx_Identity(&m);
             
-            Mtx_Translate(&m, position.x, position.y, position.z, false); // translate
+            Mtx_Translate(&m, position.x, position.y, position.z, true); // translate
             Mtx_Multiply(&m, &rot, &m); // rotate 
             Mtx_Scale(&m, scale.x, scale.y, scale.z); // scale
-
+            
             return m;
         }
 };
