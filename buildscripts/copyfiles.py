@@ -45,7 +45,7 @@ def find_base_class(file_path):
 
     return main_class, base_class
 
-def run_fast_scandir(dir, ext):    # dir: str, ext: list
+def run_fast_scandir(dir: str, ext: list[str]):    # dir: str, ext: list
     subfolders, files = [], []
 
     for f in os.scandir(dir):
@@ -130,7 +130,7 @@ def process(args: argparse.Namespace):
         if not os.path.exists(infpath):
             with open(infpath, 'w+') as inf:
                 inf.write("{}")
-        if (file not in file_edit_times) or (file_edit_times[file] < os.path.getmtime(file)) or (infpath not in file_edit_times) or (file_edit_times[infpath] < os.path.getmtime(infpath)):
+        if (file not in file_edit_times) or (file_edit_times[file] < os.path.getmtime(file)) or (infpath not in file_edit_times) or (file_edit_times[infpath] < os.path.getmtime(infpath)) or (not os.path.exists(os.path.join(args.gfx, os.path.splitext(os.path.basename(file))[0]) + '.t3s')):
             if os.path.exists(infpath):
                 with open(infpath, 'r') as config:
                     info = json.load(config)
@@ -180,7 +180,7 @@ def process(args: argparse.Namespace):
                     arg |= wrap_arg_to_n[wrap['T']] << 5
 
 
-                    
+                    # make_folder_if_not_exist(os.path.join(args.gfx, os.path.splitext(os.path.basename(file))[0]) + '.t3s')
                     with open(os.path.join(args.gfx, os.path.splitext(os.path.basename(file))[0]) + '.t3s', 'w+') as t3s: 
                         t3s.write(f'-f {format} -z {compression} --atlas ')
                         t3s.write(os.path.basename(file)) # file will be copied into here so it's fine
