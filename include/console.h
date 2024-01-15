@@ -147,9 +147,9 @@ class Console {
         #endif
     }
 
-    static inline void setPosition(int x = stats::_x, int y = stats::_y, int z = stats::_z) {
+    static inline void setPosition(int x = stats::_x, int y = stats::_y, int z = stats::_z, int w = stats::_w) {
         #if CONSOLE_ENABLED
-        printf("\e[s\e[%u;%uHPosition: %d %d %d         \e[u", POS_Y, POS_X, x, y, z);
+        printf("\e[s\e[%u;%uHPosition: %d %d %d %d        \e[u", POS_Y, POS_X, x, y, z, w);
         #endif
     }
 

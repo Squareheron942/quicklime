@@ -25,24 +25,20 @@ namespace {
 material::~material() {}
 
 std::optional<std::shared_ptr<Texture>> material::loadTextureFromFile(std::string name) {
-    // Console::log("texture requested");
-    if (name.size() == 0) name = "blank"; // no texture, load backup cat
+    if (name.size() == 0) name = "blank"; // no texture, load blank white texture
     if (loadedTex.find(name) == loadedTex.end()) {
         FILE* f = fopen(("romfs:/gfx/" + name + ".t3x").c_str(), "r");
-        if (!f) f = fopen("romfs:/gfx/kitten.t3x", "r"); // texture not found, load backup cat
+        if (!f) {
+            // Console::warn("File not found:");
+            // Console::warn(name.c_str());
+            name = "blank";
+            f = fopen(("romfs:/gfx/" + name + ".t3x").c_str(), "r");
+            // return {};
+        } // texture not found, return nothing
 
         FILE* cfg = fopen(("romfs:/gfx/" + name + ".t3xcfg").c_str(), "r");
         
         t3xcfg_t texcfg;
-
-        // const char *bit_rep[16] = {
-        //     [ 0] = "0000", [ 1] = "0001", [ 2] = "0010", [ 3] = "0011",
-        //     [ 4] = "0100", [ 5] = "0101", [ 6] = "0110", [ 7] = "0111",
-        //     [ 8] = "1000", [ 9] = "1001", [10] = "1010", [11] = "1011",
-        //     [12] = "1100", [13] = "1101", [14] = "1110", [15] = "1111",
-        // };
-        // if (name == "PlazaShopGlassTile_Alb")
-        //     Console::log("%s%s", bit_rep[*(char*)&texcfg >> 4], bit_rep[*(char*)&texcfg & 0x0F]);
 
         if (cfg) fread(&texcfg, sizeof(t3xcfg_t), 1, cfg);
 
@@ -55,10 +51,6 @@ std::optional<std::shared_ptr<Texture>> material::loadTextureFromFile(std::strin
 
         C3D_TexSetFilter(&tex->tex, texcfg.magFilter, texcfg.minFilter);
         C3D_TexSetWrap(&tex->tex, texcfg.wrapS, texcfg.wrapT);
-
-        // Console::log("%p", *(char*)&texcfg);
-        // if (name == "PlazaShopGlassTile_Alb")
-        //     Console::log("%s%s", bit_rep[*(char*)&texcfg >> 4], bit_rep[*(char*)&texcfg & 0x0F]);
 
         
         // Delete the t3x object since we don't need it

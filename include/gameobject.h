@@ -29,12 +29,25 @@ class GameObject {
     void LateUpdate(void);
     void Awake(void);
 
-    template<typename T>
-    inline void addComponent(T &component) {
-        reg.emplace_or_replace<T>(id);
-        reg.get<T>(id) = component;
+    /**
+     * @brief Adds a component to GameObject at runtime. If the GameObject already has the component, this one will replace it.
+     * 
+     * @tparam T Component to add
+     * @tparam Args Argument types
+     * 
+     * @param args Arguments to pass to the component constructor
+     */
+    template<typename T, typename ...Args>
+    inline void addComponent(Args&& ...args) {
+        reg.emplace_or_replace<T>(id, std::forward<Args>(args)...);
     }
 
+    /**
+     * @brief Get the Component object
+     * 
+     * @tparam T Component to get
+     * @return T* Pointer to the component instance
+     */
     template<typename T>
     inline T* getComponent() {
         return reg.try_get<T>(id);

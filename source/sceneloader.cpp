@@ -11,6 +11,7 @@
 #include "slmdlloader.h"
 #include <type_traits>
 #include <iostream>
+#include "lights.h"
 
 // helper functions for the loader
 
@@ -48,6 +49,7 @@ std::unique_ptr<Scene> SceneLoader::load(std::string name) {
         svcSleepThread(5000000000);
         return NULL;
     }
+    
     std::unique_ptr<Scene> out(new Scene(name));
 
     std::string text = readFile(name);
