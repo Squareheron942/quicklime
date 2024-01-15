@@ -103,7 +103,10 @@ def process(args: argparse.Namespace):
         if not file in file_edit_times or file_edit_times[file] < os.path.getmtime(file):
             shutil.copy(file, args.include)
         main_class, base_class = find_base_class(file)
-        print(main_class + " header")
+        try:
+            print(main_class + " header")
+        except:
+            pass
         if base_class == "Script":
             scripts.append(os.path.basename(file))
         elif base_class == "material":
@@ -179,7 +182,7 @@ def process(args: argparse.Namespace):
 
                     
                     with open(os.path.join(args.gfx, os.path.splitext(os.path.basename(file))[0]) + '.t3s', 'w+') as t3s: 
-                        t3s.write(f'-f {format} -z {compression} ')
+                        t3s.write(f'-f {format} -z {compression} --atlas ')
                         t3s.write(os.path.basename(file)) # file will be copied into here so it's fine
                         print(file)
                         stream = ffmpeg.input(file)

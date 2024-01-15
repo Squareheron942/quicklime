@@ -59,7 +59,7 @@ def writematerials(inp: et.Element, path: str) -> list:
                 out.write((1).to_bytes(4)) # tells the material it is opaque
             if eff.find('diffuse/texture') is not None:
                 try:
-                    out.write(bytes(os.path.splitext(tex[effect.find('profile_COMMON/newparam[@sid="' + samplers[eff.find('diffuse/texture').attrib['texture']] + '"]/surface/init_from').text])[0], 'utf-8'))
+                    out.write(bytes(os.path.splitext(tex[effect.find('profile_COMMON/newparam[@sid="' + samplers[eff.find('diffuse/texture').attrib['texture']] + '"]/surface/init_from').text])[0].split("_Alb")[0], 'utf-8'))
                 except KeyError:
                     continue
                 out.write((0).to_bytes(1))
