@@ -33,7 +33,7 @@ include $(DEVKITARM)/3ds_rules
 #     - <libctru folder>/default_icon.png
 #---------------------------------------------------------------------------------
 
-VERSION			:=  v0.0.1.2
+VERSION			:=  v0.0.1.1
 TARGET			:=	$(notdir $(CURDIR))
 PYTHON      	:=  python3
 BUILD			:=	build
@@ -172,7 +172,7 @@ endif
 .PHONY: all touchelf romfs clean runexttool
 
 #---------------------------------------------------------------------------------
-all: $(BUILD) runexttool $(GFXBUILD) $(DEPSDIR) $(ROMFS_T3XFILES)
+all: $(BUILD) runexttool $(GFXBUILD) $(DEPSDIR)  $(ROMFS_T3XFILES)
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile 
 
 touchelf:
@@ -208,7 +208,7 @@ clean:
 	@rm -rf $(BUILD) $(TARGET).3dsx $(OUTPUT).smdh $(TARGET).elf $(GFXBUILD) $(TEMPINCLUDE) $(TEMPSOURCE)
 # makes sense, make clean will run
 #---------------------------------------------------------------------------------
-$(GFXBUILD)/%.t3x	$(BUILD)/%.h	:	%.t3s $(EXTTOOL)
+$(GFXBUILD)/%.t3x	$(BUILD)/%.h	:	%.t3s runexttool
 #---------------------------------------------------------------------------------
 	@echo $(notdir $<)
 	@tex3ds -i $< -H $(BUILD)/$*.h -d $(DEPSDIR)/$*.d -o $(GFXBUILD)/$*.t3x

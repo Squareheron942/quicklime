@@ -175,12 +175,13 @@ def writeobjs(inp: et.Element, path: str) -> None:
                                     m.write(struct.pack('f', sourcevals[offsets[attrib]][index * stride[attrib] + component]))
                                 except IndexError:
                                     print("ERROR: Index out of range when parsing indices")
-                                    print(sourcevals)
                                     print(node.attrib['name'])
-                                    print(stride)
-                                    print(indices)
-                                    print(nv)
-                                    print(index, vertex, attrib, component)
+                                    print(len(sourcevals), "attribs")
+                                    print(len(sourcevals[offsets[attrib]]), sourcevals[offsets[attrib]])
+                                    print(len(indices), "indices", indices)
+                                    print("offsets", offsets) # correct
+                                    print("stride", stride) # correct
+                                    print("nv", nv, "index", index, "vertex", vertex, "attrib", attrib, "component", component, "stride", stride[attrib])
                                     exit(1)
                         case 'short':
                             pass
