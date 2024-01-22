@@ -40,7 +40,7 @@ int main()
 	Console::log("Language detected: %u", config::lang);
 	Console::log("Region detected: %u", config::region);
 
-	SceneManager::currentScene = SceneLoader::load("scene1");
+	SceneManager::currentScene = SceneLoader::load("Fld_Plaza");
 
 	HIDUSER_EnableGyroscope();
 

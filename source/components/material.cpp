@@ -24,30 +24,39 @@ namespace {
 
 material::~material() {}
 
-std::optional<std::shared_ptr<Texture>> material::loadTextureFromFile(std::string name) {
+[[nodiscard]] std::optional<std::shared_ptr<Texture>> material::loadTextureFromFile(std::string name) {
     if (name.size() == 0) name = "blank"; // no texture, load blank white texture
     if (loadedTex.find(name) == loadedTex.end()) {
         FILE* f = fopen(("romfs:/gfx/" + name + ".t3x").c_str(), "r");
         if (!f) {
-            // Console::warn("File not found:");
-            // Console::warn(name.c_str());
-            name = "blank";
-            f = fopen(("romfs:/gfx/" + name + ".t3x").c_str(), "r");
-            // return {};
+            Console::warn("File not found:");
+            Console::warn(name.c_str());
+            // name = "blank";
+            // f = fopen(("romfs:/gfx/" + name + ".t3x").c_str(), "r");
+            return {};
         } // texture not found, return nothing
 
         FILE* cfg = fopen(("romfs:/gfx/" + name + ".t3xcfg").c_str(), "r");
         
         t3xcfg_t texcfg;
 
-        if (cfg) fread(&texcfg, sizeof(t3xcfg_t), 1, cfg);
+        if (!cfg) {
+            fclose(f);
+            return {};
+        }
+
+        fread(&texcfg, sizeof(t3xcfg_t), 1, cfg);
 
         Texture* tex = new Texture(name); 
 
         loadedTex[name] = tex;
 
         Tex3DS_Texture t3x = Tex3DS_TextureImportStdio(f, &tex->tex, &tex->cube, texcfg.vram);
-        if (!t3x) return {};
+        if (!t3x) {
+            fclose(f);
+            fclose(cfg);
+            return {};
+        }
 
         C3D_TexSetFilter(&tex->tex, texcfg.magFilter, texcfg.minFilter);
         C3D_TexSetWrap(&tex->tex, texcfg.wrapS, texcfg.wrapT);

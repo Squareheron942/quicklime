@@ -12,6 +12,7 @@
 #include "meshrenderer.h"
 #include <memory>
 #include <unordered_map>
+#include "stats.h"
 
 namespace {
     static int freadstr(FILE* fid, char* str, size_t max_size)
@@ -104,6 +105,8 @@ namespace mdlLoader {
         fread(&attrlen, sizeof(char), attrnum, f);
         fread(&radius, sizeof(float), 1, f);
 
+        stats::_vertices += numVerts;
+
         // read obj section
         fread(str, sizeof(char), 3, f);
 
@@ -113,7 +116,7 @@ namespace mdlLoader {
             return false;
         }
 
-        bone* bones = parseBones(f);
+        [[maybe_unused]] bone* bones = parseBones(f);
 
         const size_t sizevert = sv;
 

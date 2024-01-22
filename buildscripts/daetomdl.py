@@ -14,7 +14,7 @@ def writematerials(inp: et.Element, path: str) -> list:
     for image in inp.findall('library_images/image'):
         tex[image.attrib['id']] = image.find('init_from').text
     for mat in inp.findall('library_materials/material'):
-        with open(os.path.join(path, mat.attrib['name']) + '.slmtl', 'wb+') as out:
+        with open(os.path.join(path, mat.attrib['id']) + '.slmtl', 'wb+') as out:
             print(out.name)
             effect = inp.find('library_effects/effect[@id="' + mat.find('instance_effect').attrib['url'].split('#')[1] + '"]')
             inputs = {}
@@ -66,7 +66,7 @@ def writematerials(inp: et.Element, path: str) -> list:
 
 def writeheader(root: et.Element, inp: et.Element, out: io.BufferedWriter, geom: et.Element) -> float:
     out.write(("mdl").encode('utf-8')) # start of header
-    out.write(root.find('library_materials/material[@id="' + inp.find('instance_geometry/bind_material/technique_common/instance_material').attrib['target'].split('#')[1] + '"]').attrib['name'].encode('utf-8')) # write material name
+    out.write(root.find('library_materials/material[@id="' + inp.find('instance_geometry/bind_material/technique_common/instance_material').attrib['target'].split('#')[1] + '"]').attrib['id'].encode('utf-8')) # write material name
     out.write((0).to_bytes(1))
     out.write((int(geom.find('mesh/triangles').attrib['count']) * 3).to_bytes(length=4, byteorder='little')) # number of vertices
     n_attr = 0
@@ -132,12 +132,16 @@ def writeheader(root: et.Element, inp: et.Element, out: io.BufferedWriter, geom:
 
     return avg
 
-def writeobjs(inp: et.Element, path: str) -> None:
+def writeobjs(inp: et.Element, path: str) -> None: 
     geoms = inp.findall('library_geometries/geometry')
     # parse the scene section (since it's the only place where the material is specified)
     for node in inp.findall('library_visual_scenes/visual_scene/node'): # iterate through all nodes in the first scene (i'm going to ignore having multiple scenes because just why) 
-        with open(os.path.join(path, node.attrib['name']) + '.slmdl', 'wb+') as m: 
-            geom = inp.find('library_geometries/geometry[@id="' + node.find('instance_geometry').attrib['url'].split('#')[1] + '"]') # get the geometry tag
+        with open(os.path.join(path, node.attrib['id']) + '.slmdl', 'wb+') as m: 
+            try:
+                geom = inp.find('library_geometries/geometry[@id="' + node.find('instance_geometry').attrib['url'].split('#')[1] + '"]') # get the geometry tag
+            except:
+                print(node.attrib)
+                exit(1)
             avgpos = writeheader(inp, node, m, geom) # creates the header and also calculates the center of the object for us
             m.write(("obj").encode('utf-8')) # start of object stuff
 
@@ -164,20 +168,22 @@ def writeobjs(inp: et.Element, path: str) -> None:
                 t_attr_str.append(attrib.find('technique_common/accessor/param').attrib['type'])
 
             totalstride = sum(stride)
+
+            n_attr = sorted(offsets)[len(offsets) - 1] + 1 
             
             for vertex in range(nv): # iterate through vertices
-                for attrib in range(len(attribs)): # iterate though attribs
-                    index = indices[vertex * len(attribs) + attrib]
+                for attrib in range(len(offsets)): # iterate though attribs
+                    index = indices[vertex * n_attr + offsets[attrib]]
                     match t_attr_str[attrib]:
                         case 'float':
                             for component in range(stride[attrib]): # iterate through each value in the attribute
                                 try:
-                                    m.write(struct.pack('f', sourcevals[offsets[attrib]][index * stride[attrib] + component]))
+                                    m.write(struct.pack('f', sourcevals[attrib][index * stride[attrib] + component]))
                                 except IndexError:
                                     print("ERROR: Index out of range when parsing indices")
-                                    print(node.attrib['name'])
+                                    print(node.attrib['id'])
                                     print(len(sourcevals), "attribs")
-                                    print(len(sourcevals[offsets[attrib]]), sourcevals[offsets[attrib]])
+                                    print(len(sourcevals[attrib]), sourcevals[attrib])
                                     print(len(indices), "indices", indices)
                                     print("offsets", offsets) # correct
                                     print("stride", stride) # correct
@@ -198,24 +204,24 @@ def process(args: argparse.Namespace):
         with open(os.path.join(args.build, 'mdl_edit_times.json'), 'r') as times:
             file_edit_times = json.load(times)
     
-    for modelfolder in args.models:
-        for root, dirs, models in os.walk(os.path.realpath(modelfolder)):
-            for modelfile in models:
-                if os.path.splitext(modelfile)[1] == '.dae':
-                    model = os.path.join(root, modelfile)
-                    if model not in file_edit_times or file_edit_times[model] != os.path.getmtime(model):
-                        print(model)
-                        if not os.path.isdir("romfs/" + modelfolder):
-                            os.makedirs("romfs/" + modelfolder)
-                        with open(model, 'r') as src:
-                            xmlstring = src.read()
-                            xmlstring = re.sub(r'\sxmlns="[^"]+"', '', xmlstring, count=1) # remove namespace definition from file
-                            mdl = et.fromstring(xmlstring)
-                            if args.mirrorpath: 
-                                convfile(mdl, os.path.join(args.romfs, modelfolder))
-                            else: 
-                                convfile(mdl, args.romfs)
-                    file_edit_times[model] = os.path.getmtime(model)
+     
+    for root, dirs, models in os.walk(os.path.realpath(args.assets)):
+        folder = os.path.relpath(root, os.path.join(args.assets, '../'))
+        for modelfile in models:
+            if os.path.splitext(modelfile)[1] == '.dae':
+                model = os.path.join(root, modelfile)
+                if model not in file_edit_times or file_edit_times[model] != os.path.getmtime(model):
+                    if not os.path.isdir("romfs/" + folder):
+                        os.makedirs("romfs/" + folder)
+                    with open(model, 'r') as src:
+                        xmlstring = src.read()
+                        xmlstring = re.sub(r'\sxmlns="[^"]+"', '', xmlstring, count=1) # remove namespace definition from file
+                        mdl = et.fromstring(xmlstring)
+                        if args.mirrorpath:
+                            convfile(mdl, os.path.join(args.romfs, folder))
+                        else:
+                            convfile(mdl, args.romfs)
+                file_edit_times[model] = os.path.getmtime(model)
 
     with open(os.path.join(args.build, 'mdl_edit_times.json'), 'w+') as times:
         json.dump(file_edit_times, times)

@@ -20,6 +20,8 @@
 #define DRAW_Y 4
 #define MEM_X 0
 #define MEM_Y 5
+#define NV_X 0
+#define NV_Y 9
 
 #define CONSOLE_TOP 2 // 1 line past bottom of static elements
 #define CONSOLE_NUM_LINES 32 - CONSOLE_TOP
@@ -175,6 +177,12 @@ class Console {
         #endif
     }
 
+    static inline void showNumVertices() {
+        #if CONSOLE_ENABLED
+        printf("\e[s\e[%u;%uHVertices: %u\e[u", NV_Y, NV_X, stats::_vertices);
+        #endif
+    }
+
     static inline void update() {
         if (controls::getDown(controls::key::KEY_SELECT)) nextMenu();
         switch (menu) {
@@ -183,6 +191,7 @@ class Console {
                 setDrawCalls();
                 setPosition();
                 updateMemUsage();
+                showNumVertices();
                 #if CONSOLE_ENABLED
                 printf("\e[s\e[1;0H<                Stats                 >\e[u"); // 40 chars wide
                 #endif

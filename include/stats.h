@@ -1,6 +1,7 @@
 #pragma once
 
 namespace stats {
-    static unsigned int _drawcalls = 0;
-    static float _x = 0, _y = 0, _z = 0, _w = 0;
+    extern unsigned int _drawcalls;
+    extern float _x, _y, _z, _w;
+    extern unsigned int _vertices;
 }

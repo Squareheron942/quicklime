@@ -10,6 +10,7 @@
 #include <vector>
 #include "lights.h"
 #include "pointlight.h"
+#include "spotlight.h"
 
 class Scene {
     protected:
@@ -23,7 +24,7 @@ class Scene {
         std::string name;
         entt::registry reg;
 	    GameObject *root;
-        PointLight splight;
+        SpotLight splight;
         std::vector<GameObject*> objects;
         // still hardcoded until i add proper light component
 

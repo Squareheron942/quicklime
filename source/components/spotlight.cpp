@@ -5,8 +5,8 @@
 namespace {
     struct spotlight_args { // pretty much just left it at what I think are decently reasonable settings
         float spread_angle = 1.1780972451f;
-        float color[4] = {0.992, 0.984, 0.827, 1.f};
-        C3D_FVec direction = {1.f, 0.5773502692f, 0.5773502692f, 0.5773502692f}; // pointing down, forward, left
+        float color[4] = {1.0f, 1.0f, 0.8f, 1.0f};
+        C3D_FVec direction = {1.f, -0.368688f, -0.766044f, -0.526541f};
         C3D_FVec position = {1.f, 0.f, 0.f, 0.f};
     };
 }
