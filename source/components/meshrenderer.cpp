@@ -10,17 +10,18 @@
 #include "stats.h"
 #include "defines.h"
 
-MeshRenderer::MeshRenderer(GameObject& parent, const void* args) : parent(&parent), mat((material*)args) {
+MeshRenderer::MeshRenderer(GameObject& parent, const void* args) : parent(&parent), mat((material*)args) {}
 
-}
-
-MeshRenderer::MeshRenderer(GameObject& parent, material* mat) : parent(&parent), mat(mat) {
-
-}
+MeshRenderer::MeshRenderer(GameObject& parent, material* mat) : parent(&parent), mat(mat) {}
 
 void MeshRenderer::render(C3D_Mtx& view, C3D_Mtx& projection, C3D_Mtx* replacement_mv) {
     mesh* m = parent->getComponent<mesh>();
+    #if DEBUG
     assert(m != nullptr);
+    assert(mat != nullptr);
+    assert(parent != nullptr);
+    stats::_drawcalls++; // increment internal counter for debugging info
+    #endif
 
     C3D_SetBufInfo(&m->buf);
     C3D_SetAttrInfo(&m->attrInfo);
@@ -35,10 +36,6 @@ void MeshRenderer::render(C3D_Mtx& view, C3D_Mtx& projection, C3D_Mtx* replaceme
     C3D_DrawArrays(GPU_TRIANGLES, 0, m->numVerts);
 
     mat->resetMaterial();
-
-    #if DEBUG
-    stats::_drawcalls++; // increment internal counter for debugging info
-    #endif
 }
 
 COMPONENT_REGISTER(MeshRenderer)

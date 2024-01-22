@@ -17,7 +17,7 @@ namespace {
     u64 permut_from_num_attr(u8 n) {
         u64 perm = 0;
         for (u8 i = 0; i < n; i++) {
-            perm |= (i << (4 * i));
+            perm |= ((i & 0xF) << (4 * i));
         } // for each attrib add the corresponding number (for 3 attribs, should make 0x210 aka 528)
         return perm;
     }

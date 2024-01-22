@@ -122,8 +122,7 @@ void Camera::Render() {
     
     culledList.clear(); // remove all the old objects without deallocating the space since 99% of the time it won't need to change the space
 
-    stats::_drawcalls++;
-    // Console::log("Drawcalls: %u", stats::_drawcalls);
+    stats::_drawcalls = 0;
 
     // camera setup
 
@@ -182,9 +181,7 @@ void Camera::Render() {
     // lighting update
 
     for (int i = 0; i < HW_MAX_LIGHTS; ++i) 
-        if (lights::active[i] != nullptr) lights::active[i]->update(&view);
-
-    
+        if (lights::active[i] != nullptr) lights::active[i]->update(&view); 
 
 
     C3D_Mtx vp;
@@ -193,66 +190,62 @@ void Camera::Render() {
 
     // calculate frustum normals
 
-    C3D_FVec pos = trans->position;
-    C3D_FVec topN, botN, leftN, rightN, nearN, farN;
-
-    nearN.x = vp.r[2].c[0] + vp.r[3].c[0];
-    nearN.y = vp.r[2].c[1] + vp.r[3].c[1];
-    nearN.z = vp.r[2].c[2] + vp.r[3].c[2];
-
-    farN.x = -vp.r[2].c[0] + vp.r[3].c[0];
-    farN.y = -vp.r[2].c[1] + vp.r[3].c[1];
-    farN.z = -vp.r[2].c[2] + vp.r[3].c[2];
+    // C3D_FVec pos = trans->position;
+    // C3D_FVec topN, botN, leftN, rightN, nearN, farN;
+ 
+    // farN.x = -vp.r[0].c[2] + vp.r[0].c[3];
+    // farN.y = -vp.r[1].c[2] + vp.r[1].c[3];
+    // farN.z = -vp.r[2].c[2] + vp.r[2].c[3];
 
 
-    botN.x = vp.r[1].c[0] + vp.r[3].c[0];
-    botN.y = vp.r[1].c[1] + vp.r[3].c[1];
-    botN.z = vp.r[1].c[2] + vp.r[3].c[2];
+    // botN.x = vp.r[0].c[1] + vp.r[0].c[3];
+    // botN.y = vp.r[1].c[1] + vp.r[1].c[3];
+    // botN.z = vp.r[2].c[1] + vp.r[2].c[3];
 
-    topN.x = -vp.r[1].c[0] + vp.r[3].c[0];
-    topN.y = -vp.r[1].c[1] + vp.r[3].c[1];
-    topN.z = -vp.r[1].c[2] + vp.r[3].c[2];
+    // topN.x = -vp.r[0].c[1] + vp.r[0].c[3];
+    // topN.y = -vp.r[1].c[1] + vp.r[1].c[3];
+    // topN.z = -vp.r[2].c[1] + vp.r[2].c[3];
 
 
-    leftN.x = vp.r[0].c[0] + vp.r[3].c[0];
-    leftN.y = vp.r[0].c[1] + vp.r[3].c[1];
-    leftN.z = vp.r[0].c[2] + vp.r[3].c[2];
+    // leftN.x = vp.r[0].c[0] + vp.r[0].c[3];
+    // leftN.y = vp.r[1].c[0] + vp.r[1].c[3];
+    // leftN.z = vp.r[2].c[0] + vp.r[2].c[3];
 
-    rightN.x = -vp.r[0].c[0] + vp.r[3].c[0];
-    rightN.y = -vp.r[0].c[1] + vp.r[3].c[1];
-    rightN.z = -vp.r[0].c[2] + vp.r[3].c[2];
+    // rightN.x = -vp.r[0].c[0] + vp.r[0].c[3];
+    // rightN.y = -vp.r[1].c[0] + vp.r[1].c[3];
+    // rightN.z = -vp.r[2].c[0] + vp.r[2].c[3];
     
-    // normalize frustum normals
-    float invnearM = 1/sqrtf(nearN.x*nearN.x + nearN.y*nearN.y + nearN.z*nearN.z);
-    float invfarM = 1/sqrtf(farN.x*farN.x + farN.y*farN.y + farN.z*farN.z);
-    float invtopM = 1/sqrtf(topN.x*topN.x + topN.y*topN.y + topN.z*topN.z);
-    float invbotM = 1/sqrtf(botN.x*botN.x + botN.y*botN.y + botN.z*botN.z);
-    float invleftM = 1/sqrtf(leftN.x*leftN.x + leftN.y*leftN.y + leftN.z*leftN.z);
-    float invrightM = 1/sqrtf(rightN.x*rightN.x + rightN.y*rightN.y + rightN.z*rightN.z);
+    // // normalize frustum normals
+    // float invnearM = 1/sqrtf(nearN.x*nearN.x + nearN.y*nearN.y + nearN.z*nearN.z);
+    // float invfarM = 1/sqrtf(farN.x*farN.x + farN.y*farN.y + farN.z*farN.z);
+    // float invtopM = 1/sqrtf(topN.x*topN.x + topN.y*topN.y + topN.z*topN.z);
+    // float invbotM = 1/sqrtf(botN.x*botN.x + botN.y*botN.y + botN.z*botN.z);
+    // float invleftM = 1/sqrtf(leftN.x*leftN.x + leftN.y*leftN.y + leftN.z*leftN.z);
+    // float invrightM = 1/sqrtf(rightN.x*rightN.x + rightN.y*rightN.y + rightN.z*rightN.z);
 
-    nearN.x *= invnearM;
-    nearN.y *= invnearM;
-    nearN.z *= invnearM;
+    // nearN.x *= invnearM;
+    // nearN.y *= invnearM;
+    // nearN.z *= invnearM;
 
-    farN.x *= invfarM;
-    farN.y *= invfarM;
-    farN.z *= invfarM;
+    // farN.x *= invfarM;
+    // farN.y *= invfarM;
+    // farN.z *= invfarM;
 
-    topN.x *= invtopM;
-    topN.y *= invtopM;
-    topN.z *= invtopM;
+    // topN.x *= invtopM;
+    // topN.y *= invtopM;
+    // topN.z *= invtopM;
 
-    botN.x *= invbotM;
-    botN.y *= invbotM;
-    botN.z *= invbotM;
+    // botN.x *= invbotM;
+    // botN.y *= invbotM;
+    // botN.z *= invbotM;
 
-    leftN.x *= invleftM;
-    leftN.y *= invleftM;
-    leftN.z *= invleftM;
+    // leftN.x *= invleftM;
+    // leftN.y *= invleftM;
+    // leftN.z *= invleftM;
 
-    rightN.x *= invrightM;
-    rightN.y *= invrightM;
-    rightN.z *= invrightM;
+    // rightN.x *= invrightM;
+    // rightN.y *= invrightM;
+    // rightN.z *= invrightM;
 
 
     // culling prepass
@@ -263,17 +256,23 @@ void Camera::Render() {
         if (!(m = obj->getComponent<mesh>())) continue; // skip objects with no mesh
         if (!obj->getComponent<MeshRenderer>()) continue; // skip objects with no renderer
 
-        transform* t = obj->getComponent<transform>();
-        C3D_FVec p = FVec3_Subtract(pos, t->position);
+        // transform* t = obj->getComponent<transform>();
+        // C3D_FVec p = FVec3_Subtract(pos, t->position);
 
-        bool left = m->radius > FVec3_Dot(leftN, p);
-        bool right = m->radius > FVec3_Dot(rightN, p);
-        bool back = m->radius > FVec3_Dot(farN, p);
-        bool front = m->radius > FVec3_Dot(nearN, p);
-        bool top = m->radius > FVec3_Dot(topN, p);
-        bool bot = m->radius > FVec3_Dot(botN, p);
+        // bool left = -m->radius < FVec3_Dot(leftN, p);
+        // if (!left) continue;
+        // bool right = -m->radius < FVec3_Dot(rightN, p);
+        // if (!right) continue;
+        // bool top = -m->radius < FVec3_Dot(topN, p);
+        // if (!top) continue;
+        // bool bot = -m->radius < FVec3_Dot(botN, p);
+        // if (!bot) continue;
+        // bool back = -m->radius < FVec3_Dot(farN, p);
+        // if (!back) continue;
+        // bool front = -m->radius < FVec3_Dot(nearN, p);
+        // if (!front) continue;
 
-        if (!(left + right + back + front + top + bot)) continue; // if not in any then skip it (this means it is outside the frustum)
+        // if (!(left + right + back + front + top + bot)) continue; // if not in any then skip it (this means it is outside the frustum)
         culledList.push_back(obj);
     }
 
