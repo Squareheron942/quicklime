@@ -148,6 +148,9 @@ void Camera::Render() {
             C3D_RenderTargetSetOutput(target[0], GFX_BOTTOM, GFX_LEFT, CAM_DISPLAY_TRANSFER_FLAGS);
             C3D_RenderTargetClear(target[0], C3D_CLEAR_ALL, bgcolor, 0);
             C3D_FrameDrawOn(target[0]);
+            C2D_Prepare();
+            C2D_SceneBegin(target[0]);
+            C2D_SceneTarget(target[0]);
             break;
         case RENDER_TYPE_TEXTURE:
             // TODO add handling for this

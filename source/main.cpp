@@ -1,5 +1,6 @@
 #include <3ds.h>
 #include <citro3d.h>
+#include <citro2d.h>
 #include <string.h>
 
 #include "scripts.inc"
@@ -30,6 +31,7 @@ int main()
 		consoleInit(GFX_BOTTOM, NULL);
 	#endif
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE * 8);
+	C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
 
 	romfsInit();
 
@@ -70,6 +72,7 @@ int main()
 	sceneExit();
 
 	// Deinitialize graphics
+	C2D_Fini();
 	C3D_Fini();
 	gfxExit();
 	return 0;
