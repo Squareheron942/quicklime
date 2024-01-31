@@ -62,6 +62,23 @@ def run_fast_scandir(dir: str, ext: list[str]):    # dir: str, ext: list
         files.extend(f)
     return subfolders, files
 
+def run_fast_scandir_inv(dir: str, ext: list[str]):    # dir: str, ext: list
+    subfolders, files = [], []
+
+    for f in os.scandir(dir):
+        if f.is_dir():
+            subfolders.append(f.path)
+        if f.is_file():
+            if os.path.splitext(f.name)[1].lower() not in ext:
+                files.append(f.path)
+
+
+    for dir in list(subfolders):
+        sf, f = run_fast_scandir(dir, ext)
+        subfolders.extend(sf)
+        files.extend(f)
+    return subfolders, files
+
 def make_folder_if_not_exist(path: str) -> None:
     folder = os.path.dirname(path)
     if not os.path.exists(folder):
@@ -75,6 +92,13 @@ def process(args: argparse.Namespace):
             file_edit_times = json.load(edit_times)
     except:
         pass
+
+    # copy all non special files to romfs
+    subfolders, files = run_fast_scandir_inv(args.assets, mdl_ext + scene_ext + src_ext + hdr_ext + image_ext)
+    for file in files:
+        if not file in file_edit_times or file_edit_times[file] < os.path.getmtime(file):
+            shutil.copy(file, os.path.join(args.romfs, os.path.dirname(file)))
+        file_edit_times[file] = os.path.getmtime(file)
 
     # copy all scene files to romfs
     subfolders, files = run_fast_scandir(args.assets, scene_ext)
@@ -187,7 +211,7 @@ def process(args: argparse.Namespace):
                         print(file)
                         stream = ffmpeg.input(file)
                         stream = ffmpeg.filter(stream, "scale", size, size)
-                        stream = ffmpeg.output(stream, os.path.join(args.gfx, os.path.basename(file))) 
+                        stream = ffmpeg.output(stream, os.path.join(args.gfx, os.path.splitext(os.path.basename(file))[0] + '.png')) 
                         ffmpeg.run(stream, overwrite_output=True, quiet=True)
                         # TODO replace hardcoded path with variable
 
