@@ -35,9 +35,10 @@ namespace {
     enum DEBUG_MENU {
         MENU_STATS = 0,
         MENU_CONSOLE = 1,
-        MENU_SETTINGS = 2
+        MENU_SETTINGS = 2,
+        MENU_PROFILING = 3
     };
-    
+
     enum CONSOLE_LOG_LEVEL {
         LOG_LEVEL_LOW,
         LOG_LEVEL_WARN,
@@ -106,7 +107,7 @@ class Console {
 
     static void nextMenu() {
         menu++;
-        menu %= 3;
+        menu %= 4;
         if (menu == MENU_CONSOLE) console_needs_updating = true;
         printf("\e[2J"); // clear screen
     }
@@ -177,6 +178,30 @@ class Console {
         #endif
     }
 
+    static inline void dispProfiling() {
+        #if CONSOLE_ENABLED
+        printf("\e[s\e[%u;%uHScene Update: %f\e[u", 2, 0, stats::profiling::go_supd);
+        printf("\e[s\e[%u;%uHUpdate: %f\e[u", 3, 2, stats::profiling::go_upd);
+        printf("\e[s\e[%u;%uHLateUpdate: %f\e[u", 4, 2, stats::profiling::go_lupd);
+        printf("\e[s\e[%u;%uHFixedUpdate: %f\e[u", 5, 2, stats::profiling::go_fupd);
+
+        printf("\e[s\e[%u;%uHCamera::render(): %f\e[u", 7, 0, stats::profiling::rnd_camrnd);
+        printf("\e[s\e[%u;%uHCulling: %f\e[u", 8, 2, stats::profiling::rnd_cull);
+        printf("\e[s\e[%u;%uHMeshRenderer::render(): %f\e[u", 9, 2, stats::profiling::rnd_meshrnd);
+        printf("\e[s\e[%u;%uHSetMaterial(): %f\e[u", 10, 4, stats::profiling::rnd_setmtl);
+        printf("\e[s\e[%u;%uHBindProgram(): %f\e[u", 11, 6, stats::profiling::rnd_bndprg);
+        printf("\e[s\e[%u;%uHDrawArrays(): %f\e[u", 12, 4, stats::profiling::rnd_drawarr);
+        printf("\e[s\e[%u;%uHUpdContext(): %f\e[u", 13, 6, drw_ctx);
+        printf("\e[s\e[%u;%uHGPUCMD_Add(): %f\e[u", 14, 6, drw_gpucmd);
+
+        stats::profiling::rnd_setmtl = 0;
+        stats::profiling::rnd_drawarr = 0;
+        stats::profiling::rnd_bndprg = 0;
+        drw_ctx = 0;
+        drw_gpucmd = 0;
+        #endif
+    }
+
     static inline void showNumVertices() {
         #if CONSOLE_ENABLED
         printf("\e[s\e[%u;%uHVertices: %u\e[u", NV_Y, NV_X, stats::_vertices);
@@ -207,6 +232,12 @@ class Console {
                 dispSensitivity();
                 #if CONSOLE_ENABLED
                 printf("\e[s\e[1;0H<               Settings               >\e[u"); // 40 chars wide
+                #endif
+                break;
+            case MENU_PROFILING:
+                dispProfiling();
+                #if CONSOLE_ENABLED
+                printf("\e[s\e[1;0H<               Profiling              >\e[u"); // 40 chars wide
                 #endif
                 break;
         }

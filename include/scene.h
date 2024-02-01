@@ -11,6 +11,7 @@
 #include "lights.h"
 #include "pointlight.h"
 #include "spotlight.h"
+#include "stats.h"
 
 class Scene {
     protected:
@@ -24,7 +25,7 @@ class Scene {
         std::string name;
         entt::registry reg;
 	    GameObject *root;
-        SpotLight splight;
+        // SpotLight splight;
         std::vector<GameObject*> objects;
         // still hardcoded until i add proper light component
 
@@ -54,7 +55,6 @@ class Scene {
 
         void fixedUpdate() {
             // all the physics stuff will go here
-
             r_act_on_objects(root, &GameObject::FixedUpdate);
         };
 
@@ -64,7 +64,7 @@ class Scene {
 
         virtual void drawBottom() {}
 
-        Scene(std::string name) : name(name), splight(3.141592653579) {}
+        Scene(std::string name) : name(name) {}
     protected:
         
 };

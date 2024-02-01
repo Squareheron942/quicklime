@@ -9,6 +9,9 @@
 #include "meshrenderer.h"
 #include "lights.h"
 #include "light.h"
+#include "renderertypes.h"
+#include "ui_text.h"
+#include "citro2d.h"
 
 Camera* Camera::mainTop = NULL;
 Camera* Camera::mainBottom = NULL;
@@ -91,7 +94,7 @@ Camera::Camera(GameObject& parent, const void* args) {
             target[0] = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8); // only type to be used for display
             if (!target[0]) Console::warn("Could not create render target");
             if (stereo) target[1] = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8); // only type to be used for display
-            if (highRes) target[2] = C3D_RenderTargetCreate(240, 800, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8); // only type to be used for display
+            if (highRes) target[2] = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8); // only type to be used for display
             aspectRatio = C3D_AspectRatioTop;
             break;
         case RENDER_TYPE_BOTTOMSCREEN:
@@ -168,7 +171,7 @@ void Camera::Render() {
         Mtx_PerspTilt(&projection, C3D_AngleFromDegrees(fovY), aspectRatio, nearClip, farClip, false);
     
     
-    gfxSetWide(useWide); // Enable wide mode if wanted and if not rendering in stereo
+    // gfxSetWide(useWide); // Enable wide mode if wanted and if not rendering in stereo
 
     // scene setup
 
@@ -184,6 +187,8 @@ void Camera::Render() {
         if (lights::active[i] != nullptr) lights::active[i]->update(&view); 
 
 
+    osTickCounterStart(&stats::profiling::cnt_cull);
+    
     C3D_Mtx vp;
 
     Mtx_Multiply(&vp, &projection, &view); // create view projection matrix, much faster since it saves a ton of matrix multiplications and is also useful for frustum culling
@@ -250,11 +255,12 @@ void Camera::Render() {
 
     // culling prepass
     for (GameObject* obj : sceneRoot->children) {
-        mesh* m = NULL;
+        // mesh* m = NULL;
         if (!obj) continue; // skip null objects, there shouldn't be any so I think it can be removed, and I can't remove it from the list at this step so it might end up being kinda slow
         if (!(obj->layer & cullingMask)) continue; // skip culled objects
-        if (!(m = obj->getComponent<mesh>())) continue; // skip objects with no mesh
-        if (!obj->getComponent<MeshRenderer>()) continue; // skip objects with no renderer
+        if (!obj->renderer) continue; // skip objects with no set renderer
+        // if (!(m = obj->getComponent<mesh>())) continue; // skip objects with no mesh
+        // if (!obj->getComponent<MeshRenderer>()) continue; // skip objects with no renderer
 
         // transform* t = obj->getComponent<transform>();
         // C3D_FVec p = FVec3_Subtract(pos, t->position);
@@ -275,13 +281,19 @@ void Camera::Render() {
         // if (!(left + right + back + front + top + bot)) continue; // if not in any then skip it (this means it is outside the frustum)
         culledList.push_back(obj);
     }
+    osTickCounterUpdate(&stats::profiling::cnt_cull);
+    stats::profiling::rnd_cull = osTickCounterRead(&stats::profiling::cnt_cull);
 
     // actually render stuff for left eye
-
+    osTickCounterStart(&stats::profiling::cnt_meshrnd);
     // render objects
+    C2D_SceneTarget(target[0]);
     for (GameObject* obj : culledList) {
-        obj->getComponent<MeshRenderer>()->render(view, projection);
+        if (obj->renderer & RENDERER_MESH) obj->getComponent<MeshRenderer>()->render(view, projection);
+        if (obj->renderer & RENDERER_TEXT) obj->getComponent<Text>()->Render();
     }
+    osTickCounterUpdate(&stats::profiling::cnt_meshrnd);
+    stats::profiling::rnd_meshrnd = osTickCounterRead(&stats::profiling::cnt_meshrnd);
 
 
     if (!(stereo && iod > 0.0f)) return; // stop after first eye is drawn unless 3d is enabled
@@ -302,11 +314,15 @@ void Camera::Render() {
     C3D_RenderTargetClear(target[1], C3D_CLEAR_ALL, bgcolor, 0);
     C3D_FrameDrawOn(target[1]);
 
+    osTickCounterStart(&stats::profiling::cnt_meshrnd);
     // render objects
+    C2D_SceneTarget(target[1]);
     for (GameObject* obj : culledList) {
-        obj->getComponent<MeshRenderer>()->render(view, projection); 
-
+        if (obj->renderer & RENDERER_MESH) obj->getComponent<MeshRenderer>()->render(view, projection);
+        if (obj->renderer & RENDERER_TEXT) obj->getComponent<Text>()->Render();
     }
+    osTickCounterUpdate(&stats::profiling::cnt_meshrnd);
+    stats::profiling::rnd_meshrnd += osTickCounterRead(&stats::profiling::cnt_meshrnd);
     
 }
 
