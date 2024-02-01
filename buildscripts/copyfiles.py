@@ -91,41 +91,36 @@ def process(args: argparse.Namespace):
         with open(os.path.join(args.build, "file_edit_times.json"), 'r') as edit_times:
             file_edit_times = json.load(edit_times)
     except:
-        pass
-
-    # copy all non special files to romfs
-    subfolders, files = run_fast_scandir_inv(args.assets, mdl_ext + scene_ext + src_ext + hdr_ext + image_ext)
-    for file in files:
-        if not file in file_edit_times or file_edit_times[file] < os.path.getmtime(file):
-            shutil.copy(file, os.path.join(args.romfs, os.path.dirname(file)))
-        file_edit_times[file] = os.path.getmtime(file)
+        pass 
 
     # copy all scene files to romfs
     subfolders, files = run_fast_scandir(args.assets, scene_ext)
     for file in files:
         if not file in file_edit_times or file_edit_times[file] < os.path.getmtime(file):
             shutil.copy(file, os.path.join(args.romfs, 'scenes'))
-        file_edit_times[file] = os.path.getmtime(file)
+            file_edit_times[file] = os.path.getmtime(file)
 
     # copy all user source code files to the correct source code directory
     subfolders, files = run_fast_scandir(args.assets, src_ext) # copy all source code files to the temporary source code folders
     for file in files:
         if not file in file_edit_times or file_edit_times[file] < os.path.getmtime(file):
             shutil.copy(file, args.source)
-        file_edit_times[file] = os.path.getmtime(file)
+            file_edit_times[file] = os.path.getmtime(file)
 
     # copy all user model files to the correct directory
     subfolders, files = run_fast_scandir(args.assets, mdl_ext) # copy all source code files to the temporary source code folders
     for file in files:
         if not file in file_edit_times or file_edit_times[file] < os.path.getmtime(file):
+            make_folder_if_not_exist(os.path.join(args.romfs, os.path.dirname(file)));
             shutil.copy(file, os.path.join(args.romfs, os.path.dirname(file)))
-        file_edit_times[file] = os.path.getmtime(file)
+            file_edit_times[file] = os.path.getmtime(file)
 
     # copy all headers to include dir
     subfolders, files = run_fast_scandir(args.assets, hdr_ext)
     for file in files:
         if not file in file_edit_times or file_edit_times[file] < os.path.getmtime(file):
             shutil.copy(file, args.include)
+            file_edit_times[file] = os.path.getmtime(file)
         main_class, base_class = find_base_class(file)
         try:
             print(main_class + " header")
@@ -135,7 +130,8 @@ def process(args: argparse.Namespace):
             scripts.append(os.path.basename(file))
         elif base_class == "material":
             materials.append(os.path.basename(file)) 
-        file_edit_times[file] = os.path.getmtime(file)
+    
+    print(scripts)
 
     # compile all user defined scripts into one header
     with open(os.path.join(args.include, "scripts.inc"), 'w+') as scriptheader:
@@ -155,6 +151,8 @@ def process(args: argparse.Namespace):
             with open(infpath, 'w+') as inf:
                 inf.write("{}")
         if (file not in file_edit_times) or (file_edit_times[file] < os.path.getmtime(file)) or (infpath not in file_edit_times) or (file_edit_times[infpath] < os.path.getmtime(infpath)) or (not os.path.exists(os.path.join(args.gfx, os.path.splitext(os.path.basename(file))[0]) + '.t3s')):
+            file_edit_times[file] = os.path.getmtime(file)
+            file_edit_times[infpath] = os.path.getmtime(infpath)
             if os.path.exists(infpath):
                 with open(infpath, 'r') as config:
                     info = json.load(config)
@@ -218,12 +216,17 @@ def process(args: argparse.Namespace):
 
                         make_folder_if_not_exist(os.path.join(args.romfs, "gfx", os.path.splitext(os.path.basename(file))[0] + '.t3xcfg'))
                         with open(os.path.join(args.romfs, "gfx", os.path.splitext(os.path.basename(file))[0] + '.t3xcfg'), 'wb+') as t3xcfg:
-                            t3xcfg.write((arg).to_bytes(1))
-        file_edit_times[file] = os.path.getmtime(file)
-        file_edit_times[infpath] = os.path.getmtime(infpath)
-        with open(os.path.join(args.build, "file_edit_times.json"), 'w+') as edit_times:
-            json.dump(file_edit_times, edit_times)
+                            t3xcfg.write((arg).to_bytes(1)) 
+    with open(os.path.join(args.build, "file_edit_times.json"), 'w+') as edit_times:
+        json.dump(file_edit_times, edit_times)
 
+    # copy all non special files to romfs
+    subfolders, files = run_fast_scandir_inv(args.assets, mdl_ext + scene_ext + src_ext + hdr_ext + image_ext)
+    for file in files:
+        if not file in file_edit_times or file_edit_times[file] < os.path.getmtime(file):
+            make_folder_if_not_exist(os.path.join(args.romfs, os.path.dirname(file)));
+            shutil.copy(file, os.path.join(args.romfs, os.path.dirname(file)))
+        file_edit_times[file] = os.path.getmtime(file)
 
 def add_args(parser: argparse.ArgumentParser):
     try:
