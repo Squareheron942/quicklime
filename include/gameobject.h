@@ -19,8 +19,8 @@ class GameObject {
     std::list<Script*> scripts; // cannot be component since you can't have more than 1 object of type per entity
     entt::entity id;
     std::string name; // saved in scene file
-    unsigned short layer; // by default on base layer (layer 1)
-    GameObject(entt::registry& registry) : reg(registry), id(registry.create()), layer(0x1) {}
+    unsigned short layer, renderer; // by default on base layer (layer 1)
+    GameObject(entt::registry& registry) : reg(registry), id(registry.create()), layer(0x1), renderer(0x0) {}
     operator entt::entity() { return id; }
 
     void Start(void);
