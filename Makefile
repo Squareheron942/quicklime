@@ -38,11 +38,11 @@ TARGET			:=	$(notdir $(CURDIR))
 PYTHON      	:=  python3
 BUILD			:=	build
 TEMPSOURCE		:= 	tempsource
-SOURCES			:=	source $(TEMPSOURCE) source/components
+SOURCES			:=	source $(TEMPSOURCE) source/components source/audio
 DATA			:=	
 MODEL			:=  assets
 TEMPINCLUDE		:=  tempinclude
-INCLUDES		:=	include entt include/materials include/scripts include/components include/deprecated $(TEMPINCLUDE)
+INCLUDES		:=	include entt include/materials include/scripts include/components include/deprecated include/audio $(TEMPINCLUDE)
 GRAPHICS		:=	gfx
 ROMFS		    :=	romfs
 APP_TITLE       := 	Splatoon Legends
@@ -61,20 +61,20 @@ CFLAGS	:= -Wall -O2 -ffast-math -ggdb -mword-relocations \
 			-ffunction-sections \
 			$(ARCH)
 
-CFLAGS	+=	$(INCLUDE) -D__3DS__
+CFLAGS	+=	$(INCLUDE) -D__3DS__ -lm `/opt/devkitpro/portlibs/3ds/bin/arm-none-eabi-pkg-config opusfile --cflags`
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++20 -flto
 
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= -lcitro2d -lcitro3d -lctru -lm
+LIBS	:= -lcitro2d -lcitro3d -lctru -lm `/opt/devkitpro/portlibs/3ds/bin/arm-none-eabi-pkg-config opusfile --libs`
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS	:= $(CTRULIB)
+LIBDIRS	:= $(CTRULIB) $(PORTLIBS)
 
 
 #---------------------------------------------------------------------------------
