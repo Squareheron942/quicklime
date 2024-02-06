@@ -33,7 +33,10 @@ int main()
 	C3D_InitEx(C3D_DEFAULT_CMDBUF_SIZE * 8, 32, true);
 	C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
 
+    ndspInit();
 	romfsInit();
+	osSetSpeedupEnable(true);
+	HIDUSER_EnableGyroscope();
 
 	config::getInfo();
 
@@ -42,11 +45,7 @@ int main()
 	Console::log("Language detected: %u", config::lang);
 	Console::log("Region detected: %u", config::region);
 
-	osSetSpeedupEnable(true);
-
 	SceneManager::currentScene = SceneLoader::load("Fld_Plaza");
-
-	HIDUSER_EnableGyroscope();
 
 	int scene = 0;
 

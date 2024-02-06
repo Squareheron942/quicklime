@@ -44,7 +44,7 @@ Text::~Text(){
 void Text::Render() {
     C2D_Prepare();
     // C2D_DrawText(&txt, 0, , , , trans->scale.x, trans->scale.y);
-    C2D_DrawText(&txt, 0, trans->position.x, trans->position.y, trans->position.z, 1, 1);
+    // C2D_DrawText(&txt, 0, trans->position.x, trans->position.y, trans->position.z, 1, 1);
     C2D_Flush();
 }
 

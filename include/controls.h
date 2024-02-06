@@ -41,12 +41,33 @@ namespace controls {
 
     void update();
 
+    /**
+     * @brief Check if key was pressed this frame
+     * 
+     * @param inputName Key ID to check
+     * @return true 
+     * @return false 
+     */
     bool getDown(key inputName);
 
     bool getRepeat(key inputName);
 
+    /**
+     * @brief Check if key was held for at least 2 frames
+     * 
+     * @param inputName Key ID to check
+     * @return true 
+     * @return false 
+     */
     bool getHeld(key inputName);
 
+    /**
+     * @brief Check if key was released this frame
+     * 
+     * @param inputName Key ID to check
+     * @return true 
+     * @return false 
+     */
     bool getUp(key inputName);
 
     /**
@@ -60,18 +81,23 @@ namespace controls {
 
     /**
      * @brief Resets internal gyro state to given value
+     * 
      * @param[in] newPos Position to reset the gyro state to (in radians)
     */
     void resetGyro(const C3D_FVec newPos);
 
     /**
-     * @returns The position of the Circle Pad
+     * @brief Gets the position of the Circle Pad
+     * 
+     * @returns const circlePosition The position of the Circle Pad
     */
     const circlePosition circlePos();
 
     /**
-     * @returns The position of the C Stick
-    */
+     * @brief 
+     * 
+     * @return const circlePosition The position of the C Stick
+     */
     const circlePosition cStickPos();
 
     float gyroDeadZone(), gyroSensitivity();

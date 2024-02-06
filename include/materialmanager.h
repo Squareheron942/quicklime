@@ -17,8 +17,7 @@ class MaterialManager {
     
     template<typename T> static bool registerMaterial(const char* name) {
         getMaterialMap()[name] = MaterialManager::createMaterialInstance<T>;
-        Console::log("Material %s added", name);
-        printf("Material %s added", name);
+        // Console::log("Material %s added", name);
         return true;
     }
 
