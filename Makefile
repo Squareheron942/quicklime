@@ -61,14 +61,14 @@ CFLAGS	:= -Wall -O2 -ffast-math -ggdb -mword-relocations \
 			-ffunction-sections \
 			$(ARCH)
 
-CFLAGS	+=	$(INCLUDE) -D__3DS__ -lm `/opt/devkitpro/portlibs/3ds/bin/arm-none-eabi-pkg-config opusfile --cflags`
+CFLAGS	+=	$(INCLUDE) -D__3DS__ -lm `/opt/devkitpro/portlibs/3ds/bin/arm-none-eabi-pkg-config opusfile libmpg123 --cflags`
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++20 -flto
 
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= -lcitro2d -lcitro3d -lctru -lm `/opt/devkitpro/portlibs/3ds/bin/arm-none-eabi-pkg-config opusfile --libs`
+LIBS	:= -lcitro2d -lcitro3d -lctru -lm `/opt/devkitpro/portlibs/3ds/bin/arm-none-eabi-pkg-config opusfile libmpg123 --libs`
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -172,7 +172,7 @@ endif
 .PHONY: all touchelf romfs clean runexttool
 
 #---------------------------------------------------------------------------------
-all: $(BUILD) runexttool $(GFXBUILD) $(DEPSDIR)  $(ROMFS_T3XFILES)
+all: $(BUILD) runexttool $(GFXBUILD) $(DEPSDIR) $(ROMFS_T3XFILES)
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile 
 
 touchelf:

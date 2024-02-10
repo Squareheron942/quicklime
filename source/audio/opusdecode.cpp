@@ -49,7 +49,7 @@ namespace {
 
     // Main audio decoding logic
     // This function pulls and decodes audio samples from opusFile_ to fill waveBuf_
-    bool fillBuffer(OggOpusFile *opusFile_, ndspWaveBuf *waveBuf_, int samplesperbuf, int channelspersample) {
+    bool fillBuffer(OggOpusFile *opusFile_, ndspWaveBuf *waveBuf_, int samplesperbuf, int channelspersample, char channel) {
         // Decode samples until our waveBuf is full
         int totalSamples = 0;
         while(totalSamples < samplesperbuf) {
@@ -99,8 +99,8 @@ namespace {
                     continue;
                 }
                 
-                if(!fillBuffer(args.OpusFile, &args.waveBufs[i], args.samplesperbuf, args.channelspersample)) {   // Playback complete
-                    return;
+                if(!fillBuffer(args.OpusFile, &args.waveBufs[i], args.samplesperbuf, args.channelspersample, args.channel)) {   // Playback complete
+                    goto exit;
                 }
             }
 
@@ -110,44 +110,32 @@ namespace {
             // (Note that the 3DS uses cooperative threading)
             LightEvent_Wait(args.event);
         }
+        exit:
+        audio_shared_inf::ndsp_used_channels &= ~BIT(args.channel);
         Console::log("Audio thread ended");
+        Console::log("Channels: %p", audio_shared_inf::ndsp_used_channels);
     }
-}
-
-OpusDecode::OpusDecode(audio_params params) {
-    Console::log("Opus Decoder Constructor");
-    int error = 0;
-
-    opusFile = op_open_file("romfs:/sample.opus", &error);
-    if (error) {
-        Console::error("Error loading audio");
-        Console::error("error %d (%s)", error, opusStrError(error));
-        return;
-    }
-    audio_params p = {
-        op_channel_count(opusFile, -1),
-        48000
-    };
-    this->AudioInit(p);
 }
 
 OpusDecode::OpusDecode(std::string file) : args{NULL, 0, 0} {
     int error = 0;
-    opusFile = op_open_file("romfs:/sample.opus", &error);
+    opusFile = op_open_file(file.c_str(), &error);
     if (error) {
         Console::error("Error loading audio");
         Console::error("error %d (%s)", error, opusStrError(error));
         return;
     }
-    audio_params p = {
-        op_channel_count(opusFile, -1),
-        48000
-    };
-    this->AudioInit(p);
-    Console::log("Done audio initialization");
-}
 
-void OpusDecode::Play(audio_params params) {
+    args.OpusFile = opusFile;
+    args.samplesperbuf = 48000 * AUDIO_WAVBUF_TIME_MS;
+    args.channelspersample = 2;
+    args.event = &this->event;
+    args.quit = &this->quit;
+    args.waveBufs = this->waveBufs;
+    args.channel = channel;
+
+    this->AudioInit(48000, args.samplesperbuf, args.channelspersample);
+
     // Set the thread priority to the main thread's priority ...
     int32_t priority = 0x30;
     svcGetThreadPriority(&priority, CUR_THREAD_HANDLE);
@@ -156,72 +144,6 @@ void OpusDecode::Play(audio_params params) {
     // ... finally, clamp it between 0x18 and 0x3F to guarantee that it's valid.
     priority = priority < 0x18 ? 0x18 : priority;
     priority = priority > 0x3F ? 0x3F : priority;
-
-    args.OpusFile = opusFile;
-    args.samplesperbuf = 48000 * 120 / 1000;
-    args.channelspersample = 2;
-    args.event = &this->event;
-    args.quit = &this->quit;
-    args.waveBufs = this->waveBufs;
-
-    // Allocate audio buffer
-    const size_t bufferSize = args.samplesperbuf * args.channelspersample * AUDIO_NUM_WAVBUFS;
-    audioBuffer = (int16_t *)linearAlloc(bufferSize);
-    if(!audioBuffer) {
-        Console::error("Failed to allocate audio buffer\n");
-        return;
-    }
-
-    // Setup waveBufs for NDSP
-    memset(&waveBufs, 0, sizeof(waveBufs));
-    int16_t *buffer = audioBuffer;
-
-    for(size_t i = 0; i < 3; ++i) {
-        waveBufs[i].data_vaddr = buffer;
-        waveBufs[i].status     = NDSP_WBUF_DONE;
-
-        buffer += args.samplesperbuf * args.channelspersample / sizeof(buffer[0]);
-    }
-
-    // Start the thread, passing our opusFile as an argument.
-    threadId = threadCreate(audioThread, &this->args, THREAD_STACK_SZ, priority, THREAD_AFFINITY, false);
-}
-
-void OpusDecode::Play() {
-    // Set the thread priority to the main thread's priority ...
-    int32_t priority = 0x30;
-    svcGetThreadPriority(&priority, CUR_THREAD_HANDLE);
-    // ... then subtract 1, as lower number => higher actual priority ...
-    priority -= 1;
-    // ... finally, clamp it between 0x18 and 0x3F to guarantee that it's valid.
-    priority = priority < 0x18 ? 0x18 : priority;
-    priority = priority > 0x3F ? 0x3F : priority;
-
-    args.OpusFile = opusFile;
-    args.samplesperbuf = 48000 * 120 / 1000;
-    args.channelspersample = 2;
-    args.event = &this->event;
-    args.quit = &this->quit;
-    args.waveBufs = this->waveBufs;
-
-    // Allocate audio buffer
-    const size_t bufferSize = args.samplesperbuf * args.channelspersample * AUDIO_NUM_WAVBUFS;
-    audioBuffer = (int16_t *)linearAlloc(bufferSize);
-    if(!audioBuffer) {
-        Console::error("Failed to allocate audio buffer\n");
-        return;
-    }
-
-    // Setup waveBufs for NDSP
-    memset(&waveBufs, 0, sizeof(waveBufs));
-    int16_t *buffer = audioBuffer;
-
-    for(size_t i = 0; i < 3; ++i) {
-        waveBufs[i].data_vaddr = buffer;
-        waveBufs[i].status     = NDSP_WBUF_DONE;
-
-        buffer += args.samplesperbuf * args.channelspersample / sizeof(buffer[0]);
-    }
 
     // Start the thread, passing our opusFile as an argument.
     threadId = threadCreate(audioThread, &this->args, THREAD_STACK_SZ, priority, THREAD_AFFINITY, false);
@@ -229,5 +151,6 @@ void OpusDecode::Play() {
 }
 
 OpusDecode::~OpusDecode() {
-    op_free(opusFile);
+    if (opusFile) op_free(opusFile);
+    if (audioBuffer) linearFree(audioBuffer);
 }
