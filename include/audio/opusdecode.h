@@ -15,6 +15,7 @@ namespace {
         OggOpusFile* OpusFile;
         LightEvent* event;
         volatile bool *quit;
+        unsigned char channel;
         int samplesperbuf, channelspersample;
         ndspWaveBuf *waveBufs;
     };
@@ -23,13 +24,8 @@ namespace {
 class OpusDecode : public AudioDecode {
     OggOpusFile *opusFile;
     opusthreadargs args;
-    int16_t *audioBuffer = NULL;
 
     public:
-    OpusDecode(audio_params params);
     OpusDecode(std::string file);
-    ~OpusDecode();
-
-    virtual void Play(audio_params params);
-    virtual void Play();
+    virtual ~OpusDecode();
 };

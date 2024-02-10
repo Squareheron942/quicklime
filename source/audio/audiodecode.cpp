@@ -1,10 +1,13 @@
 #include "audiodecode.h"
 #include "console.h"
+#include "defines.h"
 
 namespace {
     void audioCallback(void *const data) {
         if(((AudioDecode*)data)->quit) { // Quit flag
+            #if DEBUG
             Console::warn("Audio callback quit");
+            #endif
             return;
         }
         
@@ -13,16 +16,38 @@ namespace {
 }
 
 
-bool AudioDecode::AudioInit(audio_params params) {
+bool AudioDecode::AudioInit(unsigned int samplerate, unsigned int samplesperbuf, unsigned char channelspersample) {
     // if no available channel, audio cannot be played so end here
     if (!foundchannel) return false;
 
     ndspChnReset(channel);
+    ndspSetOutputMode(NDSP_OUTPUT_STEREO);
     ndspChnSetInterp(channel, interpolation);
-    ndspChnSetRate(channel, params.samplerate);
+    ndspChnSetRate(channel, samplerate);
     ndspChnSetFormat(channel, NDSP_FORMAT_STEREO_PCM16);
 
+    // Allocate audio buffer
+    const size_t bufferSize = samplesperbuf * channelspersample * AUDIO_NUM_WAVBUFS;
+    audioBuffer = linearAlloc(bufferSize);
+    if(!audioBuffer) {
+        Console::error("Failed to allocate audio buffer\n");
+        return false;
+    }
+
+    // Setup waveBufs for NDSP
+    memset(&waveBufs, 0, sizeof(waveBufs));
+    int16_t *buffer = (int16_t*)audioBuffer;
+
+    for(size_t i = 0; i < 3; ++i) {
+        waveBufs[i].data_vaddr = buffer;
+        waveBufs[i].status     = NDSP_WBUF_DONE;
+
+        buffer += samplesperbuf * channelspersample / sizeof(buffer[0]);
+    }
+
+    #if DEBUG
     Console::log("Audio initialization");
+    #endif
 
     return true;
 }
@@ -39,14 +64,13 @@ AudioDecode::AudioDecode() {
             foundchannel = true;
             break;
         }
-    Console::log("Set audio callback");
+    #if DEBUG
+    Console::log("Audio decoder created with chn%u", channel);
+    #endif
     ndspSetCallback(audioCallback, this);
     LightEvent_Init(&event, RESET_ONESHOT);
 }
 
 AudioDecode::~AudioDecode() {
-    quit = true;
-    // Free the audio thread
-    threadJoin(threadId, UINT64_MAX);
-    threadFree(threadId);
+    Stop();
 }

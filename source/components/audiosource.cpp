@@ -25,11 +25,13 @@ AudioSource::AudioSource(GameObject& parent, const void* data) {
 void AudioSource::Play(std::string file) {
     std::string extension = file.substr(file.find_last_of(".") + 1);
 
+    if (decoder) delete decoder;
+
     Console::log("AudioSource playing");
-    if (extension == "ogg" || extension == "opus") {
+    if (extension == "opus") {
         decoder = new OpusDecode(file);
     } else if (extension == "mp3") {
-
+        decoder = new MP3Decode(file);
     } else if (extension == "bcstm") {
 
     } else if (extension == "wav" || extension == "wave") {
@@ -37,7 +39,7 @@ void AudioSource::Play(std::string file) {
     }
     Console::log("Decoder created");
     Console::log("channels used %u");
-    decoder->Play();
+    // decoder->Play(file);
 }
 
 COMPONENT_REGISTER(AudioSource)
