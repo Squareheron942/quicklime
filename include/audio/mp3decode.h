@@ -6,7 +6,7 @@
 
 namespace {
     struct mp3threadargs {
-        mpg123_handle* file;
+        mpg123_handle* mh;
         LightEvent* event;
         volatile bool *quit;
         unsigned char channel;
