@@ -1,19 +1,18 @@
 #include "mp3decode.h"
 #include "console.h"
 #include "stdio.h"
-#include "mp3file.h"
 
 namespace {
 
     static ssize_t replace_read(void * file, void * buffer, size_t length) {
-        return fread(buffer, 1, length, file);
+        return fread(buffer, 1, length, (FILE*)file);
     }
 
     static off_t replace_lseek(void * file, off_t to, int whence) {
-        if (fseek(file, to, whence) < 0)
+        if (fseek((FILE*)file, to, whence) < 0)
             return -1;
 
-        return ftell(file);
+        return ftell((FILE*)file);
     }
 
     // Main audio decoding logic
@@ -84,7 +83,7 @@ namespace {
 
 
 MP3Decode::MP3Decode(std::string file) {
-    if ((file = fopen(file.c_str(), "r")) == nullptr) {
+    if ((this->file = fopen(file.c_str(), "r")) == nullptr) {
         Console::error("File not found");
         return;
     }
@@ -106,7 +105,8 @@ MP3Decode::MP3Decode(std::string file) {
 
     mpg123_replace_reader_handle(mh, replace_read, replace_lseek, nullptr);
 
-    if(mpg123_open_handle(mh, file) != MPG123_OK || mpg123_getformat(mh, &samplerate, &channels, &encoding) != MPG123_OK)
+    // pass file* to handle
+    if(mpg123_open_handle(mh, this->file) != MPG123_OK || mpg123_getformat(mh, &samplerate, &channels, &encoding) != MPG123_OK)
 	{
 		Console::error("mpg123 error:");
         Console::error(mpg123_strerror(mh));
