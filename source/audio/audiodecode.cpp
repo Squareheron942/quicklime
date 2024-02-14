@@ -16,7 +16,7 @@ namespace {
 }
 
 
-bool AudioDecode::AudioInit(unsigned int samplerate, unsigned int samplesperbuf, unsigned char channelspersample) {
+bool AudioDecode::AudioInit(unsigned int samplerate, unsigned char channels, unsigned int bufsize) {
     // if no available channel, audio cannot be played so end here
     if (!foundchannel) return false;
 
@@ -24,10 +24,10 @@ bool AudioDecode::AudioInit(unsigned int samplerate, unsigned int samplesperbuf,
     ndspSetOutputMode(NDSP_OUTPUT_STEREO);
     ndspChnSetInterp(channel, interpolation);
     ndspChnSetRate(channel, samplerate);
-    ndspChnSetFormat(channel, NDSP_FORMAT_STEREO_PCM16);
+    ndspChnSetFormat(channel, channels == 2 ? NDSP_FORMAT_STEREO_PCM16 : NDSP_FORMAT_MONO_PCM16);
 
     // Allocate audio buffer
-    const size_t bufferSize = samplesperbuf * channelspersample * AUDIO_NUM_WAVBUFS;
+    const size_t bufferSize = bufsize * AUDIO_NUM_WAVBUFS * sizeof(int16_t);
     audioBuffer = linearAlloc(bufferSize);
     if(!audioBuffer) {
         Console::error("Failed to allocate audio buffer\n");
@@ -38,11 +38,11 @@ bool AudioDecode::AudioInit(unsigned int samplerate, unsigned int samplesperbuf,
     memset(&waveBufs, 0, sizeof(waveBufs));
     int16_t *buffer = (int16_t*)audioBuffer;
 
-    for(size_t i = 0; i < 3; ++i) {
+    for(size_t i = 0; i < AUDIO_NUM_WAVBUFS; ++i) {
         waveBufs[i].data_vaddr = buffer;
         waveBufs[i].status     = NDSP_WBUF_DONE;
 
-        buffer += samplesperbuf * channelspersample / sizeof(buffer[0]);
+        buffer += bufsize;
     }
 
     #if DEBUG

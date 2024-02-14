@@ -30,13 +30,14 @@ namespace {
             // storing the number of samples that were decoded (or error)
             size_t samples = 0;
             mpg123_read(mh, reinterpret_cast<unsigned char*>(buffer), bufferSize, &samples);
-            if(samples == 0) break;  // No error here
+
+            if(samples <= 0) break;  // No error here
             
             totalSamples += samples;
         }
 
         // If no samples were read in the last decode cycle, we're done
-        if(totalSamples == 0) {
+        if(totalSamples <= 0) {
             Console::log("Playback complete");
             return false;
         }
@@ -54,20 +55,40 @@ namespace {
     void audioThread(void *const args_) {
         mp3threadargs args = *(mp3threadargs *)args_;
 
+        bool finished = false;;
+
         while(!*args.quit) {  // Whilst the quit flag is unset,
                         // search our waveBufs and fill any that aren't currently
                         // queued for playback (i.e, those that are 'done')
             for(size_t i = 0; i < AUDIO_NUM_WAVBUFS; ++i) {
-                if(args.waveBufs[i].status != NDSP_WBUF_DONE) {
+
+                auto& buf = args.waveBufs[i];
+
+                if(buf.status != NDSP_WBUF_DONE && buf.status != NDSP_WBUF_FREE) {
                     continue;
                 }
-                
-                if(!fillBuffer(args.mh, &args.waveBufs[i], args.samplesperbuf, args.channelspersample, args.channel)) {   // Playback complete
-                    goto exit;
+                size_t done = 0;
+                mpg123_read(args.mh, reinterpret_cast<unsigned char*>(buf.data_pcm16), args.bufsize, &done);
+                size_t read = done / (sizeof(int16_t));
+
+                if (read <= 0) {
+                    finished = true;
+                    continue;
                 }
+
+                buf.nsamples = read / args.channels;
+
+                ndspChnWaveBufAdd(args.channel, &buf);
+
+                DSP_FlushDataCache(buf.data_pcm16, args.bufsize);
+                
+                // if(!fillBuffer(args.mh, &args.waveBufs[i], args.samplesperbuf, args.channelspersample, args.channel)) {   // Playback complete
+                //     goto exit;
+                // }
             }
-
-
+            if (finished) 
+                break;
+                
             // Wait for a signal that we're needed again before continuing,
             // so that we can yield to other things that want to run
             // (Note that the 3DS uses cooperative threading)
@@ -113,8 +134,31 @@ MP3Decode::MP3Decode(std::string file) {
 		return;
 	} 
 	mpg123_format_none(mh);
-	mpg123_format(mh, samplerate, MPG123_STEREO, MPG123_ENC_SIGNED_16);
+	mpg123_format(mh, samplerate, channels, encoding);
 	bufsize = mpg123_outblock(mh) * 16;
+
+    args.mh = mh;
+    args.bufsize = bufsize;
+    args.channels = channels;
+    args.event = &this->event;
+    args.quit = &this->quit;
+    args.waveBufs = this->waveBufs;
+    args.channel = channel;
+
+    if (!this->AudioInit(samplerate, channels, bufsize)) return;
+
+    // Set the thread priority to the main thread's priority ...
+    int32_t priority = 0x30;
+    svcGetThreadPriority(&priority, CUR_THREAD_HANDLE);
+    // ... then subtract 1, as lower number => higher actual priority ...
+    priority -= 1;
+    // ... finally, clamp it between 0x18 and 0x3F to guarantee that it's valid.
+    priority = priority < 0x18 ? 0x18 : priority;
+    priority = priority > 0x3F ? 0x3F : priority;
+
+    // Start the thread, passing our opusFile as an argument.
+    threadId = threadCreate(audioThread, &this->args, THREAD_STACK_SZ, priority, THREAD_AFFINITY, false);
+    Console::log("Decoder Playing");
 }
 
 MP3Decode::~MP3Decode() {

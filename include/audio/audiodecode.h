@@ -1,6 +1,6 @@
 #pragma once
 
-#define AUDIO_NUM_WAVBUFS 3
+#define AUDIO_NUM_WAVBUFS 1
 #define AUDIO_WAVBUF_TIME_MS 120 / 1000
 
 #include <3ds.h>
@@ -25,7 +25,7 @@ class AudioDecode {
     unsigned int samplesperbuf = 0, bufsize = 0;
     long int samplerate = 0;
     Thread threadId;
-    bool AudioInit(unsigned int samplerate, unsigned int samplesperbuf, unsigned char channelspersample);
+    bool AudioInit(unsigned int samplerate, unsigned char channels, unsigned int bufsize);
     void AudioFinish();
     AudioDecode();
     ndspWaveBuf waveBufs[3];
