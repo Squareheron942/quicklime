@@ -10,7 +10,7 @@ namespace {
         LightEvent* event;
         volatile bool *quit;
         unsigned char channel;
-        int samplesperbuf, channelspersample;
+        int bufsize, channels;
         ndspWaveBuf *waveBufs;
     };
     
@@ -19,6 +19,7 @@ namespace {
 class MP3Decode : public AudioDecode {
     FILE* file;
 	mpg123_handle* mh;
+    mp3threadargs args;
     int channels;
     public:
     MP3Decode(std::string file);

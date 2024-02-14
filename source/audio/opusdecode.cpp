@@ -134,7 +134,7 @@ OpusDecode::OpusDecode(std::string file) : args{NULL, 0, 0} {
     args.waveBufs = this->waveBufs;
     args.channel = channel;
 
-    this->AudioInit(48000, args.samplesperbuf, args.channelspersample);
+    this->AudioInit(48000, 2, args.samplesperbuf);
 
     // Set the thread priority to the main thread's priority ...
     int32_t priority = 0x30;
