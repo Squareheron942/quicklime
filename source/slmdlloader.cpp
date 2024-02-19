@@ -39,6 +39,7 @@ namespace {
     void meshdeleter(void* data) {
         auto it = std::find_if(std::begin(loadedVertices), std::end(loadedVertices), [& data](auto && pair) { return pair.second == data; });
         loadedVertices.erase(it);
+        stats::linear -= linearGetSize(data);
         linearFree(data); // free the vertex data itself
         Console::log("mesh vertices freed");
     }
@@ -105,7 +106,7 @@ namespace mdlLoader {
         fread(&attrlen, sizeof(char), attrnum, f);
         fread(&radius, sizeof(float), 1, f);
 
-        stats::_vertices += numVerts;
+        // stats::_vertices += numVerts;
 
         // read obj section
         fread(str, sizeof(char), 3, f);
@@ -125,6 +126,7 @@ namespace mdlLoader {
         std::shared_ptr<void> vertices;
         if (loadedVertices.find(path) == loadedVertices.end() || createnew) { // only read data if needed
             void* v = linearAlloc(numVerts * sizevert);
+            stats::linear += numVerts * sizevert;
             fread(v, sizevert, numVerts, f);
             vertices.reset(v, meshdeleter);
             

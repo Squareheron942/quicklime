@@ -94,7 +94,7 @@ namespace {
             // (Note that the 3DS uses cooperative threading)
             LightEvent_Wait(args.event);
         }
-        exit:
+        // exit:
         audio_shared_inf::ndsp_used_channels &= ~BIT(args.channel);
         Console::log("Audio thread ended");
         Console::log("Channels: %p", audio_shared_inf::ndsp_used_channels);

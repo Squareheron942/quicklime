@@ -10,7 +10,7 @@
 #include <string.h>
 #include "console.h"
 
-namespace {
+// namespace {
     struct opusthreadargs {
         OggOpusFile* OpusFile;
         LightEvent* event;
@@ -19,7 +19,7 @@ namespace {
         int samplesperbuf, channelspersample;
         ndspWaveBuf *waveBufs;
     };
-}
+// }
 
 class OpusDecode : public AudioDecode {
     OggOpusFile *opusFile;

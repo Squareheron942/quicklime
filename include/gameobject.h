@@ -20,7 +20,12 @@ class GameObject {
     entt::entity id;
     std::string name; // saved in scene file
     unsigned short layer, renderer; // by default on base layer (layer 1)
-    GameObject(entt::registry& registry) : reg(registry), id(registry.create()), layer(0x1), renderer(0x0) {}
+    GameObject(entt::registry& registry) : 
+        reg(registry), 
+        id(registry.create()), 
+        layer(0x1), 
+        renderer(0x0) 
+    {}
     operator entt::entity() { return id; }
 
     void Start(void);

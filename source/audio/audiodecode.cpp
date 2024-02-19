@@ -1,6 +1,7 @@
 #include "audiodecode.h"
 #include "console.h"
 #include "defines.h"
+#include "stats.h"
 
 namespace {
     void audioCallback(void *const data) {
@@ -27,8 +28,9 @@ bool AudioDecode::AudioInit(unsigned int samplerate, unsigned char channels, uns
     ndspChnSetFormat(channel, channels == 2 ? NDSP_FORMAT_STEREO_PCM16 : NDSP_FORMAT_MONO_PCM16);
 
     // Allocate audio buffer
-    const size_t bufferSize = bufsize * AUDIO_NUM_WAVBUFS * sizeof(int16_t);
+    const size_t bufferSize = bufsize * AUDIO_NUM_WAVBUFS * sizeof(ndspWaveBuf);
     audioBuffer = linearAlloc(bufferSize);
+    stats::linear += bufferSize;
     if(!audioBuffer) {
         Console::error("Failed to allocate audio buffer\n");
         return false;
@@ -42,7 +44,7 @@ bool AudioDecode::AudioInit(unsigned int samplerate, unsigned char channels, uns
         waveBufs[i].data_vaddr = buffer;
         waveBufs[i].status     = NDSP_WBUF_DONE;
 
-        buffer += bufsize;
+        buffer += bufsize / sizeof(buffer[0]);
     }
 
     #if DEBUG

@@ -1,6 +1,6 @@
 #pragma once
 
-#define AUDIO_NUM_WAVBUFS 1
+#define AUDIO_NUM_WAVBUFS 3
 #define AUDIO_WAVBUF_TIME_MS 120 / 1000
 
 #include <3ds.h>

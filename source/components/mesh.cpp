@@ -2,6 +2,7 @@
 #include "gameobject.h"
 #include "console.h"
 #include <memory>
+#include "stats.h"
 
 namespace {
     struct mesh_data {
@@ -54,10 +55,12 @@ mesh::mesh(GameObject& parent, std::shared_ptr<void> vertices, unsigned int numV
 
     BufInfo_Init(&buf);
     BufInfo_Add(&buf, vertices.get(), vertsize, attrnum, permut_from_num_attr(attrnum));
+    stats::_vertices += numVerts;
 }
 
 mesh::~mesh() {
     delete mat;
+    stats::_vertices -= numVerts;
     Console::log("mesh on %s deleted", parent->name.c_str());
     // std::shared_ptr removed automatically, which also removes the data
 }

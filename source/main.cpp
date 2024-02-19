@@ -45,7 +45,7 @@ int main()
 	Console::log("Language detected: %u", config::lang);
 	Console::log("Region detected: %u", config::region);
 
-	SceneManager::currentScene = SceneLoader::load("Fld_Plaza");
+	SceneManager::currentScene = SceneLoader::load("Fld_Hiagari");
 
 	int scene = 0;
 
@@ -56,16 +56,20 @@ int main()
 		
 		if (hidKeysDown() & KEY_START) {
 			++scene;
-			if (scene == 1) break; // break in order to return to hbmenu
+			// if (scene == 1) break; // break in order to return to hbmenu
 			if (scene == 1) {
 				SceneManager::currentScene.reset(); 
-				SceneManager::currentScene = SceneLoader::load("Fld_Plaza");
+				SceneManager::currentScene = SceneLoader::load("Fld_Hiagari");
+			} else if (scene == 2) {
+				scene = 0;
+				SceneManager::currentScene.reset();
+				SceneManager::currentScene = SceneLoader::load("Fld_Hiagari");
 			}
 		}
 			
 
 		osTickCounterStart(&stats::profiling::cnt_supd);
-		SceneManager::currentScene->update();
+		if (SceneManager::currentScene) SceneManager::currentScene->update();
 		osTickCounterUpdate(&stats::profiling::cnt_supd);
 		stats::profiling::go_supd = osTickCounterRead(&stats::profiling::cnt_supd);
 		Time::Update();
@@ -73,7 +77,8 @@ int main()
 		C3D_FrameBegin(0);
 
 		osTickCounterStart(&stats::profiling::cnt_camrnd);
-		SceneManager::currentScene->drawTop();
+		if (SceneManager::currentScene) SceneManager::currentScene->drawTop();
+		else Console::error("No scene");
 		osTickCounterUpdate(&stats::profiling::cnt_camrnd);
 		stats::profiling::rnd_camrnd = osTickCounterRead(&stats::profiling::cnt_camrnd);
 

@@ -4,7 +4,7 @@
 #include <mpg123.h>
 #include "audiodecode.h"
 
-namespace {
+// namespace {
     struct mp3threadargs {
         mpg123_handle* mh;
         LightEvent* event;
@@ -14,7 +14,7 @@ namespace {
         ndspWaveBuf *waveBufs;
     };
     
-}
+// }
 
 class MP3Decode : public AudioDecode {
     FILE* file;

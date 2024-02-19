@@ -7,6 +7,7 @@ namespace stats {
     extern unsigned int _drawcalls;
     extern float _x, _y, _z, _w;
     extern unsigned int _vertices;
+    extern size_t linear, heap, vram;
 
     namespace profiling {
         extern TickCounter cnt, cnt_camrnd, cnt_meshrnd, cnt_setmtl, cnt_bndprg, cnt_drawarr, cnt_cull, cnt_supd;

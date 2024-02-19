@@ -2,6 +2,15 @@
 #include <3ds.h>
 #include "console.h"
 
+static const int SAMPLE_RATE = 48000;            // Opus is fixed at 48kHz
+static const int SAMPLES_PER_BUF = SAMPLE_RATE * AUDIO_WAVBUF_TIME_MS;  // 120ms buffer
+static const int CHANNELS_PER_SAMPLE = 2;        // We ask libopusfile for
+                                                 // stereo output; it will down
+                                                 // -mix for us as necessary.
+
+static const size_t WAVEBUF_SIZE = SAMPLES_PER_BUF * CHANNELS_PER_SAMPLE
+    * sizeof(int16_t);                           // Size of NDSP wavebufs
+
 namespace {
     const char *opusStrError(int error)
     {
@@ -52,11 +61,11 @@ namespace {
     bool fillBuffer(OggOpusFile *opusFile_, ndspWaveBuf *waveBuf_, int samplesperbuf, int channelspersample, char channel) {
         // Decode samples until our waveBuf is full
         int totalSamples = 0;
-        while(totalSamples < samplesperbuf) {
+        while(totalSamples < SAMPLES_PER_BUF) {
             int16_t *buffer = waveBuf_->data_pcm16 + (totalSamples *
-                channelspersample);
-            const size_t bufferSize = (samplesperbuf - totalSamples) *
-                channelspersample;
+                CHANNELS_PER_SAMPLE);
+            const size_t bufferSize = (SAMPLES_PER_BUF - totalSamples) *
+                CHANNELS_PER_SAMPLE;
 
             // Decode bufferSize samples from opusFile_ into buffer,
             // storing the number of samples that were decoded (or error)
@@ -64,7 +73,7 @@ namespace {
             if(samples <= 0) {
                 if(samples == 0) break;  // No error here
 
-                Console::error("op_read_stereo: error %d (%s)", samples,
+                printf("op_read_stereo: error %d (%s)", samples,
                     opusStrError(samples));
                 break;
             }
@@ -74,7 +83,7 @@ namespace {
 
         // If no samples were read in the last decode cycle, we're done
         if(totalSamples == 0) {
-            Console::log("Playback complete");
+            printf("Playback complete, press Start to exit\n");
             return false;
         }
 
@@ -82,7 +91,7 @@ namespace {
         waveBuf_->nsamples = totalSamples;
         ndspChnWaveBufAdd(0, waveBuf_);
         DSP_FlushDataCache(waveBuf_->data_pcm16,
-            totalSamples * channelspersample * sizeof(int16_t));
+            totalSamples * CHANNELS_PER_SAMPLE * sizeof(int16_t));
 
         return true;
     }
@@ -127,14 +136,38 @@ OpusDecode::OpusDecode(std::string file) : args{NULL, 0, 0} {
     }
 
     args.OpusFile = opusFile;
-    args.samplesperbuf = 48000 * AUDIO_WAVBUF_TIME_MS;
-    args.channelspersample = 2;
+    args.samplesperbuf = SAMPLES_PER_BUF;
+    args.channelspersample = CHANNELS_PER_SAMPLE;
     args.event = &this->event;
     args.quit = &this->quit;
     args.waveBufs = this->waveBufs;
     args.channel = channel;
 
-    this->AudioInit(48000, 2, args.samplesperbuf);
+    // Setup NDSP
+    ndspChnReset(channel);
+    ndspSetOutputMode(NDSP_OUTPUT_STEREO);
+    ndspChnSetInterp(channel, NDSP_INTERP_POLYPHASE);
+    ndspChnSetRate(channel, SAMPLE_RATE);
+    ndspChnSetFormat(channel, NDSP_FORMAT_STEREO_PCM16);
+
+    // Allocate audio buffer
+    const size_t bufferSize = WAVEBUF_SIZE * AUDIO_NUM_WAVBUFS;
+    audioBuffer = (int16_t *)linearAlloc(bufferSize);
+    if(!audioBuffer) {
+        printf("Failed to allocate audio buffer\n");
+        return;
+    }
+
+    // Setup waveBufs for NDSP
+    memset(&waveBufs, 0, sizeof(waveBufs));
+    int16_t *buffer = (int16_t*)audioBuffer;
+
+    for(size_t i = 0; i < AUDIO_NUM_WAVBUFS; ++i) {
+        waveBufs[i].data_vaddr = buffer;
+        waveBufs[i].status     = NDSP_WBUF_DONE;
+
+        buffer += WAVEBUF_SIZE / sizeof(buffer[0]);
+    }
 
     // Set the thread priority to the main thread's priority ...
     int32_t priority = 0x30;
@@ -152,5 +185,8 @@ OpusDecode::OpusDecode(std::string file) : args{NULL, 0, 0} {
 
 OpusDecode::~OpusDecode() {
     if (opusFile) op_free(opusFile);
-    if (audioBuffer) linearFree(audioBuffer);
+    if (audioBuffer) {
+        stats::linear -= linearGetSize(audioBuffer);
+        linearFree(audioBuffer);
+    }
 }
