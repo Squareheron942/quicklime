@@ -111,8 +111,8 @@ def process(args: argparse.Namespace):
     subfolders, files = run_fast_scandir(args.assets, mdl_ext) # copy all source code files to the temporary source code folders
     for file in files:
         if not file in file_edit_times or file_edit_times[file] < os.path.getmtime(file):
-            make_folder_if_not_exist(os.path.join(args.romfs, os.path.dirname(file)))
-            shutil.copy(file, os.path.join(args.romfs, os.path.dirname(file)))
+            make_folder_if_not_exist(os.path.join(args.romfs, file))
+            shutil.copy(file, os.path.join(args.romfs, file))
             file_edit_times[file] = os.path.getmtime(file)
 
     # copy all headers to include dir
@@ -222,8 +222,8 @@ def process(args: argparse.Namespace):
     subfolders, files = run_fast_scandir_inv(args.assets, mdl_ext + scene_ext + src_ext + hdr_ext + image_ext)
     for file in files:
         if not file in file_edit_times or file_edit_times[file] < os.path.getmtime(file):
-            make_folder_if_not_exist(os.path.join(args.romfs, os.path.dirname(file)))
-            shutil.copy(file, os.path.join(args.romfs, os.path.dirname(file)))
+            make_folder_if_not_exist(os.path.join(args.romfs, file))
+            shutil.copy(file, os.path.join(args.romfs, file))
         file_edit_times[file] = os.path.getmtime(file) 
 
     with open(os.path.join(args.build, "file_edit_times.json"), 'w+') as edit_times:
