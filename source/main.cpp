@@ -45,7 +45,7 @@ int main()
 	Console::log("Language detected: %u", config::lang);
 	Console::log("Region detected: %u", config::region);
 
-	SceneManager::currentScene = SceneLoader::load("Fld_Hiagari");
+	SceneManager::currentScene = SceneLoader::load("test");
 
 	int scene = 0;
 
@@ -63,7 +63,7 @@ int main()
 			} else if (scene == 2) {
 				scene = 0;
 				SceneManager::currentScene.reset();
-				SceneManager::currentScene = SceneLoader::load("Fld_Hiagari");
+				SceneManager::currentScene = SceneLoader::load("test");
 			}
 		}
 			

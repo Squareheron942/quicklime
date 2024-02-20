@@ -10,3 +10,5 @@ gfx/
 tempinclude/
 tempsource/
 build-log.txt
+assets/
+romfs/

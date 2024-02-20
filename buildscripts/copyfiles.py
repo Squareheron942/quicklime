@@ -97,7 +97,7 @@ def process(args: argparse.Namespace):
     subfolders, files = run_fast_scandir(args.assets, scene_ext)
     for file in files:
         if not file in file_edit_times or file_edit_times[file] < os.path.getmtime(file):
-            shutil.copy(file, os.path.join(args.romfs, 'scenes'))
+            shutil.copy(file, os.path.join(args.romfs, 'scenes', os.path.basename(file)))
             file_edit_times[file] = os.path.getmtime(file)
 
     # copy all user source code files to the correct source code directory
@@ -111,7 +111,7 @@ def process(args: argparse.Namespace):
     subfolders, files = run_fast_scandir(args.assets, mdl_ext) # copy all source code files to the temporary source code folders
     for file in files:
         if not file in file_edit_times or file_edit_times[file] < os.path.getmtime(file):
-            make_folder_if_not_exist(os.path.join(args.romfs, os.path.dirname(file)));
+            make_folder_if_not_exist(os.path.join(args.romfs, os.path.dirname(file)))
             shutil.copy(file, os.path.join(args.romfs, os.path.dirname(file)))
             file_edit_times[file] = os.path.getmtime(file)
 
@@ -216,17 +216,18 @@ def process(args: argparse.Namespace):
 
                         make_folder_if_not_exist(os.path.join(args.romfs, "gfx", os.path.splitext(os.path.basename(file))[0] + '.t3xcfg'))
                         with open(os.path.join(args.romfs, "gfx", os.path.splitext(os.path.basename(file))[0] + '.t3xcfg'), 'wb+') as t3xcfg:
-                            t3xcfg.write((arg).to_bytes(1)) 
-    with open(os.path.join(args.build, "file_edit_times.json"), 'w+') as edit_times:
-        json.dump(file_edit_times, edit_times)
+                            t3xcfg.write((arg).to_bytes(1))
 
     # copy all non special files to romfs
     subfolders, files = run_fast_scandir_inv(args.assets, mdl_ext + scene_ext + src_ext + hdr_ext + image_ext)
     for file in files:
         if not file in file_edit_times or file_edit_times[file] < os.path.getmtime(file):
-            make_folder_if_not_exist(os.path.join(args.romfs, os.path.dirname(file)));
+            make_folder_if_not_exist(os.path.join(args.romfs, os.path.dirname(file)))
             shutil.copy(file, os.path.join(args.romfs, os.path.dirname(file)))
-        file_edit_times[file] = os.path.getmtime(file)
+        file_edit_times[file] = os.path.getmtime(file) 
+
+    with open(os.path.join(args.build, "file_edit_times.json"), 'w+') as edit_times:
+        json.dump(file_edit_times, edit_times)
 
 def add_args(parser: argparse.ArgumentParser):
     try:
