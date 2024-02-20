@@ -1,31 +1,21 @@
-# SL Dev Repo
-
-## WARNING
-
-PLEASE DO NOT EDIT MAIN BRANCH DIRECTLY
-
-GOOGLE HOW TO CREATE BRANCHES AND ONLY EVER COMMIT TO THOSE
-
-BRANCHES ARE FOR WHEN YOU ARE DEVELOPING SOMETHING SPECIFIC, THAT MEANS ONE BRANCH FOR ONE FEATURE
-
-ONLY WHEN YOU ARE DONE THAT FEATURE DO YOU PUSH IT TO THE MAIN BRANCH, AND MAKE SURE IT ACTUALLY WORKS PROPERLY
+# CitroEn
 
 ## How to build
 
 Dependencies:
 
-ffmpeg, python 3, make 4.4.1
+special citro3D and libctru distributions which aren't available rn, ffmpeg, python 3, ffmpeg-python, devkitpro 3ds-dev package
 
-Set the python install location in the makefile, then run `make` in the project directory. The first build will error when compiling the c++ code (due to how the makefile is set up), and the second will succeed.
+Set the python install location in the makefile, then run `make` in the project directory. The first build will error when compiling the c++ code (due to how the makefile is set up, will be fixed in final release when an app is made), and the second will succeed.
 
 ## How to use the engine
 
-The makefile contains various settings, you mostly don't need to mess with them
+The makefile contains various settings, you mostly don't need to mess with them other than the python variable which should be set to your python 3 install location
 
 
 ### Scripts
-To create a new script, make a new header in /include/scripts which is where all the code will go. 
-It is very similar to Unity scripts, look at the example scripts to see how to write it.
+To create a new script, make a new class extending the `Script` class (defined in `script.h`) which is where all the code will go, and place it in your asset folder.
+It is very similar to Unity scripts, look at the example scripts to see how to write it. (once those are added)
 Some stuff is not yet implemented (FixedUpdate() for example as well as just multithreading in general)
 
 ### Materials
@@ -33,7 +23,7 @@ Some stuff is not yet implemented (FixedUpdate() for example as well as just mul
 #### Material source code
 To create a material, copy one of the examples and edit the code as you need.
 You can store the data to be passed to the constructor in a .slmtl file, which needs to be placed in the same location as the .slmdl model and said model needs to reference it by name.
-Eventually I might make an app for this but not yet. Then, you can get back those parameters however you choose, since the model loader will just give you a file pointer to whatever file is specified in the model. 
+Eventually I might make an app for this (currently in the works but not done). Then, you can get back those parameters however you choose, since the model loader will just give you a file pointer to whatever file is specified in the model. 
 Again, see the example materials to see how to read a file.
 
 #### Material files
