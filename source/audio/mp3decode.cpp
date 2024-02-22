@@ -1,6 +1,7 @@
 #include "mp3decode.h"
 #include "console.h"
 #include "stdio.h"
+#include "stats.h"
 
 namespace {
 
@@ -162,6 +163,7 @@ MP3Decode::MP3Decode(std::string file) {
 }
 
 MP3Decode::~MP3Decode() {
+    Stop();
     mpg123_close(mh);
 	mpg123_delete(mh);
 	mpg123_exit();

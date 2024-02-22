@@ -113,7 +113,6 @@ namespace {
                 }
             }
 
-
             // Wait for a signal that we're needed again before continuing,
             // so that we can yield to other things that want to run
             // (Note that the 3DS uses cooperative threading)
@@ -184,9 +183,6 @@ OpusDecode::OpusDecode(std::string file) : args{NULL, 0, 0} {
 }
 
 OpusDecode::~OpusDecode() {
+    Stop(); // end audio thread etc
     if (opusFile) op_free(opusFile);
-    if (audioBuffer) {
-        stats::linear -= linearGetSize(audioBuffer);
-        linearFree(audioBuffer);
-    }
 }

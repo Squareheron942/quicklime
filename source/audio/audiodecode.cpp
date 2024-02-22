@@ -73,6 +73,24 @@ AudioDecode::AudioDecode() {
     LightEvent_Init(&event, RESET_ONESHOT);
 }
 
+void AudioDecode::Stop() {
+    quit = true;
+    LightEvent_Signal(&event);
+    // Free the audio thread
+    threadJoin(threadId, UINT64_MAX);
+    threadFree(threadId);
+    ndspChnReset(channel);
+    audio_shared_inf::ndsp_used_channels &= ~BIT(channel);
+    if (audioBuffer) {
+        stats::linear -= linearGetSize(audioBuffer);
+        linearFree(audioBuffer);
+        audioBuffer = NULL;
+        Console::log("Audio buffer freed");
+    } else {
+        Console::error("No buffer");
+    }
+}
+
 AudioDecode::~AudioDecode() {
-    Stop();
+    // Stop();
 }

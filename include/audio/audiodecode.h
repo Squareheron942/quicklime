@@ -6,6 +6,7 @@
 #include <3ds.h>
 #include "audiosharedinf.h"
 #include <string>
+#include "stats.h"
 
 #define THREAD_AFFINITY (-1)           // Execute thread on any core
 #define THREAD_STACK_SZ (32 * 1024)    // 32kB stack for audio thread
@@ -35,12 +36,5 @@ class AudioDecode {
     void *audioBuffer = NULL;
     LightEvent event;
 
-    void Stop() {
-        quit = true;
-        LightEvent_Signal(&event);
-        // Free the audio thread
-        threadJoin(threadId, UINT64_MAX);
-        threadFree(threadId);
-        audio_shared_inf::ndsp_used_channels &= ~BIT(channel);
-    }
+    void Stop();
 };
