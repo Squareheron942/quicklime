@@ -136,7 +136,7 @@ MP3Decode::MP3Decode(std::string file) {
 	} 
 	mpg123_format_none(mh);
 	mpg123_format(mh, samplerate, channels, encoding);
-	bufsize = mpg123_outblock(mh) * 16;
+	bufsize = mpg123_outblock(mh);
 
     args.mh = mh;
     args.bufsize = bufsize;
