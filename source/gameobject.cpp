@@ -115,4 +115,5 @@ GameObject* GameObject::find(std::string name) {
 
 GameObject::~GameObject() {
     if (parent) parent->removeChild(*this);
+    reg.destroy(id);
 }

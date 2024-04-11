@@ -29,8 +29,8 @@ material::~material() {}
     if (loadedTex.find(name) == loadedTex.end()) {
         FILE* f = fopen(("romfs:/gfx/" + name + ".t3x").c_str(), "r");
         if (!f) {
-            Console::warn("File not found:");
-            Console::warn(name.c_str());
+            // Console::warn("File not found:");
+            // Console::warn(name.c_str());
             // name = "blank";
             // f = fopen(("romfs:/gfx/" + name + ".t3x").c_str(), "r");
             return {};

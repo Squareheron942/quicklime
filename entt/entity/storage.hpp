@@ -17,6 +17,9 @@
 #include "fwd.hpp"
 #include "sparse_set.hpp"
 
+
+#include "3ds.h"
+
 namespace entt {
 
 /**
@@ -290,15 +293,16 @@ class basic_storage: public basic_sparse_set<Entity, typename std::allocator_tra
 
         for(auto pos = sz, length = base_type::size(); pos < length; ++pos) {
             if constexpr(traits_type::in_place_delete) {
-                if(base_type::at(pos) != tombstone) {
+                if(base_type::at(pos) != tombstone) { 
                     alloc_traits::destroy(allocator, std::addressof(element_at(pos)));
                 }
-            } else {
+            } else { 
                 alloc_traits::destroy(allocator, std::addressof(element_at(pos)));
             }
         }
 
         for(auto pos = from, last = payload.size(); pos < last; ++pos) {
+            if (!payload[pos]) svcBreak(USERBREAK_ASSERT);
             alloc_traits::deallocate(allocator, payload[pos], traits_type::page_size);
         }
 

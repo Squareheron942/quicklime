@@ -11,7 +11,6 @@ namespace {
             #endif
             return;
         }
-
         LightEvent_Signal(&((AudioDecode*)data)->event);
     }
 }
@@ -59,7 +58,7 @@ void AudioDecode::AudioFinish() {
 }
 
 AudioDecode::AudioDecode() {
-    for (int i = 0; i < 24; i++)
+    for (int i = 0; i < 24; i++) 
         if (!(BIT(i) & audio_shared_inf::ndsp_used_channels)) {
             audio_shared_inf::ndsp_used_channels |= BIT(i);
             channel = i;

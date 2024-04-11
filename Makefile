@@ -38,14 +38,14 @@ TARGET			:=	$(notdir $(CURDIR))
 PYTHON      	:=  python3
 BUILD			:=	build
 TEMPSOURCE		:= 	tempsource
-SOURCES			:=	source $(TEMPSOURCE) source/components
+SOURCES			:=	source $(TEMPSOURCE) source/components source/audio
 DATA			:=	
 MODEL			:=  assets
 TEMPINCLUDE		:=  tempinclude
-INCLUDES		:=	include entt include/materials include/scripts include/components include/deprecated $(TEMPINCLUDE)
+INCLUDES		:=	include entt include/materials include/scripts include/components include/deprecated include/audio $(TEMPINCLUDE)
 GRAPHICS		:=	gfx
 ROMFS		    :=	romfs
-APP_TITLE       := 	Splatoon Legends
+APP_TITLE       := 	CitroEn test
 APP_DESCRIPTION := 	$(VERSION)
 APP_AUTHOR		:= 	nontendo
 GFXBUILD		:=	$(ROMFS)/gfx
@@ -61,28 +61,20 @@ CFLAGS	:= -Wall -O2 -ffast-math -ggdb -mword-relocations \
 			-ffunction-sections \
 			$(ARCH)
 
-<<<<<<< Updated upstream
-CFLAGS	+=	$(INCLUDE) -D__3DS__
-=======
-CFLAGS	+=	$(INCLUDE) -D__3DS__ -lm `arm-none-eabi-pkg-config opusfile --cflags`
->>>>>>> Stashed changes
-
+CFLAGS	+=	$(INCLUDE) -D__3DS__ -lm `/opt/devkitpro/portlibs/3ds/bin/arm-none-eabi-pkg-config opusfile libmpg123 --cflags`
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++20 -flto
 
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-<<<<<<< Updated upstream
-LIBS	:= -lcitro2d -lcitro3d -lctru -lm
-=======
+
 LIBS	:= -lcitro2d -lcitro3d -lctru -lm -lmpg123 -lopusfile -lopus -lvorbisidec -logg
->>>>>>> Stashed changes
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS	:= $(CTRULIB)
+LIBDIRS	:= $(CTRULIB) $(PORTLIBS)
 
 
 #---------------------------------------------------------------------------------
@@ -180,7 +172,7 @@ endif
 .PHONY: all touchelf romfs clean runexttool
 
 #---------------------------------------------------------------------------------
-all: $(BUILD) runexttool $(GFXBUILD) $(DEPSDIR)  $(ROMFS_T3XFILES)
+all: $(BUILD) runexttool $(GFXBUILD) $(DEPSDIR) $(ROMFS_T3XFILES)
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile 
 
 touchelf:
@@ -216,7 +208,7 @@ clean:
 	@rm -rf $(BUILD) $(TARGET).3dsx $(OUTPUT).smdh $(TARGET).elf $(GFXBUILD) $(TEMPINCLUDE) $(TEMPSOURCE)
 # makes sense, make clean will run
 #---------------------------------------------------------------------------------
-$(GFXBUILD)/%.t3x	$(BUILD)/%.h	:	%.t3s runexttool
+$(GFXBUILD)/%.t3x	$(BUILD)/%.h	:	%.t3s
 #---------------------------------------------------------------------------------
 	@echo $(notdir $<)
 	@tex3ds -i $< -H $(BUILD)/$*.h -d $(DEPSDIR)/$*.d -o $(GFXBUILD)/$*.t3x

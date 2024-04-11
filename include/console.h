@@ -7,6 +7,7 @@
 #include "stats.h"
 #include "controls.h"
 #include "sl_time.h"
+#include <malloc.h>
 
 #define FPS_X 0
 #define FPS_Y 2
@@ -164,10 +165,9 @@ class Console {
 
     static inline void updateMemUsage() {
         #if CONSOLE_ENABLED
-        printf("\e[s\e[%u;%uHAll RAM Usage: %lu/%lu MiB         \e[u", MEM_Y, MEM_X, osGetMemRegionUsed(MEMREGION_ALL)/1048576, (osGetMemRegionSize(MEMREGION_ALL))/1048576); // 124 on old, 228 on new;
-        printf("\e[s\e[%u;%uHApplication RAM Usage: %lu/%lu MiB         \e[u", MEM_Y + 1, MEM_X, osGetMemRegionUsed(MEMREGION_APPLICATION)/1048576, (osGetMemRegionSize(MEMREGION_APPLICATION))/1048576); // mode 0 64mb, mode 2 96mb, mode 3 80mb, mode 4 72mb, mode 5 32mb, NEW: mode 6/8 124mb, mode 7 178mb
-        printf("\e[s\e[%u;%uHSystem RAM Usage: %lu/%lu MiB         \e[u", MEM_Y + 2, MEM_X, osGetMemRegionUsed(MEMREGION_SYSTEM)/1048576, (osGetMemRegionSize(MEMREGION_SYSTEM))/1048576); // mode 0 44mb, mode 2 12mb, mode 3 28mb, mode 4 36mb, mode 5 76mb, mode 6/8 100mb, mode 7 46mb
-        printf("\e[s\e[%u;%uHBase RAM Usage: %lu/%lu MiB         \e[u", MEM_Y + 3, MEM_X, osGetMemRegionUsed(MEMREGION_BASE)/1048576, (osGetMemRegionSize(MEMREGION_BASE))/1048576); // 20mb on old, 32mb on new
+        printf("\e[s\e[%u;%uHHeap Usage: %u KiB         \e[u", MEM_Y, MEM_X, mallinfo().uordblks/1024); // 124 on old, 228 on new;
+        printf("\e[s\e[%u;%uHLinear RAM Usage: %u KiB         \e[u", MEM_Y + 1, MEM_X, stats::linear/1024); // mode 0 64mb, mode 2 96mb, mode 3 80mb, mode 4 72mb, mode 5 32mb, NEW: mode 6/8 124mb, mode 7 178mb
+        printf("\e[s\e[%u;%uHVRAM Usage: %u KiB         \e[u", MEM_Y + 2, MEM_X, 0/1048576); // mode 0 44mb, mode 2 12mb, mode 3 28mb, mode 4 36mb, mode 5 76mb, mode 6/8 100mb, mode 7 46mb
         #endif
     }
 

@@ -12,6 +12,7 @@
 #include "pointlight.h"
 #include "spotlight.h"
 #include "stats.h"
+#include <list>
 
 class Scene {
     protected:
@@ -23,13 +24,13 @@ class Scene {
         }
     public:
         std::string name;
-        entt::registry reg;
 	    GameObject *root;
-        // SpotLight splight;
-        std::vector<GameObject*> objects;
-        // still hardcoded until i add proper light component
+        std::list<GameObject*> objects;
+        entt::registry reg;
 
-        virtual ~Scene() {}
+        ~Scene() {
+
+        }
 
         void awake() {
             r_act_on_objects(root, &GameObject::Awake); // call awake() on every gameobject and enable them (to self disable do it when this is called)

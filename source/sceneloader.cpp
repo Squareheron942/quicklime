@@ -24,10 +24,9 @@ GameObject *parseObject(std::unique_ptr<Scene>& s, std::string& input);
 void printSceneTree(GameObject& root, int indentlevel = 0);
 void parseSceneTree(std::unique_ptr<Scene>& s, std::string& text);
 
-std::string readFile(std::string name)
+std::string readFile(std::ifstream& stream)
 {
     std::stringstream str;
-    std::ifstream stream(("romfs:/scenes/" + name + ".scene"));
     if(stream.is_open())
     {
         while(stream.peek() != EOF)
@@ -52,11 +51,12 @@ std::unique_ptr<Scene> SceneLoader::load(std::string name) {
     
     std::unique_ptr<Scene> out(new Scene(name));
 
-    std::string text = readFile(name);
+    std::string text = readFile(scenefile);
 
     Console::log("read file\n"); 
     scenefile.close();
-
+    
+    // remove whitespace
     text.erase(std::remove_if(text.begin(), text.end(), [](unsigned char x) { return std::isspace(x); }), text.end()); // remove all whitespace from text
     
     parseSceneTree(out, text); // parse the whole object tree 
