@@ -61,14 +61,22 @@ CFLAGS	:= -Wall -O2 -ffast-math -ggdb -mword-relocations \
 			-ffunction-sections \
 			$(ARCH)
 
+<<<<<<< Updated upstream
 CFLAGS	+=	$(INCLUDE) -D__3DS__
+=======
+CFLAGS	+=	$(INCLUDE) -D__3DS__ -lm `arm-none-eabi-pkg-config opusfile --cflags`
+>>>>>>> Stashed changes
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++20 -flto
 
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
+<<<<<<< Updated upstream
 LIBS	:= -lcitro2d -lcitro3d -lctru -lm
+=======
+LIBS	:= -lcitro2d -lcitro3d -lctru -lm -lmpg123 -lopusfile -lopus -lvorbisidec -logg
+>>>>>>> Stashed changes
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing

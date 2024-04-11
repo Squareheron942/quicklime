@@ -202,7 +202,7 @@ def process(args: argparse.Namespace):
                     arg |= wrap_arg_to_n[wrap['T']] << 5
 
 
-                    # make_folder_if_not_exist(os.path.join(args.gfx, os.path.splitext(os.path.basename(file))[0]) + '.t3s')
+                    make_folder_if_not_exist(os.path.join(args.gfx, os.path.splitext(os.path.basename(file))[0]) + '.t3s')
                     with open(os.path.join(args.gfx, os.path.splitext(os.path.basename(file))[0]) + '.t3s', 'w+') as t3s: 
                         t3s.write(f'-f {format} -z {compression} --atlas ')
                         t3s.write(os.path.basename(file)) # file will be copied into here so it's fine
