@@ -11,7 +11,6 @@ namespace {
             #endif
             return;
         }
-        
         LightEvent_Signal(&((AudioDecode*)data)->event);
     }
 }
@@ -92,5 +91,5 @@ void AudioDecode::Stop() {
 }
 
 AudioDecode::~AudioDecode() {
-    // Stop();
+    Stop();
 }

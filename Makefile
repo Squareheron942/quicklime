@@ -62,13 +62,13 @@ CFLAGS	:= -Wall -O2 -ffast-math -ggdb -mword-relocations \
 			$(ARCH)
 
 CFLAGS	+=	$(INCLUDE) -D__3DS__ -lm `/opt/devkitpro/portlibs/3ds/bin/arm-none-eabi-pkg-config opusfile libmpg123 --cflags`
-
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++20 -flto
 
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= -lcitro2d -lcitro3d -lctru -lm `/opt/devkitpro/portlibs/3ds/bin/arm-none-eabi-pkg-config opusfile libmpg123 --libs`
+
+LIBS	:= -lcitro2d -lcitro3d -lctru -lm -lmpg123 -lopusfile -lopus -lvorbisidec -logg
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing

@@ -77,7 +77,6 @@ namespace {
                     opusStrError(samples));
                 break;
             }
-            
             totalSamples += samples;
         }
 
@@ -107,7 +106,6 @@ namespace {
                 if(args.waveBufs[i].status != NDSP_WBUF_DONE) {
                     continue;
                 }
-                
                 if(!fillBuffer(args.OpusFile, &args.waveBufs[i], args.samplesperbuf, args.channelspersample, args.channel)) {   // Playback complete
                     goto exit;
                 }

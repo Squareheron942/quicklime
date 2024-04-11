@@ -6,6 +6,7 @@
 #include "mp3decode.h"
 #include "bcstmdecode.h"
 #include "wavdecode.h"
+#include "vorbisdecode.h"
 #include <3ds.h>
 #include <string>
 
@@ -35,7 +36,9 @@ void AudioSource::Play(std::string file) {
     } else if (extension == "bcstm") {
 
     } else if (extension == "wav" || extension == "wave") {
-
+      
+    } else if (extension == "ogg" || extension == "oga") {
+        decoder = new VorbisDecode(file);
     }
     Console::log("Decoder created");
     Console::log("channels used %u");

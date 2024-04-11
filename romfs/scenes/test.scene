@@ -1,0 +1,29 @@
+root[
+    components[
+        transform{},
+    ],
+    scripts[],
+    children[
+        cam[
+            components[
+                transform{},
+                Camera{AQD//wAAAADNzMw9AAB6RP/rdzQAAAAAAADAQQAAIEIBAAAAAABcQgAAAAAAAAAA}
+            ],
+            scripts[
+                MovementScript
+            ],
+            children[],
+        ],
+        testobject[
+            components[
+                transform{},
+                AudioSource{}
+                Text{YmlnYmFsbHNsaWxkaWNrCg==}
+            ],
+            scripts[
+                TestScript
+            ],
+            children[],
+        ]
+    ]
+]
