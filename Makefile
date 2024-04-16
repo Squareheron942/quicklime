@@ -39,7 +39,7 @@ PYTHON      	:=  python3
 BUILD			:=	build
 TEMPSOURCE		:= 	tempsource
 SOURCES			:=	source $(TEMPSOURCE) source/components source/audio
-DATA			:=	
+DATA			:=
 MODEL			:=  assets
 TEMPINCLUDE		:=  tempinclude
 INCLUDES		:=	include entt include/materials include/scripts include/components include/deprecated include/audio $(TEMPINCLUDE)
@@ -62,7 +62,7 @@ CFLAGS	:= -Wall -O2 -ffast-math -ggdb -mword-relocations \
 			$(ARCH)
 
 CFLAGS	+=	$(INCLUDE) -D__3DS__ -lm `/opt/devkitpro/portlibs/3ds/bin/arm-none-eabi-pkg-config opusfile libmpg123 --cflags`
-CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++20 -flto
+CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++2b -flto
 
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
@@ -173,7 +173,7 @@ endif
 
 #---------------------------------------------------------------------------------
 all: $(BUILD) runexttool $(GFXBUILD) $(DEPSDIR) $(ROMFS_T3XFILES)
-	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile 
+	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
 touchelf:
 	@touch -c $(TARGET).elf

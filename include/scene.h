@@ -48,7 +48,6 @@ class Scene {
 
             r_act_on_objects(root, &GameObject::LateUpdate); // call lateupdate() on every gameobject (propagates from root). Used to ensure stuff like cameras move only when everything else is done moving
 
-            // printf("%s\n", root.name.c_str());
             // printSceneTree(root, 1);
 
             Console::update();
@@ -60,12 +59,12 @@ class Scene {
         };
 
         virtual void drawTop() {
-            Camera::mainTop->Render(); 
+            Camera::mainTop->Render();
         };
 
         virtual void drawBottom() {}
 
         Scene(std::string name) : name(name) {}
     protected:
-        
+
 };

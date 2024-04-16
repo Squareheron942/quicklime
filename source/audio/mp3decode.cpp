@@ -33,7 +33,7 @@ namespace {
             mpg123_read(mh, reinterpret_cast<unsigned char*>(buffer), bufferSize, &samples);
 
             if(samples <= 0) break;  // No error here
-            
+
             totalSamples += samples;
         }
 
@@ -56,11 +56,14 @@ namespace {
     void audioThread(void *const args_) {
         mp3threadargs args = *(mp3threadargs *)args_;
 
-        bool finished = false;;
+        bool finished = false;
 
-        while(!*args.quit) {  // Whilst the quit flag is unset,
-                        // search our waveBufs and fill any that aren't currently
-                        // queued for playback (i.e, those that are 'done')
+        while(!*args.quit) {
+        	// Whilst the quit flag is unset,
+            // search our waveBufs and fill any that aren't currently
+            // queued for playback (i.e, those that are 'done')
+            if (finished)
+                break;
             for(size_t i = 0; i < AUDIO_NUM_WAVBUFS; ++i) {
 
                 auto& buf = args.waveBufs[i];
@@ -82,14 +85,14 @@ namespace {
                 ndspChnWaveBufAdd(args.channel, &buf);
 
                 DSP_FlushDataCache(buf.data_pcm16, args.bufsize);
-                
+
                 // if(!fillBuffer(args.mh, &args.waveBufs[i], args.samplesperbuf, args.channelspersample, args.channel)) {   // Playback complete
                 //     goto exit;
                 // }
             }
-            if (finished) 
+            if (finished)
                 break;
-                
+
             // Wait for a signal that we're needed again before continuing,
             // so that we can yield to other things that want to run
             // (Note that the 3DS uses cooperative threading)
@@ -99,8 +102,6 @@ namespace {
         audio_shared_inf::ndsp_used_channels &= ~BIT(args.channel);
         Console::log("Audio thread ended");
         Console::log("Channels: %p", audio_shared_inf::ndsp_used_channels);
-
-        threadExit(0);
     }
 }
 
@@ -117,7 +118,7 @@ MP3Decode::MP3Decode(std::string file) {
 
 	if(err != MPG123_OK)
 		return;
-    
+
     mh = mpg123_new(NULL, &err);
 
 	if(!mh)
@@ -135,7 +136,7 @@ MP3Decode::MP3Decode(std::string file) {
 		Console::error("mpg123 error:");
         Console::error(mpg123_strerror(mh));
 		return;
-	} 
+	}
 	mpg123_format_none(mh);
 	mpg123_format(mh, samplerate, channels, encoding);
 	bufsize = mpg123_outblock(mh);
@@ -166,7 +167,9 @@ MP3Decode::MP3Decode(std::string file) {
 
 MP3Decode::~MP3Decode() {
     Stop();
+    Console::log("MP3 Audio decoder stopped");
     mpg123_close(mh);
 	mpg123_delete(mh);
 	mpg123_exit();
+	Console::log("MP3 Audio decoder destroyed");
 }

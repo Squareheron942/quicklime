@@ -14,6 +14,7 @@
 #include "config.h"
 #include "entt.hpp"
 #include "componentmanager.h"
+#include "console.h"
 
 void sceneExit(void)
 {
@@ -22,8 +23,31 @@ void sceneExit(void)
 	romfsExit();
 }
 
+void exceptionHandler(void) {
+	// uninstall handler
+	*((int*)((char*)getThreadLocalStorage() + 0x48)) = 0;
+	*((int*)((char*)getThreadLocalStorage() + 0x44)) = 0;
+	Console::error("Game Crashed. Press [START] to exit the app.");
+	while(!controls::getDown(controls::key::KEY_START) && aptMainLoop()) {
+		C3D_FrameBegin(0);
+		controls::update();
+		Time::Update();
+		Console::update();
+		C3D_FrameEnd(0);
+	};
+	exit(0);
+}
+
 int main()
 {
+
+	// setup exception handler
+	void* tls = getThreadLocalStorage();
+
+	void (**handlerptr)(void) = (void(**)())((char*)tls + 0x40);
+	*handlerptr = exceptionHandler;
+	*((int*)((char*)tls + 0x44)) = 1;
+	*((int*)((char*)tls + 0x48)) = 0;
 
 	// Initialize graphics
 	gfxInitDefault();
@@ -53,20 +77,12 @@ int main()
 	while (aptMainLoop())
 	{
 		controls::update();
-		
+
 		if (hidKeysDown() & KEY_START) {
 			++scene;
-			// if (scene == 1) break; // break in order to return to hbmenu
-			if (scene == 1) {
-				SceneManager::currentScene.reset(); 
-				SceneManager::currentScene = SceneLoader::load("Fld_Hiagari");
-			} else if (scene == 2) {
-				scene = 0;
-				SceneManager::currentScene.reset();
-				SceneManager::currentScene = SceneLoader::load("test");
-			}
+			if (scene == 1) break; // break in order to return to hbmenu
 		}
-			
+
 
 		osTickCounterStart(&stats::profiling::cnt_supd);
 		if (SceneManager::currentScene) SceneManager::currentScene->update();
@@ -87,7 +103,7 @@ int main()
 
 	for (int i = 0; i < CONSOLE_NUM_LINES; i++) // empty the console buffer to prevent memory leakage
 		delete[] Console::textbuf[i];
-	
+
 
 	// Deinitialize the scene
 	sceneExit();
@@ -96,5 +112,11 @@ int main()
 	C2D_Fini();
 	C3D_Fini();
 	gfxExit();
+	ndspExit();
+
+	// uninstall exception handler
+	*handlerptr = NULL;
+	*((int*)((char*)tls + 0x44)) = 0;
+	*((int*)((char*)tls + 0x48)) = 0;
 	return 0;
 }

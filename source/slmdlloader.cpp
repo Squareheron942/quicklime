@@ -64,7 +64,7 @@ namespace mdlLoader {
 
     bool addModel(const std::string path, GameObject& object, bool createnew) {
         char b_path[255];
-        strcpy(b_path, path.c_str()); 
+        strcpy(b_path, path.c_str());
         *(strrchr(b_path, '/') + 1) = 0; // get parent folder path by looking for last '/' and putting a null after it (basically just changes the end of the string to be immediately after the /)
         FILE *f = fopen((path + ".slmdl").c_str(), "r");
 
@@ -80,7 +80,7 @@ namespace mdlLoader {
             Console::error("Wrong magic word '%c%c%c', 'mdl' expected (file pointer at position %p)", str[0], str[1], str[2], (void*)ftell(f));
             return false;
         }
-        
+
         // read header info
 
         // get material name
@@ -92,8 +92,8 @@ namespace mdlLoader {
         material* mat = parseMat(mf);
 
         fclose(mf);
-        
-        unsigned int numVerts = 0; 
+
+        unsigned int numVerts = 0;
         unsigned char sv = 0;
         float radius = 0.f;
         unsigned char attrnum, attrtypes[16], attrlen[16];
@@ -113,7 +113,7 @@ namespace mdlLoader {
 
         // read obj section
         if (str[0] != 'o' || str[1] != 'b' || str[2] != 'j') {
-            Console::error("Wrong magic word '%c%c%c', 'obj' expected (file pointer at position %p)\n", str[0], str[1], str[2], (void*)ftell(f));
+            Console::error("Wrong magic word '%c%c%c', 'obj' expected (file pointer at position %p)", str[0], str[1], str[2], (void*)ftell(f));
             return false;
         }
 
@@ -122,22 +122,22 @@ namespace mdlLoader {
         const size_t sizevert = sv;
 
         // Console::log("vs %lu nv %u, rad %f", sizevert, numVerts, radius * 0.01f);
-        
+
         std::shared_ptr<void> vertices;
         if (loadedVertices.find(path) == loadedVertices.end() || createnew) { // only read data if needed
             void* v = linearAlloc(numVerts * sizevert);
             stats::linear += numVerts * sizevert;
             fread(v, sizevert, numVerts, f);
             vertices.reset(v, meshdeleter);
-            
+
             if (!createnew) loadedVertices[path] = v;
 
         } else vertices.reset(loadedVertices[path], meshdeleter);
 
         fclose(f);
-        
+
         // typedef struct {float position[3]; float normal[3]; float texcoord[2];} daevert;
-        // for (unsigned int i = 0; i < numVerts; i++) Console::log("%u t%0.1f %0.1f\n", i, ((daevert*)vertices)[i].texcoord[0], ((daevert*)vertices)[i].texcoord[1]);
+        // for (unsigned int i = 0; i < numVerts; i++) Console::log("%u t%0.1f %0.1f", i, ((daevert*)vertices)[i].texcoord[0], ((daevert*)vertices)[i].texcoord[1]);
         object.reg.emplace_or_replace<mesh>(object.id, object, vertices, numVerts, sv, radius * 0.01f, attrnum, attrtypes, attrlen);
         object.reg.emplace_or_replace<MeshRenderer>(object.id, object, mat);
 

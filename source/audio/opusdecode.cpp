@@ -82,7 +82,7 @@ namespace {
 
         // If no samples were read in the last decode cycle, we're done
         if(totalSamples == 0) {
-            printf("Playback complete, press Start to exit\n");
+            Console::log("Playback complete, press Start to exit");
             return false;
         }
 
@@ -151,7 +151,7 @@ OpusDecode::OpusDecode(std::string file) : args{NULL, 0, 0} {
     const size_t bufferSize = WAVEBUF_SIZE * AUDIO_NUM_WAVBUFS;
     audioBuffer = (int16_t *)linearAlloc(bufferSize);
     if(!audioBuffer) {
-        printf("Failed to allocate audio buffer\n");
+        Console::error("Failed to allocate audio buffer");
         return;
     }
 
@@ -183,4 +183,5 @@ OpusDecode::OpusDecode(std::string file) : args{NULL, 0, 0} {
 OpusDecode::~OpusDecode() {
     Stop(); // end audio thread etc
     if (opusFile) op_free(opusFile);
+    Console::log("Opus audio buffer freed");
 }

@@ -31,7 +31,7 @@ bool AudioDecode::AudioInit(unsigned int samplerate, unsigned char channels, uns
     audioBuffer = linearAlloc(bufferSize);
     stats::linear += bufferSize;
     if(!audioBuffer) {
-        Console::error("Failed to allocate audio buffer\n");
+        Console::error("Failed to allocate audio buffer");
         return false;
     }
 
@@ -58,7 +58,7 @@ void AudioDecode::AudioFinish() {
 }
 
 AudioDecode::AudioDecode() {
-    for (int i = 0; i < 24; i++) 
+    for (int i = 0; i < 24; i++)
         if (!(BIT(i) & audio_shared_inf::ndsp_used_channels)) {
             audio_shared_inf::ndsp_used_channels |= BIT(i);
             channel = i;
@@ -73,6 +73,7 @@ AudioDecode::AudioDecode() {
 }
 
 void AudioDecode::Stop() {
+	if (quit) return; // if it has already been run then don't do it again
     quit = true;
     LightEvent_Signal(&event);
     // Free the audio thread
@@ -92,4 +93,5 @@ void AudioDecode::Stop() {
 
 AudioDecode::~AudioDecode() {
     Stop();
+    Console::log("Audio decoder destroyed");
 }

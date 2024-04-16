@@ -27,7 +27,7 @@ namespace {
                 if(buf.status != NDSP_WBUF_DONE) {
                     continue;
                 }
-                
+
                 uint64_t samplesRead = 0;
 	            int samplesToRead = args.bufsize;
 
@@ -108,7 +108,7 @@ VorbisDecode::VorbisDecode(std::string file) : args{NULL, 0, 0} {
     const size_t bufferSize = WAVEBUF_SIZE * AUDIO_NUM_WAVBUFS;
     audioBuffer = (int16_t *)linearAlloc(bufferSize);
     if(!audioBuffer) {
-        printf("Failed to allocate audio buffer\n");
+        Console::error("Failed to allocate audio buffer");
         return;
     }
 
