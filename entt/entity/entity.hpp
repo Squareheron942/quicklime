@@ -9,16 +9,12 @@
 
 namespace entt {
 
-/**
- * @cond TURN_OFF_DOXYGEN
- * Internal details not to be documented.
- */
-
+/*! @cond TURN_OFF_DOXYGEN */
 namespace internal {
 
-// waiting for C++20 (and std::popcount)
+// waiting for C++20 and std::popcount
 template<typename Type>
-static constexpr int popcount(Type value) noexcept {
+constexpr int popcount(Type value) noexcept {
     return value ? (int(value & 1) + popcount(value >> 1)) : 0;
 }
 
@@ -60,11 +56,7 @@ struct entt_traits<std::uint64_t> {
 };
 
 } // namespace internal
-
-/**
- * Internal details not to be documented.
- * @endcond
- */
+/*! @endcond */
 
 /**
  * @brief Common basic entity traits implementation.
@@ -114,7 +106,7 @@ public:
      * @return The integral representation of the version part.
      */
     [[nodiscard]] static constexpr version_type to_version(const value_type value) noexcept {
-        return static_cast<version_type>(to_integral(value) >> length);
+        return (static_cast<version_type>(to_integral(value) >> length) & version_mask);
     }
 
     /**
@@ -124,7 +116,7 @@ public:
      */
     [[nodiscard]] static constexpr value_type next(const value_type value) noexcept {
         const auto vers = to_version(value) + 1;
-        return construct(to_entity(value), static_cast<version_type>(vers + (vers == version_mask)));
+        return construct(to_integral(value), static_cast<version_type>(vers + (vers == version_mask)));
     }
 
     /**
@@ -138,7 +130,7 @@ public:
      * @return A properly constructed identifier.
      */
     [[nodiscard]] static constexpr value_type construct(const entity_type entity, const version_type version) noexcept {
-        return value_type{(entity & entity_mask) | (static_cast<entity_type>(version) << length)};
+        return value_type{(entity & entity_mask) | (static_cast<entity_type>(version & version_mask) << length)};
     }
 
     /**
@@ -152,8 +144,7 @@ public:
      * @return A properly constructed identifier.
      */
     [[nodiscard]] static constexpr value_type combine(const entity_type lhs, const entity_type rhs) noexcept {
-        constexpr auto mask = (version_mask << length);
-        return value_type{(lhs & entity_mask) | (rhs & mask)};
+        return value_type{(lhs & entity_mask) | (rhs & (version_mask << length))};
     }
 };
 
@@ -170,8 +161,10 @@ struct entt_traits: basic_entt_traits<internal::entt_traits<Type>> {
 };
 
 /**
- * @copydoc entt_traits<Entity>::to_integral
+ * @brief Converts an entity to its underlying type.
  * @tparam Entity The value type.
+ * @param value The value to convert.
+ * @return The integral representation of the given value.
  */
 template<typename Entity>
 [[nodiscard]] constexpr typename entt_traits<Entity>::entity_type to_integral(const Entity value) noexcept {
@@ -179,8 +172,10 @@ template<typename Entity>
 }
 
 /**
- * @copydoc entt_traits<Entity>::to_entity
+ * @brief Returns the entity part once converted to the underlying type.
  * @tparam Entity The value type.
+ * @param value The value to convert.
+ * @return The integral representation of the entity part.
  */
 template<typename Entity>
 [[nodiscard]] constexpr typename entt_traits<Entity>::entity_type to_entity(const Entity value) noexcept {
@@ -188,8 +183,10 @@ template<typename Entity>
 }
 
 /**
- * @copydoc entt_traits<Entity>::to_version
+ * @brief Returns the version part once converted to the underlying type.
  * @tparam Entity The value type.
+ * @param value The value to convert.
+ * @return The integral representation of the version part.
  */
 template<typename Entity>
 [[nodiscard]] constexpr typename entt_traits<Entity>::version_type to_version(const Entity value) noexcept {

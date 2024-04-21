@@ -20,7 +20,7 @@ enum RenderType {
 
 class Camera {
     // void transformobjs_r(GameObject* obj, C3D_Mtx& parentmodelmtx, C3D_FVec pos, C3D_FVec topN, C3D_FVec botN, C3D_FVec leftN, C3D_FVec rightN, C3D_FVec nearN, C3D_FVec farN);
-
+    LightLock lock;
 public:
     GameObject* parent;
     float nearClip, farClip, focalLength = 2.f, fovY, height, width;
@@ -39,6 +39,6 @@ public:
     float aspectRatio;
     unsigned short cullingMask; // sees all 16 layers by default
     Camera(GameObject& parent, const void* args);
-    
+    ~Camera();
     void Render();
 };

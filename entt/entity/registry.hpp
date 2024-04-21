@@ -30,11 +30,7 @@
 
 namespace entt {
 
-/**
- * @cond TURN_OFF_DOXYGEN
- * Internal details not to be documented.
- */
-
+/*! @cond TURN_OFF_DOXYGEN */
 namespace internal {
 
 template<typename It>
@@ -50,6 +46,7 @@ public:
     using reference = value_type;
     using difference_type = std::ptrdiff_t;
     using iterator_category = std::input_iterator_tag;
+    using iterator_concept = std::random_access_iterator_tag;
 
     constexpr registry_storage_iterator() noexcept
         : it{} {}
@@ -225,11 +222,7 @@ private:
 };
 
 } // namespace internal
-
-/**
- * Internal details not to be documented.
- * @endcond
- */
+/*! @endcond */
 
 /**
  * @brief Fast and reliable entity-component system.
@@ -249,17 +242,18 @@ class basic_registry {
 
     template<typename Type>
     [[nodiscard]] auto &assure([[maybe_unused]] const id_type id = type_hash<Type>::value()) {
+        static_assert(std::is_same_v<Type, std::decay_t<Type>>, "Non-decayed types not allowed");
+
         if constexpr(std::is_same_v<Type, entity_type>) {
             return entities;
         } else {
-            static_assert(std::is_same_v<Type, std::decay_t<Type>>, "Non-decayed types not allowed");
             auto &cpool = pools[id];
 
             if(!cpool) {
                 using storage_type = storage_for_type<Type>;
                 using alloc_type = typename storage_type::allocator_type;
 
-                if constexpr(std::is_same_v<Type, void> && !std::is_constructible_v<alloc_type, allocator_type>) {
+                if constexpr(std::is_void_v<Type> && !std::is_constructible_v<alloc_type, allocator_type>) {
                     // std::allocator<void> has no cross constructors (waiting for C++20)
                     cpool = std::allocate_shared<storage_type>(get_allocator(), alloc_type{});
                 } else {
@@ -276,11 +270,11 @@ class basic_registry {
 
     template<typename Type>
     [[nodiscard]] const auto *assure([[maybe_unused]] const id_type id = type_hash<Type>::value()) const {
+        static_assert(std::is_same_v<Type, std::decay_t<Type>>, "Non-decayed types not allowed");
+
         if constexpr(std::is_same_v<Type, entity_type>) {
             return &entities;
         } else {
-            static_assert(std::is_same_v<Type, std::decay_t<Type>>, "Non-decayed types not allowed");
-
             if(const auto it = pools.find(id); it != pools.cend()) {
                 ENTT_ASSERT(it->second->type() == type_id<Type>(), "Unexpected type");
                 return static_cast<const storage_for_type<Type> *>(it->second.get());
@@ -313,6 +307,10 @@ public:
     using common_type = base_type;
     /*! @brief Context type. */
     using context = internal::registry_context<allocator_type>;
+    /*! @brief Iterable registry type. */
+    using iterable = iterable_adaptor<internal::registry_storage_iterator<typename pool_container_type::iterator>>;
+    /*! @brief Constant iterable registry type. */
+    using const_iterable = iterable_adaptor<internal::registry_storage_iterator<typename pool_container_type::const_iterator>>;
 
     /**
      * @copybrief storage_for
@@ -395,7 +393,7 @@ public:
      * @return The associated allocator.
      */
     [[nodiscard]] constexpr allocator_type get_allocator() const noexcept {
-        return pools.get_allocator();
+        return entities.get_allocator();
     }
 
     /**
@@ -406,12 +404,12 @@ public:
      *
      * @return An iterable object to use to _visit_ the registry.
      */
-    [[nodiscard]] auto storage() noexcept {
+    [[nodiscard]] iterable storage() noexcept {
         return iterable_adaptor{internal::registry_storage_iterator{pools.begin()}, internal::registry_storage_iterator{pools.end()}};
     }
 
     /*! @copydoc storage */
-    [[nodiscard]] auto storage() const noexcept {
+    [[nodiscard]] const_iterable storage() const noexcept {
         return iterable_adaptor{internal::registry_storage_iterator{pools.cbegin()}, internal::registry_storage_iterator{pools.cend()}};
     }
 
@@ -457,77 +455,12 @@ public:
     }
 
     /**
-     * @brief Returns the number of entities created so far.
-     * @return Number of entities created so far.
-     */
-    [[deprecated("use .storage<Entity>().size() instead")]] [[nodiscard]] size_type size() const noexcept {
-        return entities.size();
-    }
-
-    /**
-     * @brief Returns the number of entities still in use.
-     * @return Number of entities still in use.
-     */
-    [[deprecated("use .storage<Entity>().in_use() instead")]] [[nodiscard]] size_type alive() const {
-        return entities.in_use();
-    }
-
-    /**
-     * @brief Increases the capacity (number of entities) of the registry.
-     * @param cap Desired capacity.
-     */
-    [[deprecated("use .storage<Entity>().reserve(cap) instead")]] void reserve(const size_type cap) {
-        entities.reserve(cap);
-    }
-
-    /**
-     * @brief Returns the number of entities that a registry has currently
-     * allocated space for.
-     * @return Capacity of the registry.
-     */
-    [[deprecated("use .storage<Entity>().capacity() instead")]] [[nodiscard]] size_type capacity() const noexcept {
-        return entities.capacity();
-    }
-
-    /**
-     * @brief Checks whether the registry is empty (no entities still in use).
-     * @return True if the registry is empty, false otherwise.
-     */
-    [[deprecated("use .storage<Entity>().in_use() instead")]] [[nodiscard]] bool empty() const {
-        return !alive();
-    }
-
-    /**
-     * @brief Direct access to the list of entities of a registry.
-     *
-     * The returned pointer is such that range `[data(), data() + size())` is
-     * always a valid range, even if the registry is empty.
-     *
-     * @warning
-     * This list contains both valid and destroyed entities and isn't suitable
-     * for direct use.
-     *
-     * @return A pointer to the array of entities.
-     */
-    [[deprecated("use .storage<Entity>().data() instead")]] [[nodiscard]] const entity_type *data() const noexcept {
-        return entities.data();
-    }
-
-    /**
-     * @brief Returns the number of released entities.
-     * @return The number of released entities.
-     */
-    [[deprecated("use .storage<Entity>().size() and .storage<Entity>().in_use() instead")]] [[nodiscard]] size_type released() const noexcept {
-        return (entities.size() - entities.in_use());
-    }
-
-    /**
      * @brief Checks if an identifier refers to a valid entity.
      * @param entt An identifier, either valid or not.
      * @return True if the identifier is valid, false otherwise.
      */
     [[nodiscard]] bool valid(const entity_type entt) const {
-        return entities.contains(entt) && (entities.index(entt) < entities.in_use());
+        return entities.contains(entt) && (entities.index(entt) < entities.free_list());
     }
 
     /**
@@ -573,74 +506,6 @@ public:
     template<typename It>
     void create(It first, It last) {
         entities.insert(std::move(first), std::move(last));
-    }
-
-    /**
-     * @brief Assigns identifiers to an empty registry.
-     *
-     * This function is intended for use in conjunction with `data`, `size` and
-     * `released`.<br/>
-     * Don't try to inject ranges of randomly generated entities nor the _wrong_
-     * head for the list of destroyed entities. There is no guarantee that a
-     * registry will continue to work properly in this case.
-     *
-     * @warning
-     * There must be no entities still alive for this to work properly.
-     *
-     * @tparam It Type of input iterator.
-     * @param first An iterator to the first element of the range of entities.
-     * @param last An iterator past the last element of the range of entities.
-     * @param destroyed The number of released entities.
-     */
-    template<typename It>
-    [[deprecated("use .storage<Entity>().push(first, last) and .storage<Entity>().in_use(len) instead")]] void assign(It first, It last, const size_type destroyed) {
-        ENTT_ASSERT(!entities.in_use(), "Non-empty registry");
-        entities.push(first, last);
-        entities.in_use(entities.size() - destroyed);
-    }
-
-    /**
-     * @brief Releases an identifier.
-     *
-     * The version is updated and the identifier can be recycled at any time.
-     *
-     * @param entt A valid identifier.
-     * @return The version of the recycled entity.
-     */
-    [[deprecated("use .orphan(entt) and .storage<Entity>().erase(entt) instead")]] version_type release(const entity_type entt) {
-        ENTT_ASSERT(orphan(entt), "Non-orphan entity");
-        entities.erase(entt);
-        return entities.current(entt);
-    }
-
-    /**
-     * @brief Releases an identifier.
-     *
-     * The suggested version or the valid version closest to the suggested one
-     * is used instead of the implicitly generated version.
-     *
-     * @param entt A valid identifier.
-     * @param version A desired version upon destruction.
-     * @return The version actually assigned to the entity.
-     */
-    [[deprecated("use .orphan(entt), then .storage<Entity>().erase(entt)/.bump(next) instead")]] version_type release(const entity_type entt, const version_type version) {
-        ENTT_ASSERT(orphan(entt), "Non-orphan entity");
-        entities.erase(entt);
-        const auto elem = traits_type::construct(traits_type::to_entity(entt), version);
-        return entities.bump((elem == tombstone) ? traits_type::next(elem) : elem);
-    }
-
-    /**
-     * @brief Releases all identifiers in a range.
-     *
-     * @tparam It Type of input iterator.
-     * @param first An iterator to the first element of the range of entities.
-     * @param last An iterator past the last element of the range of entities.
-     */
-    template<typename It>
-    [[deprecated("use .orphan(entt) and .storage<Entity>().erase(first, last) instead")]] void release(It first, It last) {
-        ENTT_ASSERT(std::all_of(first, last, [this](const auto entt) { return orphan(entt); }), "Non-orphan entity");
-        entities.erase(std::move(first), std::move(last));
     }
 
     /**
@@ -691,11 +556,13 @@ public:
      */
     template<typename It>
     void destroy(It first, It last) {
-        const auto from = entities.each().cbegin().base();
-        const auto to = from + entities.pack(first, last);
+        entities.sort_as(first, last);
 
-        for(size_type pos = pools.size(); pos; --pos) {
-            pools.begin()[pos - 1u].second->remove(from, to);
+        const auto from = entities.cbegin(0);
+        const auto to = from + std::distance(first, last);
+
+        for(auto &&curr: pools) {
+            curr.second->remove(from, to);
         }
 
         entities.erase(from, to);
@@ -963,7 +830,7 @@ public:
      * @return True if the entity is part of all the storage, false otherwise.
      */
     template<typename... Type>
-    [[nodiscard]] bool all_of(const entity_type entt) const {
+    [[nodiscard]] bool all_of([[maybe_unused]] const entity_type entt) const {
         if constexpr(sizeof...(Type) == 1u) {
             auto *cpool = assure<std::remove_const_t<Type>...>();
             return cpool && cpool->contains(entt);
@@ -980,7 +847,7 @@ public:
      * otherwise.
      */
     template<typename... Type>
-    [[nodiscard]] bool any_of(const entity_type entt) const {
+    [[nodiscard]] bool any_of([[maybe_unused]] const entity_type entt) const {
         return (all_of<Type>(entt) || ...);
     }
 
@@ -1062,8 +929,7 @@ public:
     template<typename... Type>
     [[nodiscard]] auto try_get([[maybe_unused]] const entity_type entt) {
         if constexpr(sizeof...(Type) == 1u) {
-            auto &cpool = assure<std::remove_const_t<Type>...>();
-            return (static_cast<Type *>(cpool.contains(entt) ? std::addressof(cpool.get(entt)) : nullptr), ...);
+            return (const_cast<Type *>(std::as_const(*this).template try_get<Type>(entt)), ...);
         } else {
             return std::make_tuple(try_get<Type>(entt)...);
         }
@@ -1080,31 +946,10 @@ public:
                 pools.begin()[pos - 1u].second->clear();
             }
 
-            const auto iterable = entities.each();
-            entities.erase(iterable.begin().base(), iterable.end().base());
+            const auto elem = entities.each();
+            entities.erase(elem.begin().base(), elem.end().base());
         } else {
             (assure<Type>().clear(), ...);
-        }
-    }
-
-    /**
-     * @brief Iterates all the entities that are still in use.
-     *
-     * The signature of the function should be equivalent to the following:
-     *
-     * @code{.cpp}
-     * void(const Entity);
-     * @endcode
-     *
-     * It's not defined whether entities created during iteration are returned.
-     *
-     * @tparam Func Type of the function object to invoke.
-     * @param func A valid function object.
-     */
-    template<typename Func>
-    [[deprecated("use .storage<Entity>().each() instead")]] void each(Func func) const {
-        for(auto [entt]: entities.each()) {
-            func(entt);
         }
     }
 
@@ -1330,7 +1175,8 @@ public:
     template<typename To, typename From>
     void sort() {
         ENTT_ASSERT(!owned<To>(), "Cannot sort owned storage");
-        assure<To>().sort_as(assure<From>());
+        const base_type &cpool = assure<From>();
+        assure<To>().sort_as(cpool.begin(), cpool.end());
     }
 
     /**

@@ -9,8 +9,11 @@ class transform {
         C3D_FVec position;
         C3D_FQuat rotation;
         C3D_FVec scale;
+
+        ~transform();
+
         transform() : position({1, 0, 0, 0}), rotation({1, 0, 0, 0}), scale({1, 1, 1, 1}) {}; // sets position, rotation, and scale to do nothing
-        
+
         // constructor to be used when data created by componentmanager
         transform(GameObject& parent, const void* data) : position({1, 0, 0, 0}), rotation({1, 0, 0, 0}), scale({1, 1, 1, 1}) {
             if (data) {
@@ -34,7 +37,7 @@ class transform {
 
         /**
          * @brief Rotates entity by `offset` radians
-         * 
+         *
          * @param offset Euler angles to offset by
          * @param local Whether or not to use local or global rotation
         */
@@ -50,7 +53,7 @@ class transform {
 
         /**
          * @brief Set the rotation component
-         * 
+         *
          * @param attitude New direction to set rotation to
          * @param local Whether or not to use local or global rotation
          */
@@ -60,7 +63,7 @@ class transform {
 
         /**
          * Rotates entity by `offset` radians around origin point
-         * 
+         *
          * @param offset How much to rotate by
          * @param origin Point to rotate around
         */
@@ -99,7 +102,7 @@ class transform {
                 return qm;
             }
             float ratioA = sinf((1 - t) * halfTheta) / sinHalfTheta;
-            float ratioB = sinf(t * halfTheta) / sinHalfTheta; 
+            float ratioB = sinf(t * halfTheta) / sinHalfTheta;
 
             //calculate Quaternion.
             qm.w = (qa.w * ratioA + qb.w * ratioB);
@@ -112,8 +115,8 @@ class transform {
 
         /**
          * @brief Converts the internal quaternion to euler angles. NOT RECOMMENDED AS IT IS VERY SLOW (multiple sqrt and atan2 used)
-         * 
-         * @return C3D_FVec 
+         *
+         * @return C3D_FVec
          */
         inline C3D_FVec eulerAngles() {
             C3D_FVec angles;
@@ -139,14 +142,14 @@ class transform {
 
         inline operator C3D_Mtx() {
             C3D_Mtx m, rot;
-            
+
             Mtx_FromQuat(&rot, rotation);
             Mtx_Identity(&m);
-            
+
             Mtx_Translate(&m, position.x, position.y, position.z, true); // translate
-            Mtx_Multiply(&m, &rot, &m); // rotate 
+            Mtx_Multiply(&m, &rot, &m); // rotate
             Mtx_Scale(&m, scale.x, scale.y, scale.z); // scale
-            
+
             return m;
         }
 };

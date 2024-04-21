@@ -19,6 +19,7 @@ struct audio_params {
 
 class AudioDecode {
     protected:
+    LightLock lock;
     bool foundchannel = false;
     unsigned char channel = 0;
     unsigned char dataformat = 0;

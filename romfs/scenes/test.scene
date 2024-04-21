@@ -17,8 +17,8 @@ root[
         testobject[
             components[
                 transform{},
-                AudioSource{}
-                Text{YmlnYmFsbHNsaWxkaWNrCg==}
+                AudioSource{},
+                Text{c29tZSBsb25nIHRleHQKb3RoZXIgc3R1ZmY=}
             ],
             scripts[
                 TestScript

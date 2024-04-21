@@ -1,6 +1,4 @@
 #include "ui_text.h"
-#include "citro2d.h"
-#include "citro3d.h"
 #include "componentmanager.h"
 #include "gameobject.h"
 #include "transform.h"
@@ -24,7 +22,7 @@ Text::Text(GameObject& parent, const void* args) {
         // formatted_args = *(text_params*)args;
         textlen = strlen((char*)args);
         text = new char[textlen];
-        memcpy(text, args, strlen((char*)args)); // copy the string data into the 
+        memcpy(text, args, strlen((char*)args)); // copy the string data into the
     }
     font = C2D_FontLoad("romfs:/assets/Splat.bcfnt");
     textBuf = C2D_TextBufNew(textlen);
@@ -32,19 +30,22 @@ Text::Text(GameObject& parent, const void* args) {
     C2D_TextOptimize(&txt);
     this->parent = &parent;
     this->parent->renderer |= RENDERER_TEXT;
+    Console::log("Text constructor");
 }
 
 Text::~Text(){
+	Console::log("ui text destructor");
     C2D_FontFree(font);
     C2D_TextBufDelete(textBuf);
-    parent->renderer &= ~RENDERER_TEXT;
+    parent->renderer &= ~RENDERER_TEXT; // set it to text rendering layer
     delete text;
 }
 
 void Text::Render() {
+	trans = parent->getComponent<transform>();
     C2D_Prepare();
-    // C2D_DrawText(&txt, 0, , , , trans->scale.x, trans->scale.y);
-    // C2D_DrawText(&txt, 0, trans->position.x, trans->position.y, trans->position.z, 1, 1);
+    if (trans) C2D_DrawText(&txt, 0, trans->position.x, trans->position.y, trans->position.z, trans->scale.x, trans->scale.y);
+    else Console::error("No transform for text");
     C2D_Flush();
 }
 

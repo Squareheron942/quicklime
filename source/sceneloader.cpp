@@ -14,6 +14,8 @@
 #include "lights.h"
 #include <filesystem>
 #include <3ds.h>
+#include "controls.h"
+#include "debug.h"
 
 #define SCENELOADER_THREAD_STACK_SZ (32 * 1024)    // 32kB stack for audio thread
 
@@ -21,14 +23,15 @@
 
 // need to pass in scene for the object constructor
 void parseChildren(std::unique_ptr<Scene>& s, GameObject& object, std::string& input);
-void parseComponent(GameObject& object, std::string input);
-void parseComponents(GameObject& object, std::string& input);
-void parseScripts(GameObject& object, std::string& input);
+void parseChildrenAsync(Scene* s, GameObject& object, std::string& input);
+void parseComponent(Scene* s, GameObject& object, std::string input);
+void parseComponents(Scene* s, GameObject& object, std::string& input);
+void parseScripts(Scene* s, GameObject& object, std::string& input);
 GameObject *parseObject(std::unique_ptr<Scene>& s, std::string& input);
-GameObject *parseObjectAsync(std::unique_ptr<Scene>& s, std::string& input, unsigned int size, float* progress);
+GameObject *parseObjectAsync(Scene* s, std::string& input, unsigned int size, float* progress);
 void printSceneTree(GameObject& root, int indentlevel = 0);
 void parseSceneTree(std::unique_ptr<Scene>& s, std::string& text);
-void parseSceneTreeAsync(std::unique_ptr<Scene>& s, std::string& text, float* progress);
+void parseSceneTreeAsync(Scene* s, std::string& text, float* progress);
 
 std::string readFile(std::ifstream& stream)
 {
@@ -46,13 +49,26 @@ std::string readFile(std::ifstream& stream)
 }
 
 struct sceneLoadThreadParams {
-	std::unique_ptr<Scene>& s; // reference to the scene pointer we are writing to
+	Scene* s; // reference to the scene pointer we are writing to
 	std::string name; // scene file name
 	float* progress; // progress value callback
 };
 
+void exceptionHandler2(void) {
+	// uninstall handler
+	uninstallExceptionHandler();
+
+	register unsigned int lr asm("lr"); // might work? idk
+	Console::error("Scene Load Thread Crashed.");
+	Console::error("lr: %p", lr);
+	threadExit(0);
+}
+
 void sceneLoadThread(void* params) {
-	sceneLoadThreadParams p = *(sceneLoadThreadParams*)params;
+	// setup exception handler
+	installExceptionHandler(exceptionHandler2);
+
+	sceneLoadThreadParams p = *(sceneLoadThreadParams*)params; // make a copy in case the original is deleted
 	std::ifstream scenefile;
 	scenefile.open(p.name);
 
@@ -63,11 +79,15 @@ void sceneLoadThread(void* params) {
 
     // remove whitespace
     text.erase(std::remove_if(text.begin(), text.end(), [](unsigned char x) { return std::isspace(x); }), text.end()); // remove all whitespace from text
-
     parseSceneTreeAsync(p.s, text, p.progress); // parse the whole object tree
-    // printSceneTree(*out->root);
-    Console::success("finished reading scene file");
     Console::log("%u objects", p.s->root->children.size());
+
+    // printSceneTree(*p.s->root);
+
+    if (p.progress)
+    	*p.progress = 1;
+
+    Console::success("finished reading scene file");
 }
 
 std::unique_ptr<Scene> SceneLoader::loadAsync(std::string name, float* progress) {
@@ -87,7 +107,7 @@ std::unique_ptr<Scene> SceneLoader::loadAsync(std::string name, float* progress)
     // start of scene load async function
 
     sceneLoadThreadParams p = {
-    	out,
+    	out.get(),
     	"romfs:/scenes/" + name + ".scene",
     	progress
     };
@@ -101,14 +121,9 @@ std::unique_ptr<Scene> SceneLoader::loadAsync(std::string name, float* progress)
     priority = priority < 0x18 ? 0x18 : priority;
     priority = priority > 0x3F ? 0x3F : priority;
 
-    // Start the thread, passing our opusFile as an argument.
+    // Start the thread
     Thread threadId = threadCreate(sceneLoadThread, &p, SCENELOADER_THREAD_STACK_SZ, priority, -1, true);
-
-    Camera::mainTop->sceneRoot = out->root;
-
-    out->awake();
-
-	out->start();
+    // threadDetach(threadId);
 
     return out;
 }
@@ -133,16 +148,11 @@ std::unique_ptr<Scene> SceneLoader::load(std::string name) {
     // remove whitespace
     text.erase(std::remove_if(text.begin(), text.end(), [](unsigned char x) { return std::isspace(x); }), text.end()); // remove all whitespace from text
 
-    parseSceneTree(out, text); // parse the whole object tree
-    // printSceneTree(*out->root);
+    // parse the whole object tree recursively
+    parseSceneTree(out, text);
+
     Console::success("finished reading scene file");
     Console::log("%u objects", out->root->children.size());
-
-    Camera::mainTop->sceneRoot = out->root;
-
-    out->awake();
-
-	out->start();
 
     return out;
 }
@@ -159,7 +169,7 @@ void parseSceneTree(std::unique_ptr<Scene>& s, std::string& text) {
     s->root = parseObject(s, text);
 }
 
-void parseSceneTreeAsync(std::unique_ptr<Scene>& s, std::string& text, float* progress) {
+void parseSceneTreeAsync(Scene* s, std::string& text, float* progress) {
 	unsigned int size = text.size();
     s->root = parseObjectAsync(s, text, size, progress);
 }
@@ -176,7 +186,7 @@ void parseChildren(std::unique_ptr<Scene>& s, GameObject& object, std::string& i
     if (input[0] == ',') input = input.substr(1);
 }
 
-void parseChildrenAsync(std::unique_ptr<Scene>& s, GameObject& object, std::string& input, unsigned int size, float* progress) {
+void parseChildrenAsync(Scene* s, GameObject& object, std::string& input, unsigned int size, float* progress) {
     unsigned int n = 0;
     while(input[0] != ']' && input.size() > 0) {
         GameObject* obj = parseObjectAsync(s, input, size, progress);
@@ -197,8 +207,8 @@ GameObject *parseObject(std::unique_ptr<Scene>& s, std::string& input) {
         std::string attr = input.substr(0, input.find('[')); // isolate the name of the first part
         input = input.substr(input.find('[') + 1); // go to start of that section
 
-        if (attr == "components") parseComponents(*object, input);
-        else if (attr == "scripts") parseScripts(*object, input);
+        if (attr == "components") parseComponents(s.get(), *object, input);
+        else if (attr == "scripts") parseScripts(s.get(), *object, input);
         else if (attr == "children") parseChildren(s, *object, input);
         else break;
     }
@@ -210,7 +220,7 @@ GameObject *parseObject(std::unique_ptr<Scene>& s, std::string& input) {
     return object;
 }
 
-GameObject *parseObjectAsync(std::unique_ptr<Scene>& s, std::string& input, int size, float* progress) {
+GameObject *parseObjectAsync(Scene* s, std::string& input, unsigned int size, float* progress) {
     GameObject* object = new GameObject(s->reg);
     object->name = input.substr(0, input.find('['));
     input = input.substr(input.find('[') + 1); // go to start of objects
@@ -220,8 +230,8 @@ GameObject *parseObjectAsync(std::unique_ptr<Scene>& s, std::string& input, int 
         input = input.substr(input.find('[') + 1); // go to start of that section
 
         // allows any order, as well as omission
-        if (attr == "components") parseComponents(*object, input);
-        else if (attr == "scripts") parseScripts(*object, input);
+        if (attr == "components") parseComponents(s, *object, input);
+        else if (attr == "scripts") parseScripts(s, *object, input);
         else if (attr == "children") parseChildrenAsync(s, *object, input, size, progress);
         else break;
     }
@@ -230,11 +240,13 @@ GameObject *parseObjectAsync(std::unique_ptr<Scene>& s, std::string& input, int 
     if (input[0] == ',') input = input.substr(1);
 
     if (progress)
-    	*progress = 1 - (((float)input.size())/ size);
+    	*progress = 1 - (((float)input.size()) / size);
+
+    Console::log("Progress %f", *progress);
     return object;
 }
 
-void parseScripts(GameObject& object, std::string& input) {
+void parseScripts(Scene* s, GameObject& object, std::string& input) {
     while (input[0] != ']') { // ] means end of the section
         if (input.find(',') < input.find(']')) { // this means there is a , closer than a ] so there must be at least another value
             ComponentManager::addScript(input.substr(0, input.find(',')).c_str(), object);
@@ -249,14 +261,14 @@ void parseScripts(GameObject& object, std::string& input) {
     input = input.substr(input.find(',') + 1); // go to end of section
 }
 
-void parseComponents(GameObject& object, std::string& input) {
+void parseComponents(Scene* s, GameObject& object, std::string& input) {
     while (input[0] != ']') { // ] means end of the section
         if (input.find(',') < input.find(']')) { // this means there is a , closer than a ] so there must be at least another value
-            parseComponent(object, input.substr(0, input.find(',')));
+            parseComponent(s, object, input.substr(0, input.find(',')));
             input = input.substr(input.find(',') + 1); // go to next one
         }
         else { // this means there is only one in there
-            parseComponent(object, input.substr(0, input.find(']')));
+            parseComponent(s, object, input.substr(0, input.find(']')));
             input = input.substr(input.find(']') + 1); // go to the end of the section
             break;
         }
@@ -265,7 +277,7 @@ void parseComponents(GameObject& object, std::string& input) {
     input = input.substr(input.find(',') + 1);
 }
 
-void parseComponent(GameObject& object, std::string input) {
+void parseComponent(Scene* s, GameObject& object, std::string input) {
     std::string componentname = input.substr(0, input.find('{'));
 
     const void* bindata = NULL;
@@ -280,5 +292,6 @@ void parseComponent(GameObject& object, std::string input) {
         mdlLoader::addModel("romfs:/" + s, object);
     } else {
         ComponentManager::addComponent(componentname.c_str(), object, bindata);
+        if (componentname == "Camera") s->cameras.emplace_back(object.getComponent<Camera>());
     }
 }

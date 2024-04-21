@@ -16,11 +16,7 @@
 
 namespace entt {
 
-/**
- * @cond TURN_OFF_DOXYGEN
- * Internal details not to be documented.
- */
-
+/*! @cond TURN_OFF_DOXYGEN */
 namespace internal {
 
 template<typename, typename, typename>
@@ -44,12 +40,13 @@ public:
     using pointer = input_iterator_pointer<value_type>;
     using reference = value_type;
     using iterator_category = std::input_iterator_tag;
+    using iterator_concept = std::forward_iterator_tag;
 
     constexpr extended_group_iterator()
         : it{},
           pools{} {}
 
-    extended_group_iterator(It from, const std::tuple<Owned *..., Get *...> &cpools)
+    extended_group_iterator(iterator_type from, const std::tuple<Owned *..., Get *...> &cpools)
         : it{from},
           pools{cpools} {}
 
@@ -112,27 +109,28 @@ class group_handler<owned_t<Owned...>, get_t<Get...>, exclude_t<Exclude...>> fin
     using base_type = std::common_type_t<typename Owned::base_type..., typename Get::base_type..., typename Exclude::base_type...>;
     using entity_type = typename base_type::entity_type;
 
-    void swap_elements(const std::size_t pos, const entity_type entt) {
-        std::apply([pos, entt](auto *...cpool) { (cpool->swap_elements(cpool->data()[pos], entt), ...); }, pools);
+    template<std::size_t... Index>
+    void swap_elements(const std::size_t pos, const entity_type entt, std::index_sequence<Index...>) {
+        (std::get<Index>(pools)->swap_elements(std::get<Index>(pools)->data()[pos], entt), ...);
     }
 
     void push_on_construct(const entity_type entt) {
         if(std::apply([entt, len = len](auto *cpool, auto *...other) { return cpool->contains(entt) && !(cpool->index(entt) < len) && (other->contains(entt) && ...); }, pools)
            && std::apply([entt](auto *...cpool) { return (!cpool->contains(entt) && ...); }, filter)) {
-            swap_elements(len++, entt);
+            swap_elements(len++, entt, std::index_sequence_for<Owned...>{});
         }
     }
 
     void push_on_destroy(const entity_type entt) {
         if(std::apply([entt, len = len](auto *cpool, auto *...other) { return cpool->contains(entt) && !(cpool->index(entt) < len) && (other->contains(entt) && ...); }, pools)
            && std::apply([entt](auto *...cpool) { return (0u + ... + cpool->contains(entt)) == 1u; }, filter)) {
-            swap_elements(len++, entt);
+            swap_elements(len++, entt, std::index_sequence_for<Owned...>{});
         }
     }
 
     void remove_if(const entity_type entt) {
         if(std::get<0>(pools)->contains(entt) && (std::get<0>(pools)->index(entt) < len)) {
-            swap_elements(--len, entt);
+            swap_elements(--len, entt, std::index_sequence_for<Owned...>{});
         }
     }
 
@@ -166,13 +164,11 @@ public:
         return len;
     }
 
-    template<typename Type>
-    Type pools_as() const noexcept {
+    auto pools_as_tuple() const noexcept {
         return pools;
     }
 
-    template<typename Type>
-    Type filter_as() const noexcept {
+    auto filter_as_tuple() const noexcept {
         return filter;
     }
 
@@ -234,13 +230,11 @@ public:
         return elem;
     }
 
-    template<typename Type>
-    Type pools_as() const noexcept {
+    auto pools_as_tuple() const noexcept {
         return pools;
     }
 
-    template<typename Type>
-    Type filter_as() const noexcept {
+    auto filter_as_tuple() const noexcept {
         return filter;
     }
 
@@ -251,11 +245,7 @@ private:
 };
 
 } // namespace internal
-
-/**
- * Internal details not to be documented.
- * @endcond
- */
+/*! @endcond */
 
 /**
  * @brief Group.
@@ -298,12 +288,12 @@ class basic_group<owned_t<>, get_t<Get...>, exclude_t<Exclude...>> {
 
     auto pools() const noexcept {
         using return_type = std::tuple<Get *...>;
-        return descriptor ? descriptor->template pools_as<return_type>() : return_type{};
+        return descriptor ? descriptor->pools_as_tuple() : return_type{};
     }
 
     auto filter() const noexcept {
         using return_type = std::tuple<Exclude *...>;
-        return descriptor ? descriptor->template filter_as<return_type>() : return_type{};
+        return descriptor ? descriptor->filter_as_tuple() : return_type{};
     }
 
 public:
@@ -498,11 +488,6 @@ public:
 
     /**
      * @brief Returns the components assigned to the given entity.
-     *
-     * @warning
-     * Attempting to use an entity that doesn't belong to the group results in
-     * undefined behavior.
-     *
      * @tparam Type Type of the component to get.
      * @tparam Other Other types of components to get.
      * @param entt A valid identifier.
@@ -515,11 +500,6 @@ public:
 
     /**
      * @brief Returns the components assigned to the given entity.
-     *
-     * @warning
-     * Attempting to use an entity that doesn't belong to the groups results in
-     * undefined behavior.
-     *
      * @tparam Index Indexes of the components to get.
      * @param entt A valid identifier.
      * @return The components assigned to the entity.
@@ -660,17 +640,28 @@ public:
     }
 
     /**
-     * @brief Sort the shared pool of entities according to a given storage.
+     * @brief Sort entities according to their order in a range.
      *
      * The shared pool of entities and thus its order is affected by the changes
      * to each and every pool that it tracks.
      *
+     * @tparam It Type of input iterator.
+     * @param first An iterator to the first element of the range of entities.
+     * @param last An iterator past the last element of the range of entities.
+     */
+    template<typename It>
+    void sort_as(It first, It last) const {
+        if(*this) {
+            descriptor->handle().sort_as(first, last);
+        }
+    }
+
+    /**
+     * @brief Sort entities according to their order in a range.
      * @param other The storage to use to impose the order.
      */
-    void sort_as(const common_type &other) const {
-        if(*this) {
-            descriptor->handle().sort_as(other);
-        }
+    [[deprecated("use iterator based sort_as instead")]] void sort_as(const common_type &other) const {
+        sort_as(other.begin(), other.end());
     }
 
 private:
@@ -718,12 +709,12 @@ class basic_group<owned_t<Owned...>, get_t<Get...>, exclude_t<Exclude...>> {
 
     auto pools() const noexcept {
         using return_type = std::tuple<Owned *..., Get *...>;
-        return descriptor ? descriptor->template pools_as<return_type>() : return_type{};
+        return descriptor ? descriptor->pools_as_tuple() : return_type{};
     }
 
     auto filter() const noexcept {
         using return_type = std::tuple<Exclude *...>;
-        return descriptor ? descriptor->template filter_as<return_type>() : return_type{};
+        return descriptor ? descriptor->filter_as_tuple() : return_type{};
     }
 
 public:
@@ -903,11 +894,6 @@ public:
 
     /**
      * @brief Returns the components assigned to the given entity.
-     *
-     * @warning
-     * Attempting to use an entity that doesn't belong to the group results in
-     * undefined behavior.
-     *
      * @tparam Type Type of the component to get.
      * @tparam Other Other types of components to get.
      * @param entt A valid identifier.
@@ -920,11 +906,6 @@ public:
 
     /**
      * @brief Returns the components assigned to the given entity.
-     *
-     * @warning
-     * Attempting to use an entity that doesn't belong to the groups results in
-     * undefined behavior.
-     *
      * @tparam Index Indexes of the components to get.
      * @param entt A valid identifier.
      * @return The components assigned to the entity.

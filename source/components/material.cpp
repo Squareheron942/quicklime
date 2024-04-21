@@ -22,7 +22,9 @@ namespace {
     }
 }
 
-material::~material() {}
+material::~material() {
+	Console::log("Material destructor");
+}
 
 [[nodiscard]] std::optional<std::shared_ptr<Texture>> material::loadTextureFromFile(std::string name) {
     if (name.size() == 0) name = "blank"; // no texture, load blank white texture
@@ -37,7 +39,7 @@ material::~material() {}
         } // texture not found, return nothing
 
         FILE* cfg = fopen(("romfs:/gfx/" + name + ".t3xcfg").c_str(), "r");
-        
+
         t3xcfg_t texcfg;
 
         if (!cfg) {
@@ -47,7 +49,7 @@ material::~material() {}
 
         fread(&texcfg, sizeof(t3xcfg_t), 1, cfg);
 
-        Texture* tex = new Texture(name); 
+        Texture* tex = new Texture(name);
 
         loadedTex[name] = tex;
 
@@ -61,7 +63,7 @@ material::~material() {}
         C3D_TexSetFilter(&tex->tex, texcfg.magFilter, texcfg.minFilter);
         C3D_TexSetWrap(&tex->tex, texcfg.wrapS, texcfg.wrapT);
 
-        
+
         // Delete the t3x object since we don't need it
         Tex3DS_TextureFree(t3x);
         // Close the files since we are done with them

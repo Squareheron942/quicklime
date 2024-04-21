@@ -3,7 +3,6 @@
 #include "entt.hpp"
 #include "transform.h"
 #include "config.h"
-#include "mesh.h"
 #include "componentmanager.h"
 #include "renderer.h"
 #include "meshrenderer.h"
@@ -17,8 +16,8 @@ Camera* Camera::mainTop = NULL;
 Camera* Camera::mainBottom = NULL;
 
 namespace {
-    /** 
-     * @brief The default used is just iod/5 (probably to reduce just how much it splits apart which causes headaches). 
+    /**
+     * @brief The default used is just iod/5 (probably to reduce just how much it splits apart which causes headaches).
      * Having a map function allows the user to basically do whatever they want though.
      * You can have it completely ignore the input and use your own variable, make it exponential, log, alternate between 0 and 100 etc
      * @param iod The inputted slider value
@@ -27,17 +26,17 @@ namespace {
 
     struct cam_args {
         // general camera properties
-        
+
         bool wide = true; // whether or not to use the 240x800 mode on supported models // @0
         bool ortho = false; // @1
         unsigned short cull = 0xFFFF; // shows everything // @2
-        
+
         RenderType type = RENDER_TYPE_TOPSCREEN; // what to render to // @4
-        
+
         float nearClip = 0.1f, farClip = 1000.f; // @8, @12
-        
+
         unsigned int bgcolor = 0x3477ebFF; // defaults to dark blue // @16
-        
+
         // texture render properties
         unsigned short resolution; // min 8x8, max 1024x1024 (must be square) @20
 
@@ -55,13 +54,19 @@ namespace {
          */
         float(*iodMapFunc)(float) = NULL; // @40
 
-        
+
     };
 }
 
+Camera::~Camera() {
+	Console::log("Camera destructor");
+}
+
 Camera::Camera(GameObject& parent, const void* args) {
+	LightLock_Init(&lock);
+	LightLock_Lock(&lock);
     cam_args c;
-    if (args) 
+    if (args)
         c = *(cam_args*)args;
 
     // set standard args
@@ -70,6 +75,7 @@ Camera::Camera(GameObject& parent, const void* args) {
     orthographic = c.ortho;
     type = c.type;
     cullingMask = c.cull;
+    cullingMask = ~0;
     bgcolor = c.bgcolor;
 
     if (c.ortho) {
@@ -112,9 +118,10 @@ Camera::Camera(GameObject& parent, const void* args) {
         default:
             Console::warn("Invalid render type");
     }
-    
+
     this->parent = &parent;
-    Camera::mainTop = this;
+    // Camera::mainTop = this;
+    LightLock_Unlock(&lock);
 }
 
 void transformobjs_r(GameObject* root, C3D_FVec topN, C3D_FVec botN, C3D_FVec leftN, C3D_FVec rightN, C3D_FVec nearN, C3D_FVec farN) {
@@ -122,7 +129,7 @@ void transformobjs_r(GameObject* root, C3D_FVec topN, C3D_FVec botN, C3D_FVec le
 }
 
 void Camera::Render() {
-    
+
     culledList.clear(); // remove all the old objects without deallocating the space since 99% of the time it won't need to change the space
 
     stats::_drawcalls = 0;
@@ -154,41 +161,41 @@ void Camera::Render() {
             break;
         case RENDER_TYPE_TEXTURE:
             // TODO add handling for this
-            break; 
+            break;
     }
-    
+
     if (orthographic) Mtx_OrthoTilt(&projection, -width / 2, width / 2, -height / 2, height / 2, nearClip, farClip, false); // no perspective
     else if (stereo) // both perspective and 3D
         Mtx_PerspStereoTilt(
-            &projection, 
-            C3D_AngleFromDegrees(fovY), 
-            aspectRatio, 
-            nearClip, farClip, 
-            -iod, focalLength, 
+            &projection,
+            C3D_AngleFromDegrees(fovY),
+            aspectRatio,
+            nearClip, farClip,
+            -iod, focalLength,
             false
         );
     else // perspective but no 3D
         Mtx_PerspTilt(&projection, C3D_AngleFromDegrees(fovY), aspectRatio, nearClip, farClip, false);
-    
-    
+
+
     // gfxSetWide(useWide); // Enable wide mode if wanted and if not rendering in stereo
 
     // scene setup
 
     transform* trans = parent->getComponent<transform>();
-    
+
     if (!trans) return; // if no transform, the scene can't be rendered. there should always be a transform but the check is here just in case
 
     C3D_Mtx view = *trans;
 
     // lighting update
 
-    for (int i = 0; i < HW_MAX_LIGHTS; ++i) 
-        if (lights::active[i] != nullptr) lights::active[i]->update(&view); 
+    for (int i = 0; i < HW_MAX_LIGHTS; ++i)
+        if (lights::active[i] != nullptr) lights::active[i]->update(&view);
 
 
     osTickCounterStart(&stats::profiling::cnt_cull);
-    
+
     C3D_Mtx vp;
 
     Mtx_Multiply(&vp, &projection, &view); // create view projection matrix, much faster since it saves a ton of matrix multiplications and is also useful for frustum culling
@@ -197,7 +204,7 @@ void Camera::Render() {
 
     // C3D_FVec pos = trans->position;
     // C3D_FVec topN, botN, leftN, rightN, nearN, farN;
- 
+
     // farN.x = -vp.r[0].c[2] + vp.r[0].c[3];
     // farN.y = -vp.r[1].c[2] + vp.r[1].c[3];
     // farN.z = -vp.r[2].c[2] + vp.r[2].c[3];
@@ -219,7 +226,7 @@ void Camera::Render() {
     // rightN.x = -vp.r[0].c[0] + vp.r[0].c[3];
     // rightN.y = -vp.r[1].c[0] + vp.r[1].c[3];
     // rightN.z = -vp.r[2].c[0] + vp.r[2].c[3];
-    
+
     // // normalize frustum normals
     // float invnearM = 1/sqrtf(nearN.x*nearN.x + nearN.y*nearN.y + nearN.z*nearN.z);
     // float invfarM = 1/sqrtf(farN.x*farN.x + farN.y*farN.y + farN.z*farN.z);
@@ -301,13 +308,13 @@ void Camera::Render() {
     // render right eye
 
     gfxSet3D(true);
-    C3D_RenderTargetSetOutput(target[1], GFX_TOP, GFX_RIGHT, CAM_DISPLAY_TRANSFER_FLAGS); 
+    C3D_RenderTargetSetOutput(target[1], GFX_TOP, GFX_RIGHT, CAM_DISPLAY_TRANSFER_FLAGS);
     Mtx_PerspStereoTilt(
-        &projection, 
-        C3D_AngleFromDegrees(fovY), 
-        C3D_AspectRatioTop, 
-        nearClip, farClip, 
-        iod, focalLength, 
+        &projection,
+        C3D_AngleFromDegrees(fovY),
+        C3D_AspectRatioTop,
+        nearClip, farClip,
+        iod, focalLength,
         false
     );
 
@@ -323,7 +330,7 @@ void Camera::Render() {
     }
     osTickCounterUpdate(&stats::profiling::cnt_meshrnd);
     stats::profiling::rnd_meshrnd += osTickCounterRead(&stats::profiling::cnt_meshrnd);
-    
+
 }
 
 COMPONENT_REGISTER(Camera)

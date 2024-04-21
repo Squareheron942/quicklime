@@ -22,11 +22,7 @@ class meta_any;
 class meta_type;
 struct meta_handle;
 
-/**
- * @cond TURN_OFF_DOXYGEN
- * Internal details not to be documented.
- */
-
+/*! @cond TURN_OFF_DOXYGEN */
 namespace internal {
 
 enum class meta_traits : std::uint32_t {
@@ -131,6 +127,23 @@ struct meta_type_node {
     std::shared_ptr<meta_type_descriptor> details{};
 };
 
+template<auto Member>
+auto *look_for(const meta_context &context, const meta_type_node &node, const id_type id) {
+    if(node.details) {
+        if(const auto it = (node.details.get()->*Member).find(id); it != (node.details.get()->*Member).cend()) {
+            return &it->second;
+        }
+
+        for(auto &&curr: node.details->base) {
+            if(auto *elem = look_for<Member>(context, curr.second.type(context), id); elem) {
+                return elem;
+            }
+        }
+    }
+
+    return static_cast<typename std::remove_reference_t<decltype(node.details.get()->*Member)>::mapped_type *>(nullptr);
+}
+
 template<typename Type>
 meta_type_node resolve(const meta_context &) noexcept;
 
@@ -157,6 +170,31 @@ template<typename... Args>
     }
 
     return nullptr;
+}
+
+template<typename Func>
+[[nodiscard]] inline auto try_convert(const meta_context &context, const meta_type_node &from, const type_info &to, const bool arithmetic_or_enum, const void *instance, Func func) {
+    if(from.info && *from.info == to) {
+        return func(instance, from);
+    }
+
+    if(from.details) {
+        if(auto it = from.details->conv.find(to.hash()); it != from.details->conv.cend()) {
+            return func(instance, it->second);
+        }
+
+        for(auto &&curr: from.details->base) {
+            if(auto other = try_convert(context, curr.second.type(context), to, arithmetic_or_enum, curr.second.cast(instance), func); other) {
+                return other;
+            }
+        }
+    }
+
+    if(from.conversion_helper && arithmetic_or_enum) {
+        return func(instance, from.conversion_helper);
+    }
+
+    return func(instance);
 }
 
 [[nodiscard]] inline const meta_type_node *try_resolve(const meta_context &context, const type_info &info) noexcept {
@@ -204,7 +242,7 @@ template<typename Type>
         };
     }
 
-    if constexpr(!std::is_same_v<Type, void> && !std::is_function_v<Type>) {
+    if constexpr(!std::is_void_v<Type> && !std::is_function_v<Type>) {
         node.from_void = +[](const meta_ctx &ctx, void *element, const void *as_const) {
             if(element) {
                 return meta_any{ctx, std::in_place_type<std::decay_t<Type> &>, *static_cast<std::decay_t<Type> *>(element)};
@@ -225,11 +263,7 @@ template<typename Type>
 }
 
 } // namespace internal
-
-/**
- * Internal details not to be documented.
- * @endcond
- */
+/*! @endcond */
 
 } // namespace entt
 

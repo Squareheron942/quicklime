@@ -5,6 +5,9 @@
 **/build
 **.lst
 **.DS_Store
+compile_commands.json
+.zed/
+.cache/
 buildscripts/__pycache__/
 gfx/
 tempinclude/

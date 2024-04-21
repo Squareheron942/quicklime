@@ -33,7 +33,7 @@ GameObject* GameObject::r_search(std::string name) {
         out = child->r_search(name);
         if (out) return out;
     }
-    return out;   
+    return out;
 }
 
 GameObject* GameObject::find(std::string name) {
@@ -43,18 +43,18 @@ GameObject* GameObject::find(std::string name) {
      * ./  in front of name will only search children
      * ../ in front of name will only search children of parent (do ../../ to get level above etc)
      */
-    if (name[0] == '.') 
+    if (name[0] == '.')
     {
         if (name[1] == '.')
         {
-            if (name[2] == '/') 
+            if (name[2] == '/')
             { // find in parent's children
-                if (parent) 
+                if (parent)
                 {
                     /**
                      * Go back one level by telling parent to search its children
                      * change beginning to './' and tell parent to find it
-                    */ 
+                    */
                     return parent->find(name.substr(1));
                 } else Console::warn("Object %s not found");
                 return NULL;
@@ -76,8 +76,8 @@ GameObject* GameObject::find(std::string name) {
                 }
                 if (temp == out) return NULL; // if a child was not found in one level, it was not found so return nothing
             }
-            
-            
+
+
             return out;
         }
     } else if (name[0] == '/') // find at root
@@ -89,7 +89,7 @@ GameObject* GameObject::find(std::string name) {
     } else // find anywhere
     {
         GameObject* root = this;
-        if (!root) 
+        if (!root)
             for(;;);
         while (root->parent) root = root->parent; // get root of all objects (that way we don't need to store this at all times)
 
@@ -114,6 +114,7 @@ GameObject* GameObject::find(std::string name) {
 };
 
 GameObject::~GameObject() {
+	Console::log("GameObject destructor");
     if (parent) parent->removeChild(*this);
     reg.destroy(id);
 }

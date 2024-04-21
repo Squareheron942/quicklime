@@ -20,11 +20,11 @@ class GameObject {
     entt::entity id;
     std::string name; // saved in scene file
     unsigned short layer, renderer; // by default on base layer (layer 1)
-    GameObject(entt::registry& registry) : 
-        reg(registry), 
-        id(registry.create()), 
-        layer(0x1), 
-        renderer(0x0) 
+    GameObject(entt::registry& registry) :
+        reg(registry),
+        id(registry.create()),
+        layer(0x1),
+        renderer(0x0)
     {}
     operator entt::entity() { return id; }
 
@@ -36,10 +36,10 @@ class GameObject {
 
     /**
      * @brief Adds a component to GameObject at runtime. If the GameObject already has the component, this one will replace it.
-     * 
+     *
      * @tparam T Component to add
      * @tparam Args Argument types
-     * 
+     *
      * @param args Arguments to pass to the component constructor
      */
     template<typename T, typename ...Args>
@@ -49,18 +49,15 @@ class GameObject {
 
     /**
      * @brief Get the Component object
-     * 
+     *
      * @tparam T Component to get
      * @return T* Pointer to the component instance
      */
-    template<typename T>
-    inline T* getComponent() {
-        return reg.try_get<T>(id);
-    }
+    template<typename T> inline T* getComponent() { return reg.try_get<T>(id); }
 
     /**
      * @brief Adds child to self
-     * 
+     *
      * @param object Reference to GameObject to add as child
      */
     inline void addChild(GameObject& object) {
@@ -70,40 +67,40 @@ class GameObject {
 
     /**
      * @brief Removes object from list of children
-     * 
+     *
      * @param object GameObject to remove
      */
-    inline void removeChild(GameObject& object) { 
+    inline void removeChild(GameObject& object) {
         children.erase(std::remove(children.begin(), children.end(), &object), children.end());
         object.parent = NULL;
     }
 
     /**
      * @brief Removes object from list of children
-     * 
+     *
      * @param object GameObject to remove
      */
-    inline void removeChild(GameObject* object) { 
+    inline void removeChild(GameObject* object) {
         children.erase(std::remove(children.begin(), children.end(), object), children.end());
         object->parent = NULL;
     }
 
-    inline void setParent(GameObject& object) { 
+    inline void setParent(GameObject& object) {
         this->parent = &object;
     }
 
     /**
      * @brief Finds an object within the scene.
-     * 
+     *
      * WARNING very slow, it is only intended to find the object in the Start() function of a script (do NOT use it every frame).
      * Instead, store the pointer in a variable and reuse it in the future.
-     * 
+     *
      *
      * " "   in front of name will search top down.
      * "/"   in front of name will only search root (then find children based on '/' "subdirectories").
      * "./"  in front of name will only search children.
      * "../" in front of name will only search children of parent (do ../../ to get level above etc).
-     * 
+     *
      * @param name The name of the GameObject to search for
      * @return A pointer to the found GameObject, or null if not found
      */

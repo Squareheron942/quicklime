@@ -19,6 +19,10 @@ MeshRenderer::MeshRenderer(GameObject& parent, material* mat) : parent(&parent),
     parent.renderer |= RENDERER_MESH;
 }
 
+MeshRenderer::~MeshRenderer() {
+	Console::log("Mesh renderer destructor");
+}
+
 void MeshRenderer::render(C3D_Mtx& view, C3D_Mtx& projection, C3D_Mtx* replacement_mv) {
     mesh* m = parent->getComponent<mesh>();
     #if DEBUG
@@ -30,8 +34,8 @@ void MeshRenderer::render(C3D_Mtx& view, C3D_Mtx& projection, C3D_Mtx* replaceme
 
     C3D_SetBufInfo(&m->buf);
     C3D_SetAttrInfo(&m->attrInfo);
-    
-    C3D_Mtx model = *parent->getComponent<transform>(); // always will have a transform by default 
+
+    C3D_Mtx model = *parent->getComponent<transform>(); // always will have a transform by default
 
     Mtx_Multiply(&model, &view, replacement_mv ? replacement_mv : &model);
 

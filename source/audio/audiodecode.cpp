@@ -2,6 +2,7 @@
 #include "console.h"
 #include "defines.h"
 #include "stats.h"
+#include "threads.h"
 
 namespace {
     void audioCallback(void *const data) {
@@ -19,6 +20,8 @@ namespace {
 bool AudioDecode::AudioInit(unsigned int samplerate, unsigned char channels, unsigned int bufsize) {
     // if no available channel, audio cannot be played so end here
     if (!foundchannel) return false;
+
+    LightLock_Guard l(lock);
 
     ndspChnReset(channel);
     ndspSetOutputMode(NDSP_OUTPUT_STEREO);
@@ -54,10 +57,13 @@ bool AudioDecode::AudioInit(unsigned int samplerate, unsigned char channels, uns
 }
 
 void AudioDecode::AudioFinish() {
+	LightLock_Guard l(lock);
     audio_shared_inf::ndsp_used_channels &= ~BIT(channel);
 }
 
 AudioDecode::AudioDecode() {
+	LightLock_Init(&lock);
+	LightLock_Guard l(lock);
     for (int i = 0; i < 24; i++)
         if (!(BIT(i) & audio_shared_inf::ndsp_used_channels)) {
             audio_shared_inf::ndsp_used_channels |= BIT(i);
@@ -66,7 +72,7 @@ AudioDecode::AudioDecode() {
             break;
         }
     #if DEBUG
-    Console::log("Audio decoder created with chn%u", channel);
+    Console::log("Audio decoder created with chn %u", channel);
     #endif
     ndspSetCallback(audioCallback, this);
     LightEvent_Init(&event, RESET_ONESHOT);
@@ -74,6 +80,7 @@ AudioDecode::AudioDecode() {
 
 void AudioDecode::Stop() {
 	if (quit) return; // if it has already been run then don't do it again
+	LightLock_Guard l(lock);
     quit = true;
     LightEvent_Signal(&event);
     // Free the audio thread
@@ -93,5 +100,6 @@ void AudioDecode::Stop() {
 
 AudioDecode::~AudioDecode() {
     Stop();
+    ndspSetCallback(NULL, NULL);
     Console::log("Audio decoder destroyed");
 }

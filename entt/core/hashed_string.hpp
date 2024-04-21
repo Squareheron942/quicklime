@@ -7,11 +7,7 @@
 
 namespace entt {
 
-/**
- * @cond TURN_OFF_DOXYGEN
- * Internal details not to be documented.
- */
-
+/*! @cond TURN_OFF_DOXYGEN */
 namespace internal {
 
 template<typename>
@@ -43,11 +39,7 @@ struct basic_hashed_string {
 };
 
 } // namespace internal
-
-/**
- * Internal details not to be documented.
- * @endcond
- */
+/*! @endcond */
 
 /**
  * @brief Zero overhead unique identifier.
@@ -175,7 +167,7 @@ public:
      * @return The size of the hashed string.
      */
     [[nodiscard]] constexpr size_type size() const noexcept {
-        return base_type::length;
+        return base_type::length; // NOLINT
     }
 
     /**

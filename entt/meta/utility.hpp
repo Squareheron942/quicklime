@@ -313,16 +313,12 @@ template<typename Type, auto Data, typename Policy = as_is_t>
     return meta_getter<Type, Data, Policy>(locator<meta_ctx>::value_or(), std::move(instance));
 }
 
-/**
- * @cond TURN_OFF_DOXYGEN
- * Internal details not to be documented.
- */
-
+/*! @cond TURN_OFF_DOXYGEN */
 namespace internal {
 
 template<typename Policy, typename Candidate, typename... Args>
 [[nodiscard]] meta_any meta_invoke_with_args(const meta_ctx &ctx, Candidate &&candidate, Args &&...args) {
-    if constexpr(std::is_same_v<decltype(std::invoke(std::forward<Candidate>(candidate), args...)), void>) {
+    if constexpr(std::is_void_v<decltype(std::invoke(std::forward<Candidate>(candidate), args...))>) {
         std::invoke(std::forward<Candidate>(candidate), args...);
         return meta_any{ctx, std::in_place_type<void>};
     } else {
@@ -339,7 +335,7 @@ template<typename Type, typename Policy, typename Candidate, std::size_t... Inde
             return meta_invoke_with_args<Policy>(ctx, std::forward<Candidate>(candidate), *clazz, (args + Index)->cast<type_list_element_t<Index, typename descriptor::args_type>>()...);
         }
     } else if constexpr(std::is_invocable_v<std::remove_reference_t<Candidate>, Type &, type_list_element_t<Index, typename descriptor::args_type>...>) {
-        if(auto *const clazz = instance->try_cast<Type>(); clazz && ((args + Index)->allow_cast<type_list_element_t<Index, typename descriptor::args_type>>() && ...)) {
+        if(auto *const clazz = instance->try_cast<Type>(); clazz && ((args + Index)->allow_cast<type_list_element_t<Index, typename descriptor::args_type>>() && ...)) { // NOLINT
             return meta_invoke_with_args<Policy>(ctx, std::forward<Candidate>(candidate), *clazz, (args + Index)->cast<type_list_element_t<Index, typename descriptor::args_type>>()...);
         }
     } else {
@@ -361,11 +357,7 @@ template<typename Type, typename... Args, std::size_t... Index>
 }
 
 } // namespace internal
-
-/**
- * Internal details not to be documented.
- * @endcond
- */
+/*! @endcond */
 
 /**
  * @brief Tries to _invoke_ an object given a list of erased parameters.
