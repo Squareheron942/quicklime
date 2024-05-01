@@ -1,4 +1,3 @@
-**/.vscode/
 **.3dsx
 **.smdh
 **.elf
@@ -6,6 +5,7 @@
 **.lst
 **.DS_Store
 compile_commands.json
+.vscode/
 .zed/
 .cache/
 buildscripts/__pycache__/

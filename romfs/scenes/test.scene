@@ -18,11 +18,20 @@ root[
             components[
                 transform{},
                 AudioSource{},
-                Text{c29tZSBsb25nIHRleHQKb3RoZXIgc3R1ZmY=}
+                Text{c29tZSB3b3JkcwpzdHVmZgp0ZXN0}
             ],
             scripts[
                 TestScript
             ],
+            children[],
+        ],
+        PlazaSkyBox__obj[
+            components[
+                transform{},
+                mesh{YXNzZXRzL1BsYXphU2t5Qm94X19vYmo=},
+                Text{c29tZSBsb25nIHRleHQgdG8gc2VlIHdoYXQgaGFwcGVucyB3aGVuIGl0IHdyYXBzIGlmIGl0IGV2ZXIgZG9lcyB3aGljaCBpcyBhIHBvc3NpYmlsaXR5},
+            ],
+            scripts[SkyBoxScript],
             children[],
         ]
     ]

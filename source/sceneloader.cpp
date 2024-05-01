@@ -1,4 +1,5 @@
 #include "sceneloader.h"
+#include <3ds.h>
 #include "scene.h"
 #include <memory>
 #include <fstream>
@@ -243,6 +244,7 @@ GameObject *parseObjectAsync(Scene* s, std::string& input, unsigned int size, fl
     	*progress = 1 - (((float)input.size()) / size);
 
     Console::log("Progress %f", *progress);
+    svcSleepThread(20000); // sleep for 20us to allow other threads to run without waiting overly long
     return object;
 }
 
@@ -283,8 +285,11 @@ void parseComponent(Scene* s, GameObject& object, std::string input) {
     const void* bindata = NULL;
     std::string base64data;
     if (input.find('}') - input.find('{') - 1 > 0) {
-        base64data = base64::from_base64(input.substr(input.find('{') + 1, input.find('}') - input.find('{') - 1));
+        base64data = base64::from_base64(input.substr(input.find('{') + 1, input.find('}') - input.find('{') - 1)) + '\0';
         bindata = base64data.c_str(); // get pointer to contained data
+        Console::log("Decoded data:");
+        Console::log(input.substr(input.find('{') + 1, input.find('}') - input.find('{') - 1).c_str());
+        Console::log((const char*)bindata);
     }
 
     if (componentname == "mesh") { // it needs to be handled differently since models are loaded differently

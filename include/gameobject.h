@@ -25,7 +25,21 @@ class GameObject {
         id(registry.create()),
         layer(0x1),
         renderer(0x0)
-    {}
+    {
+    	Console::log("GameObject constructor");
+    }
+    GameObject(GameObject& other) :
+        reg(other.reg),
+        id(other.id),
+        layer(other.layer),
+        renderer(other.renderer),
+        name(other.name),
+        parent(other.parent),
+        children(other.children),
+        scripts(other.scripts)
+    {
+    	Console::log("GameObject constructor");
+    }
     operator entt::entity() { return id; }
 
     void Start(void);

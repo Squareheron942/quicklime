@@ -6,7 +6,7 @@ class GameObject;
 class transform;
 
 class Text {
-    protected: 
+    protected:
     C2D_Font font;
     C2D_Text txt;
     C2D_TextBuf textBuf;
@@ -17,6 +17,7 @@ class Text {
 
     public:
     Text(GameObject& parent, const void* args);
+    Text(Text& t);
     void Render();
     ~Text();
 };

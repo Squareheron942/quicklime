@@ -1,4 +1,5 @@
 #include "camera.h"
+#include "c3d/maths.h"
 #include "gameobject.h"
 #include "entt.hpp"
 #include "transform.h"
@@ -11,6 +12,7 @@
 #include "renderertypes.h"
 #include "ui_text.h"
 #include "citro2d.h"
+#include "stats.h"
 
 Camera* Camera::mainTop = NULL;
 Camera* Camera::mainBottom = NULL;
@@ -75,7 +77,7 @@ Camera::Camera(GameObject& parent, const void* args) {
     orthographic = c.ortho;
     type = c.type;
     cullingMask = c.cull;
-    cullingMask = ~0;
+    // cullingMask = ~0;
     bgcolor = c.bgcolor;
 
     if (c.ortho) {
@@ -187,6 +189,7 @@ void Camera::Render() {
     if (!trans) return; // if no transform, the scene can't be rendered. there should always be a transform but the check is here just in case
 
     C3D_Mtx view = *trans;
+    Mtx_Inverse(&view);
 
     // lighting update
 
@@ -294,10 +297,12 @@ void Camera::Render() {
     // actually render stuff for left eye
     osTickCounterStart(&stats::profiling::cnt_meshrnd);
     // render objects
-    C2D_SceneTarget(target[0]);
     for (GameObject* obj : culledList) {
         if (obj->renderer & RENDERER_MESH) obj->getComponent<MeshRenderer>()->render(view, projection);
-        if (obj->renderer & RENDERER_TEXT) obj->getComponent<Text>()->Render();
+        if (obj->renderer & RENDERER_TEXT) {
+	        C2D_SceneTarget(target[0]); //TODO defer text/ui rendering
+	        obj->getComponent<Text>()->Render();
+        }
     }
     osTickCounterUpdate(&stats::profiling::cnt_meshrnd);
     stats::profiling::rnd_meshrnd = osTickCounterRead(&stats::profiling::cnt_meshrnd);
@@ -323,10 +328,13 @@ void Camera::Render() {
 
     osTickCounterStart(&stats::profiling::cnt_meshrnd);
     // render objects
-    C2D_SceneTarget(target[1]);
+    // C2D_SceneTarget(target[1]);
     for (GameObject* obj : culledList) {
         if (obj->renderer & RENDERER_MESH) obj->getComponent<MeshRenderer>()->render(view, projection);
-        if (obj->renderer & RENDERER_TEXT) obj->getComponent<Text>()->Render();
+        if (obj->renderer & RENDERER_TEXT) {
+        	C2D_SceneTarget(target[1]);
+        	obj->getComponent<Text>()->Render();
+        }
     }
     osTickCounterUpdate(&stats::profiling::cnt_meshrnd);
     stats::profiling::rnd_meshrnd += osTickCounterRead(&stats::profiling::cnt_meshrnd);

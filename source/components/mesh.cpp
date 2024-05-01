@@ -18,7 +18,7 @@ namespace {
     u64 permut_from_num_attr(u8 n) {
         u64 perm = 0;
         for (u8 i = 0; i < n; i++) {
-            perm |= ((i & 0xF) << (4 * i));
+            perm |= ((i & 0xF) << (i << 2));
         } // for each attrib add the corresponding number (for 3 attribs, should make 0x210 aka 528)
         return perm;
     }
@@ -34,10 +34,10 @@ mesh::mesh(GameObject& parent, const void* data) {
     // vertices.reset(d.vertices);
     // radius = d.radius;
     // GSPGPU_FlushDataCache(vertices.get(), vertsize * numVerts); // make sure the data is in ram and not CPU cache
-    
+
     // // Configure attributes for use with the vertex shader
     // AttrInfo_Init(&attrInfo);
-    // for (int i = 0; i < d.attrnum; i++) 
+    // for (int i = 0; i < d.attrnum; i++)
     //     AttrInfo_AddLoader(&attrInfo, i, (GPU_FORMATS)d.attrtypes[i], d.attrlen[i]);
 
     // BufInfo_Init(&buf);
@@ -46,8 +46,8 @@ mesh::mesh(GameObject& parent, const void* data) {
 
 mesh::mesh(GameObject& parent, std::shared_ptr<void> vertices, unsigned int numVerts, unsigned char vertsize, float radius, unsigned char attrnum, unsigned char attrtypes[], unsigned char attrlen[]) : numVerts(numVerts), vertsize(vertsize), vertices(vertices), radius(radius), parent(&parent) {
     // make sure the vertex data is in ram and not CPU cache
-    GSPGPU_FlushDataCache(vertices.get(), vertsize * numVerts); 
-    
+    GSPGPU_FlushDataCache(vertices.get(), vertsize * numVerts);
+
     // Configure attributes for use with the vertex shader
     AttrInfo_Init(&attrInfo);
     for (int i = 0; i < attrnum; i++)

@@ -1,4 +1,8 @@
 #include "console.h"
+#include "defines.h"
+#include "stats.h"
+#include "controls.h"
+#include "sl_time.h"
 
 
 int Console::line = 0;
@@ -10,7 +14,8 @@ LightLock Console::lock;
 
 void Console::print_console_lines() {
     for (int i = 0; i < CONSOLE_NUM_LINES - 1; i++)
-        printf("\e[s\e[%u;0H\e[2K%s\e[u", CONSOLE_TOP + i, textbuf[i]);
+        if (textbuf[i])
+        	printf("\e[s\e[%u;0H\e[2K%s\e[u", CONSOLE_TOP + i, textbuf[i]);
 }
 
 void Console::init() {
@@ -39,9 +44,9 @@ inline void setDrawCalls(int dc = stats::_drawcalls) {
 
 inline void updateMemUsage() {
     #if CONSOLE_ENABLED
-    printf("\e[s\e[%u;%uHHeap Usage: %u KiB         \e[u", MEM_Y, MEM_X, mallinfo().uordblks/1024); // 124 on old, 228 on new;
-    printf("\e[s\e[%u;%uHLinear RAM Usage: %u KiB         \e[u", MEM_Y + 1, MEM_X, stats::linear/1024); // mode 0 64mb, mode 2 96mb, mode 3 80mb, mode 4 72mb, mode 5 32mb, NEW: mode 6/8 124mb, mode 7 178mb
-    printf("\e[s\e[%u;%uHVRAM Usage: %u KiB         \e[u", MEM_Y + 2, MEM_X, 0/1048576); // mode 0 44mb, mode 2 12mb, mode 3 28mb, mode 4 36mb, mode 5 76mb, mode 6/8 100mb, mode 7 46mb
+    printf("\e[s\e[%u;%uHHeap Usage: %u KiB         \e[u", MEM_Y, MEM_X, mallinfo().uordblks/1024);
+    printf("\e[s\e[%u;%uHLinear RAM Usage: %u KiB         \e[u", MEM_Y + 1, MEM_X, stats::linear/1024);
+    printf("\e[s\e[%u;%uHVRAM Usage: %u KiB         \e[u", MEM_Y + 2, MEM_X, 0/1048576);
     #endif
 }
 
@@ -118,7 +123,7 @@ void Console::basic_log(CONSOLE_LOG_LEVEL loglevel, const char* text, va_list ar
     {
         console_needs_updating = true;
         for (int i = 0; i < CONSOLE_NUM_LINES - 1; i++)
-            textbuf[i] = textbuf[i + 1];
+            textbuf[i] = textbuf[i + 1]; // shift up all buffers
         textbuf[line] = new char[vsnprintf(NULL, 0, unformatted, args) + 1];
         vsprintf(textbuf[line], unformatted, args);
     } else
@@ -126,6 +131,8 @@ void Console::basic_log(CONSOLE_LOG_LEVEL loglevel, const char* text, va_list ar
         textbuf[line] = new char[vsnprintf(NULL, 0, unformatted, args) + 1];
         vsprintf(textbuf[line], unformatted, args);
         if (menu == MENU_CONSOLE) printf("\e[s\e[%u;0H%s\e[u", CONSOLE_TOP + line, textbuf[line]);
+        strtok(textbuf[line], "\n");
+        while(strtok(NULL, "\n")) line++;
         line++;
     }
 

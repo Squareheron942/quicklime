@@ -1,13 +1,8 @@
 #pragma once
 
-#include "defines.h"
-#include <mutex>
 #include <stdio.h>
 #include <3ds.h>
 #include <stdarg.h>
-#include "stats.h"
-#include "controls.h"
-#include "sl_time.h"
 #include <malloc.h>
 
 #define FPS_X 0
