@@ -123,8 +123,8 @@ std::unique_ptr<Scene> SceneLoader::loadAsync(std::string name, float* progress)
     priority = priority > 0x3F ? 0x3F : priority;
 
     // Start the thread
-    Thread threadId = threadCreate(sceneLoadThread, &p, SCENELOADER_THREAD_STACK_SZ, priority, -1, true);
-    // threadDetach(threadId);
+    threadCreate(sceneLoadThread, &p, SCENELOADER_THREAD_STACK_SZ, priority, -1, true);
+
 
     return out;
 }

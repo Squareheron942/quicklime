@@ -1,10 +1,15 @@
 #include "light.h"
 #include "lights.h"
 #include <citro3d.h>
+#include <3ds.h>
 #include "assert.h"
 #include "console.h"
+#include "threads.h"
+
+LightLock Light::lock = LightLock();
 
 Light::Light() {
+	LightLock_Guard l(lock);
     if (lights::lightenvneedsupdating) {
         C3D_LightEnvInit(&lights::lightenv);
         C3D_LightEnvBind(&lights::lightenv);
@@ -31,11 +36,13 @@ Light::Light() {
 }
 
 void Light::update(C3D_Mtx *view) {
+	LightLock_Guard l(lock);
     _tp = Mtx_MultiplyFVec4(view, position);
     C3D_LightPosition(&lights::lights[index], &_tp);
 };
 
 Light::~Light() {
+	LightLock_Guard l(lock);
     lights::active[index] = NULL;
     --lights::n;
     Console::log("Light %u deleted", index);

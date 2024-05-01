@@ -29,14 +29,14 @@ class GameObject {
     	Console::log("GameObject constructor");
     }
     GameObject(GameObject& other) :
-        reg(other.reg),
+	   	children(other.children),
+	    parent(other.parent),
+    	reg(other.reg),
+     	scripts(other.scripts),
         id(other.id),
-        layer(other.layer),
-        renderer(other.renderer),
         name(other.name),
-        parent(other.parent),
-        children(other.children),
-        scripts(other.scripts)
+        layer(other.layer),
+        renderer(other.renderer)
     {
     	Console::log("GameObject constructor");
     }

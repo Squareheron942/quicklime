@@ -194,7 +194,7 @@ void Camera::Render() {
     // lighting update
 
     for (int i = 0; i < HW_MAX_LIGHTS; ++i)
-        if (lights::active[i] != nullptr) lights::active[i]->update(&view);
+        if (lights::active[i]) lights::active[i]->update(&view);
 
 
     osTickCounterStart(&stats::profiling::cnt_cull);

@@ -32,7 +32,6 @@ bool AudioDecode::AudioInit(unsigned int samplerate, unsigned char channels, uns
     // Allocate audio buffer
     const size_t bufferSize = bufsize * AUDIO_NUM_WAVBUFS * sizeof(ndspWaveBuf);
     audioBuffer = linearAlloc(bufferSize);
-    stats::linear += bufferSize;
     if(!audioBuffer) {
         Console::error("Failed to allocate audio buffer");
         return false;
@@ -89,7 +88,6 @@ void AudioDecode::Stop() {
     ndspChnReset(channel);
     audio_shared_inf::ndsp_used_channels &= ~BIT(channel);
     if (audioBuffer) {
-        stats::linear -= linearGetSize(audioBuffer);
         linearFree(audioBuffer);
         audioBuffer = NULL;
         Console::log("Audio buffer freed");

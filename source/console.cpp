@@ -1,4 +1,5 @@
 #include "console.h"
+#include "3ds/allocator/linear.h"
 #include "defines.h"
 #include "stats.h"
 #include "controls.h"
@@ -45,8 +46,8 @@ inline void setDrawCalls(int dc = stats::_drawcalls) {
 inline void updateMemUsage() {
     #if CONSOLE_ENABLED
     printf("\e[s\e[%u;%uHHeap Usage: %u KiB         \e[u", MEM_Y, MEM_X, mallinfo().uordblks/1024);
-    printf("\e[s\e[%u;%uHLinear RAM Usage: %u KiB         \e[u", MEM_Y + 1, MEM_X, stats::linear/1024);
-    printf("\e[s\e[%u;%uHVRAM Usage: %u KiB         \e[u", MEM_Y + 2, MEM_X, 0/1048576);
+    printf("\e[s\e[%u;%uHLinear RAM Free: %lu KiB         \e[u", MEM_Y + 1, MEM_X, linearSpaceFree()/1024);
+    printf("\e[s\e[%u;%uHVRAM Free: %lu KiB         \e[u", MEM_Y + 2, MEM_X, vramSpaceFree()/1024);
     #endif
 }
 
