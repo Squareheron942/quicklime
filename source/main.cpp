@@ -13,7 +13,7 @@
 #include "console.h"
 #include "config.h"
 #include "entt.hpp"
-#include "componentmanager.h"
+// #include "componentmanager.h"
 #include "console.h"
 #include "debug.h"
 

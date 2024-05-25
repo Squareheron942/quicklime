@@ -57,9 +57,7 @@ class GameObject {
      * @param args Arguments to pass to the component constructor
      */
     template<typename T, typename ...Args>
-    inline void addComponent(Args&& ...args) {
-        reg.emplace_or_replace<T>(id, std::forward<Args>(args)...);
-    }
+    inline void addComponent(Args&& ...args) { reg.emplace_or_replace<T>(id, std::forward<Args>(args)...); }
 
     /**
      * @brief Get the Component object

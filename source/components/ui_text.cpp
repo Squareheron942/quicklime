@@ -3,14 +3,16 @@
 #include "gameobject.h"
 #include "transform.h"
 #include "renderertypes.h"
+#include "string.h"
+#include "memory.h"
 
 namespace {
-    struct text_params{
-        // float x = 0;
-        // float y = 0;
-        // float z = 0;
-        // float scaleX = 1;
-        // float scaleY = 1;
+    struct text_params {
+        float x = 0;
+        float y = 0;
+        float z = 0;
+        float scaleX = 1;
+        float scaleY = 1;
     };
 };
 
@@ -34,14 +36,14 @@ Text::Text(GameObject& parent, const void* args) {
 }
 
 Text::Text(Text& t): font(t.font), txt(t.txt), textBuf(t.textBuf), text(t.text), trans(t.trans), textlen(t.textlen), parent(t.parent) {
-	Console::log("Text constructor");
+	Console::log("Text copy constructor");
 }
 
 Text::~Text(){
 	Console::log("ui text destructor");
     C2D_FontFree(font);
     C2D_TextBufDelete(textBuf);
-    parent->renderer &= ~RENDERER_TEXT; // set it to text rendering layer
+    parent->renderer &= ~RENDERER_TEXT; // remove text rendering flag
     delete text;
 }
 
