@@ -1,5 +1,6 @@
 #include "camera.h"
 #include "c3d/maths.h"
+#include "c3d/renderqueue.h"
 #include "gameobject.h"
 #include "entt.hpp"
 #include "transform.h"
@@ -62,6 +63,8 @@ namespace {
 
 Camera::~Camera() {
 	Console::log("Camera destructor");
+	for (auto t : target) if (t) C3D_RenderTargetDelete(t);
+	Console::log("End of Camera destructor");
 }
 
 Camera::Camera(GameObject& parent, const void* args) {
@@ -102,7 +105,7 @@ Camera::Camera(GameObject& parent, const void* args) {
             target[0] = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8); // only type to be used for display
             if (!target[0]) Console::warn("Could not create render target");
             if (stereo) target[1] = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8); // only type to be used for display
-            if (highRes) target[2] = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8); // only type to be used for display
+            if (highRes) target[2] = C3D_RenderTargetCreate(240, 800, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8); // only type to be used for display
             aspectRatio = C3D_AspectRatioTop;
             break;
         case RENDER_TYPE_BOTTOMSCREEN:
@@ -133,7 +136,6 @@ void transformobjs_r(GameObject* root, C3D_FVec topN, C3D_FVec botN, C3D_FVec le
 void Camera::Render() {
 
     culledList.clear(); // remove all the old objects without deallocating the space since 99% of the time it won't need to change the space
-
     stats::_drawcalls = 0;
 
     // camera setup
@@ -147,13 +149,21 @@ void Camera::Render() {
     switch (type) {
         case RENDER_TYPE_TOPSCREEN:
             if (useWide) {
+
                 C3D_RenderTargetSetOutput(target[2], GFX_TOP, GFX_LEFT, CAM_DISPLAY_TRANSFER_FLAGS);
+
                 C3D_RenderTargetClear(target[2], C3D_CLEAR_ALL, bgcolor, 0);
+
                 C3D_FrameDrawOn(target[2]);
+
             } else {
+
                 C3D_RenderTargetSetOutput(target[0], GFX_TOP, GFX_LEFT, CAM_DISPLAY_TRANSFER_FLAGS);
+
                 C3D_RenderTargetClear(target[0], C3D_CLEAR_ALL, bgcolor, 0);
+
                 C3D_FrameDrawOn(target[0]);
+
             }
             break;
         case RENDER_TYPE_BOTTOMSCREEN:
@@ -165,6 +175,8 @@ void Camera::Render() {
             // TODO add handling for this
             break;
     }
+    
+
 
     if (orthographic) Mtx_OrthoTilt(&projection, -width / 2, width / 2, -height / 2, height / 2, nearClip, farClip, false); // no perspective
     else if (stereo) // both perspective and 3D
@@ -179,15 +191,15 @@ void Camera::Render() {
     else // perspective but no 3D
         Mtx_PerspTilt(&projection, C3D_AngleFromDegrees(fovY), aspectRatio, nearClip, farClip, false);
 
+    gfxSetWide(useWide); // Enable wide mode if wanted and if not rendering in stereo
 
-    // gfxSetWide(useWide); // Enable wide mode if wanted and if not rendering in stereo
 
+    
     // scene setup
 
     transform* trans = parent->getComponent<transform>();
 
     if (!trans) return; // if no transform, the scene can't be rendered. there should always be a transform but the check is here just in case
-
     C3D_Mtx view = *trans;
     Mtx_Inverse(&view);
 
@@ -195,6 +207,7 @@ void Camera::Render() {
 
     for (int i = 0; i < HW_MAX_LIGHTS; ++i)
         if (lights::active[i]) lights::active[i]->update(&view);
+
 
 
     osTickCounterStart(&stats::profiling::cnt_cull);
@@ -294,6 +307,8 @@ void Camera::Render() {
     osTickCounterUpdate(&stats::profiling::cnt_cull);
     stats::profiling::rnd_cull = osTickCounterRead(&stats::profiling::cnt_cull);
 
+
+    
     // actually render stuff for left eye
     osTickCounterStart(&stats::profiling::cnt_meshrnd);
     // render objects
@@ -306,6 +321,7 @@ void Camera::Render() {
     }
     osTickCounterUpdate(&stats::profiling::cnt_meshrnd);
     stats::profiling::rnd_meshrnd = osTickCounterRead(&stats::profiling::cnt_meshrnd);
+
 
 
     if (!(stereo && iod > 0.0f)) return; // stop after first eye is drawn unless 3d is enabled

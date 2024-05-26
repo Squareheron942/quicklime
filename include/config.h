@@ -11,6 +11,7 @@ namespace config {
     extern CFG_Region region;
     extern bool wideIsUnsupported;
     extern bool isOnCitra;
+    extern bool newmodel;
 
     Result getInfo();
 }

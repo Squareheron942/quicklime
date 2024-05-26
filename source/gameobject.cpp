@@ -116,5 +116,6 @@ GameObject* GameObject::find(std::string name) {
 GameObject::~GameObject() {
 	Console::log("GameObject destructor");
     if (parent) parent->removeChild(*this);
-    // reg.destroy(id);
+    reg.destroy(id);
+    Console::log("End of gameobject destructor code");
 }

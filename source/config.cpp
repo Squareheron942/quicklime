@@ -1,4 +1,5 @@
 #include "config.h"
+#include "3ds/services/cfgu.h"
 #include <3ds.h>
 
 
@@ -7,6 +8,7 @@ CFG_SystemModel config::model = CFG_MODEL_3DS;
 CFG_Region config::region = CFG_REGION_JPN;
 bool config::wideIsUnsupported = false;
 bool config::isOnCitra = false;
+bool config::newmodel = false;
 
 Result config::getInfo() {
     Result r = cfguInit();
@@ -22,6 +24,7 @@ Result config::getInfo() {
     isOnCitra = (version != 0);
 
     wideIsUnsupported = isOnCitra || model == CFG_MODEL_2DS;
+    newmodel = model == CFG_MODEL_N2DSXL || model == CFG_MODEL_N3DSXL || model == CFG_MODEL_N3DS;
 
     return r;
 }

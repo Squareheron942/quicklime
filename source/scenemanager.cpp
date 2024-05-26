@@ -57,8 +57,8 @@ void SceneManager::update() {
     Console::log("Scene starting");
     SceneManager::currentScene->start();
     Console::success("Scene started");
-
-    Camera::mainTop = SceneManager::currentScene
-                        ->cameras[0]; // set current camera to be first camera
+    if (SceneManager::currentScene->cameras.size() == 0) Console::error("No cameras found");
+    Camera::mainTop = SceneManager::currentScene->cameras[0]; // set current camera to be first camera
     Camera::mainTop->sceneRoot = SceneManager::currentScene->root;
+    Console::success("Main camera initialized");
 }

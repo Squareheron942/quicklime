@@ -36,7 +36,7 @@ int main()
 {
 
 	// setup exception handler
-	installExceptionHandler(exceptionHandler);
+	// installExceptionHandler(exceptionHandler);
 
 	// Initialize graphics
 	gfxInitDefault();
@@ -61,7 +61,7 @@ int main()
 	Console::log("Language detected: %u", config::lang);
 	Console::log("Region detected: %u", config::region);
 
-	SceneManager::setScene(SceneLoader::load("test")); // immediate scene setting
+	SceneLoader::load("test"); // immediate scene setting
 
 	// Main loop
 	while (aptMainLoop())
@@ -77,8 +77,6 @@ int main()
 
 		// Render the scene
 		C3D_FrameBegin(0);
-
-
 
 		if (SceneManager::currentScene) { // don't allow the scene to be swapped
 			osTickCounterStart(&stats::profiling::cnt_supd);

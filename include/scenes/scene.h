@@ -33,7 +33,7 @@ class Scene {
         ~Scene() {
         	Console::log("Scene destructor");
         	LightLock_Lock(&lock);
-        	for (auto* object : objects) delete object; // remove all objects
+        	for (auto* object : objects) if (object) delete object; // remove all objects
          	LightLock_Unlock(&lock);
         }
 
@@ -71,6 +71,7 @@ class Scene {
 
         virtual void drawTop() {
         	LightLock_Lock(&lock);
+         	if (Camera::mainTop)
             Camera::mainTop->Render();
             LightLock_Unlock(&lock);
         };

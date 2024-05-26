@@ -144,6 +144,7 @@ void Console::basic_log(CONSOLE_LOG_LEVEL loglevel, const char* text, va_list ar
 }
 
 void Console::update() {
+	#if CONSOLE_ENABLED
 	LightLock_Lock(&lock); // don't allow writing to the text buffer and outputting text at the same time
     if (controls::getDown(controls::key::KEY_SELECT)) nextMenu();
     switch (menu) {
@@ -153,29 +154,22 @@ void Console::update() {
             setPosition();
             updateMemUsage();
             showNumVertices();
-            #if CONSOLE_ENABLED
             printf("\e[s\e[1;0H<                Stats                 >\e[u"); // 40 chars wide
-            #endif
             break;
         case MENU_CONSOLE:
             if (console_needs_updating) print_console_lines();
             console_needs_updating = false;
-            #if CONSOLE_ENABLED
             printf("\e[s\e[1;0H<               Console                >\e[u"); // 40 chars wide
-            #endif
             break;
         case MENU_SETTINGS:
             dispSensitivity();
-            #if CONSOLE_ENABLED
             printf("\e[s\e[1;0H<               Settings               >\e[u"); // 40 chars wide
-            #endif
             break;
         case MENU_PROFILING:
             dispProfiling();
-            #if CONSOLE_ENABLED
             printf("\e[s\e[1;0H<               Profiling              >\e[u"); // 40 chars wide
-            #endif
             break;
     }
     LightLock_Unlock(&lock);
+    #endif
 }
