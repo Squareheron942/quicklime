@@ -1,10 +1,16 @@
-# CitroEn
+# quicklime <img src="https://github.com/Squareheron942/quicklime/assets/82814680/7ebc38b2-f0a1-424c-8a5c-a55221204f53" alt="quicklime logo" width="120" height="120" align="right">
+
+## What is it?
+
+quicklime is a 3D game engine for Nintendo 3DS written in C++, with the intention of providing many of the utilities needed to create nearly any game. It uses an entity-component system provided by the entt library in order to allow flexibility of usage, and provides several custom file types including a scene descriptor, binary model format (including material definitions an natived skeletal animation support), and metadata format.
+
+Currently, it is a work in progress, with only the backend being mostly complete, and the front-end in a much lesser state of development. The intention is to provide an easy-to-use graphical interface for development similar to that of other game engines such as Unity and Godot.
 
 ## How to build
 
 Dependencies:
 
-special citro3D and libctru distributions which aren't available rn, ffmpeg, python 3, ffmpeg-python, devkitpro 3ds-dev package
+citro3D, libctru, ffmpeg, python3, ffmpeg-python, devkitpro 3ds-dev package
 
 Set the python install location in the makefile, then run `make` in the project directory. The first build will error when compiling the c++ code (due to how the makefile is set up, will be fixed in final release when an app is made), and the second will succeed.
 
