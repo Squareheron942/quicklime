@@ -7,80 +7,54 @@
 #include "gameobject.h"
 #include <entt.hpp>
 #include "camera.h"
-#include <vector>
-#include "lights.h"
-#include "pointlight.h"
-#include "spotlight.h"
-#include "stats.h"
 #include <list>
 
 class Scene {
 	LightLock lock;
-    protected:
-        void r_act_on_objects(GameObject* root, void(GameObject::*action)()) {
-            for (GameObject* child : root->children) {
-                (child->*action)();
-                r_act_on_objects(child, action);
-            }
-        }
+	std::string name;
+	GameObject *root;
+    std::list<GameObject> objects; // needs to be a list so it doesn't get reallocated (sad)
+    entt::registry reg;
+    
+    friend class SceneLoader;
+    friend class Camera;
+    friend void sceneLoadThread(void* params);
+    
+    void act_on_objects(void(GameObject::*action)()) { for (GameObject& child : objects) (child.*action)(); } 
     public:
-        std::string name;
-	    GameObject *root;
-        std::vector<GameObject*> objects;
-        std::vector<Camera*> cameras;
-        entt::registry reg;
+    ~Scene();
 
-        ~Scene() {
-        	Console::log("Scene destructor");
-        	LightLock_Lock(&lock);
-        	for (auto* object : objects) if (object) delete object; // remove all objects
-         	LightLock_Unlock(&lock);
-        }
+    void awake();
 
-        void awake() {
-        	LightLock_Lock(&lock);
-            r_act_on_objects(root, &GameObject::Awake); // call awake() on every gameobject and enable them (to self disable do it when this is called)
-            LightLock_Unlock(&lock);
-        }
+    void start() {
+       	LightLock_Init(&lock);
+        LightLock_Guard l(lock);
+        act_on_objects(&GameObject::Start); // start all scripts
+    }
 
-        void start() {
-        	LightLock_Lock(&lock);
-            r_act_on_objects(root, &GameObject::Start); // start all scripts
-            LightLock_Unlock(&lock);
-        }
+    void update() {
+        act_on_objects(&GameObject::Update); // call update() on every gameobject (propagates from root)
 
-        virtual void update() {
-        	LightLock_Lock(&lock);
+        // whatever other per frame logic stuff will get called here
 
-            r_act_on_objects(root, &GameObject::Update); // call update() on every gameobject (propagates from root)
+        // call lateupdate() on every gameobject (propagates from root).
+        // Used to ensure stuff like cameras move only when everything else is done moving
+        act_on_objects(&GameObject::LateUpdate);
+    };
 
-            // whatever other per frame logic stuff will get called here
+    void fixedUpdate() {
+    	LightLock_Guard l(lock);
+        // all the physics stuff will go here
+        act_on_objects(&GameObject::FixedUpdate);
+    };
 
-            // call lateupdate() on every gameobject (propagates from root).
-            // Used to ensure stuff like cameras move only when everything else is done moving
-            r_act_on_objects(root, &GameObject::LateUpdate);
-            LightLock_Unlock(&lock);
-        };
+    void draw() {
+    	LightLock_Lock(&lock);
+    	reg.view<Camera>().each([](auto& cam) { cam.Render(); });
+        LightLock_Unlock(&lock);
+    };
 
-        void fixedUpdate() {
-        	LightLock_Lock(&lock);
-            // all the physics stuff will go here
-            r_act_on_objects(root, &GameObject::FixedUpdate);
-            LightLock_Unlock(&lock);
-        };
-
-        virtual void drawTop() {
-        	LightLock_Lock(&lock);
-         	if (Camera::mainTop)
-            Camera::mainTop->Render();
-            LightLock_Unlock(&lock);
-        };
-
-        virtual void drawBottom() {}
-
-        Scene(std::string name) : name(name) {
-        	LightLock_Init(&lock);
-        }
-    protected:
-
+    Scene(std::string name) : name(name) {
+       	LightLock_Init(&lock);
+    }
 };

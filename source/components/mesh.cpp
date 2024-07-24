@@ -3,6 +3,8 @@
 #include "console.h"
 #include <memory>
 #include "stats.h"
+#include "componentmanager.h"
+
 
 namespace {
     struct mesh_data {
@@ -22,31 +24,11 @@ namespace {
         } // for each attrib add the corresponding number (for 3 attribs, should make 0x210 aka 528)
         return perm;
     }
-}
+} 
 
-mesh::mesh(GameObject& parent, const void* data) {
-    // mesh_data d;
-
-    // if (data) d = *(mesh_data*)data;
-
-    // numVerts = d.numVerts;
-    // vertsize = d.vertsize;
-    // vertices.reset(d.vertices);
-    // radius = d.radius;
-    // GSPGPU_FlushDataCache(vertices.get(), vertsize * numVerts); // make sure the data is in ram and not CPU cache
-
-    // // Configure attributes for use with the vertex shader
-    // AttrInfo_Init(&attrInfo);
-    // for (int i = 0; i < d.attrnum; i++)
-    //     AttrInfo_AddLoader(&attrInfo, i, (GPU_FORMATS)d.attrtypes[i], d.attrlen[i]);
-
-    // BufInfo_Init(&buf);
-    // BufInfo_Add(&buf, vertices.get(), vertsize, d.attrnum, permut_from_num_attr(d.attrnum)); // put the attributes in the default registers (this is actually broken and weird and does not work properly)
-}
-
-mesh::mesh(GameObject& parent, std::shared_ptr<void> vertices, unsigned int numVerts, unsigned char vertsize, float radius, unsigned char attrnum, unsigned char attrtypes[], unsigned char attrlen[]) : numVerts(numVerts), vertsize(vertsize), vertices(vertices), radius(radius), parent(&parent) {
+mesh::mesh(void* vertices, unsigned int numVerts, unsigned char vertsize, float radius, unsigned char attrnum, unsigned char attrtypes[], unsigned char attrlen[]) : numVerts(numVerts), vertsize(vertsize), _vertices(vertices), radius(radius) {
     // make sure the vertex data is in ram and not CPU cache
-    GSPGPU_FlushDataCache(vertices.get(), vertsize * numVerts);
+    GSPGPU_FlushDataCache(vertices, vertsize * numVerts);
 
     // Configure attributes for use with the vertex shader
     AttrInfo_Init(&attrInfo);
@@ -54,15 +36,11 @@ mesh::mesh(GameObject& parent, std::shared_ptr<void> vertices, unsigned int numV
         AttrInfo_AddLoader(&attrInfo, i, (GPU_FORMATS)attrtypes[i], attrlen[i]);
 
     BufInfo_Init(&buf);
-    BufInfo_Add(&buf, vertices.get(), vertsize, attrnum, permut_from_num_attr(attrnum));
+    BufInfo_Add(&buf, vertices, vertsize, attrnum, permut_from_num_attr(attrnum));
     stats::_vertices += numVerts;
 }
 
 mesh::~mesh() {
-    delete mat;
+	linearFree(_vertices);
     stats::_vertices -= numVerts;
-    Console::log("mesh on %s deleted", parent->name.c_str());
-    // std::shared_ptr removed automatically, which also removes the data
 }
-
-COMPONENT_REGISTER(mesh)

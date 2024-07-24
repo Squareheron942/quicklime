@@ -34,13 +34,12 @@ Eventually I might make an app for this (currently in the works but not done). T
 Again, see the example materials to see how to read a file.
 
 #### Material files
-These contain the data to be input to the material code. This will vary depending on the material chosen, which is specified via a null-terminated string at the beginning of the file.
+These contain the data to be input to the shader code. This will vary depending on the shader chosen, which is specified by name via a null-terminated string at the beginning of the file.
 
 ### Models
 
-Models can be imported by adding the collada model to the asset folder, then when building, a script will generate a .slmdl model and .slmtl material. You can then optionally move those models back to the original folder and removing the collada model, and you can edit the material file to select what code is being used. 
-
-Models and their materials MUST be in the same directory, otherwise it won't be found (and the game will crash :D).
+Models can be imported by adding the collada model to the asset folder, then when building, a script will generate a .slmdl model and .slmtl material. You can then optionally move those models back to the original folder and remove the collada model (so that the models aren't regenerated every build), and you can edit the material file to select what shader is being used. 
 
 ### Objects
-Objects can be added to the scene by adding them to the scene file. Check the docs to see the syntax of that.
+
+Objects can be added to the scene by adding them to the scene file. Check the docs to see the syntax of that. Once the desktop frontend is developed it should handle this for you.

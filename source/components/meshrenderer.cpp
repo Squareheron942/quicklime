@@ -1,59 +1,66 @@
 #include "meshrenderer.h"
-#include "mesh.h"
-#include "material.h"
-#include "gameobject.h"
-#include <citro3d.h>
-#include "transform.h"
 #include "componentmanager.h"
-#include "assert.h"
-#include "console.h"
-#include "stats.h"
+#include "mesh.h"
+#include "slmdlloader.h"
+#include "sl_assert.h"
+#include <string>
+#include "transform.h"
 #include "defines.h"
-#include "renderertypes.h"
+#include "stats.h"
+#include "renderer.h"
 
-MeshRenderer::MeshRenderer(GameObject& parent, const void* args) : parent(&parent), mat((material*)args) {
-    parent.renderer |= RENDERER_MESH;
+
+namespace {
+	struct meshrenderer_args {
+		RendererType type; // useless but is used for parent class so still necessary to include
+		// mesh name
+		// material file
+	};
 }
 
-MeshRenderer::MeshRenderer(GameObject& parent, material* mat) : parent(&parent), mat(mat) {
-    parent.renderer |= RENDERER_MESH;
-}
-
-MeshRenderer::~MeshRenderer() {
-	Console::log("Mesh renderer destructor");
-}
-
-void MeshRenderer::render(C3D_Mtx& view, C3D_Mtx& projection, C3D_Mtx* replacement_mv) {
-    mesh* m = parent->getComponent<mesh>();
-    #if DEBUG
-    assert(m != nullptr);
+MeshRenderer::MeshRenderer(GameObject& obj, const void* data): parent(&obj) { // parent will never be null
+	ASSERT(data != nullptr, "Mesh parameter was null");
+	std::string meshpath = (char*)data;
+	ASSERT(meshpath.size() > 0, "Model path is empty");
+	std::string matpath = (char*)data + meshpath.size() + 1;
+	ASSERT(matpath.size() > 0, "Material path is empty");
+	mat = mdlLoader::parseMat(matpath);
+	meshdata = mdlLoader::parseModel(meshpath);
+	assert(meshdata != nullptr);
     assert(mat != nullptr);
-    assert(parent != nullptr);
-    stats::_drawcalls++; // increment internal counter for debugging info
+}
+
+void MeshRenderer::render(C3D_Mtx &view, C3D_Mtx &projection) {
+	#if DEBUG
+    stats::_drawcalls++;
     #endif
-
-    C3D_SetBufInfo(&m->buf);
-    C3D_SetAttrInfo(&m->attrInfo);
-
+    C3D_SetBufInfo(&(*meshdata.get())->buf);
+    C3D_SetAttrInfo(&(*meshdata.get())->attrInfo);
+    
     C3D_Mtx model = *parent->getComponent<transform>(); // always will have a transform by default
-
-    Mtx_Multiply(&model, &view, replacement_mv ? replacement_mv : &model);
-
-    osTickCounterStart(&stats::profiling::cnt_setmtl);
-
+    
+    Mtx_Multiply(&model, &view, &model);
+    
     mat->setMaterial(&model, &projection);
-
-    osTickCounterUpdate(&stats::profiling::cnt_setmtl);
-    stats::profiling::rnd_setmtl += osTickCounterRead(&stats::profiling::cnt_setmtl);
-
-    osTickCounterStart(&stats::profiling::cnt_drawarr);
-    // Draw the VBO
-    C3D_DrawArrays(GPU_TRIANGLES, 0, m->numVerts);
-
-    osTickCounterUpdate(&stats::profiling::cnt_drawarr);
-    stats::profiling::rnd_drawarr += osTickCounterRead(&stats::profiling::cnt_drawarr);
-
+    
+    // LOD system
+    float distance2 = model.r[0].w * model.r[0].w + model.r[1].w * model.r[1].w + model.r[2].w * model.r[2].w;
+    
+    for (LOD_info& inf : (*meshdata.get())->LOD_levels) {
+    	if (inf.distance2 <= distance2) {
+            C3D_DrawArrays(GPU_TRIANGLES, inf.beginindex, inf.size);
+            break;
+     	}
+    }
+    
     mat->resetMaterial();
+}
+
+MeshRenderer& MeshRenderer::operator=(MeshRenderer&& other) {
+	meshdata = std::move(other.meshdata);
+	mat = std::move(other.mat);
+	parent = other.parent;
+	return *this;
 }
 
 COMPONENT_REGISTER(MeshRenderer)

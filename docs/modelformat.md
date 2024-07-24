@@ -20,8 +20,8 @@ Contains:
 - Attribute types and sizes
 - Radius of bounding sphere (used for frustum culling)
 - Extra information on attributes (TBD)
-- Number of bones
-- Bone array in binary format (specifically formatted as 2 vectors for position and rotation)
+- Number of LODs
+- (distance, begin index, size) tuple for each LOD level
 
 
 #### Materials
@@ -79,3 +79,26 @@ With a vertex laid out as { position[3], texcoord[2], normal[3]} (32 bytes long)
 - bytes 32-63 represent vertex 1
 
 etc...
+
+## Skeletal Animation
+
+Animations are stored in a .anim file. Each file can store a single animation, which is described via skeleton keyframes.
+
+An animation is not specific to a single mesh and can be used on any deformable mesh. There can be up to 40 bones in a mesh, and up to 4 bones can affect a given vertex. 
+
+### Header
+
+- Number of bones
+- Number of keyframes
+
+### Keyframe
+
+- Beginning time
+- Easing function
+- Array of bones
+
+#### Bone
+
+Each bone is defined as a quaternion and vector to encode position and rotation. 
+
+Each bone is independent and has no connection to a parent or child bone. For this reason, if a connection between two bones is present it has to be applied directly to the bone keyframes at compile time.

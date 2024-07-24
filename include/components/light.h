@@ -9,10 +9,10 @@ class Light {
     static LightLock lock;
     public:
     C3D_LightLut _lut;
-    Light();
+    Light(C3D_FVec color);
     ~Light();
     C3D_Light* light;
-    C3D_FVec position;
+    C3D_FVec position, color;
     virtual void update(C3D_Mtx* view);
     unsigned char index;
 };

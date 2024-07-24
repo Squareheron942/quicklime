@@ -1,4 +1,5 @@
 #include "light.h"
+#include "c3d/types.h"
 #include "lights.h"
 #include <citro3d.h>
 #include <3ds.h>
@@ -8,7 +9,7 @@
 
 LightLock Light::lock = LightLock();
 
-Light::Light() {
+Light::Light(C3D_FVec color = FVec4_New(0.992, 0.984, 0.827, 1)): color(color) {
 	LightLock_Guard l(lock);
     if (lights::lightenvneedsupdating) {
         C3D_LightEnvInit(&lights::lightenv);
@@ -20,9 +21,9 @@ Light::Light() {
 
     for (unsigned char i = 0; i < HW_MAX_LIGHTS; ++i) {
         if (lights::active[i] == nullptr) {
-            index = i;
+        	index = i;
             lights::active[i] = this;
-            light = &lights::lights[index];
+            light = &lights::lights[i];
             break;
         }
     }
@@ -30,7 +31,7 @@ Light::Light() {
     position = FVec4_New(0.0f, 0.0f, 0.0f, 1.0f);
 
     C3D_LightInit(light, &lights::lightenv);
-    C3D_LightColor(light, 0.992, 0.984, 0.827);
+    C3D_LightColor(light, color.x, color.y, color.z);
     C3D_LightPosition(light, &position);
     Console::log("Light %u created", index);
 }

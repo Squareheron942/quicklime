@@ -745,6 +745,8 @@ public:
      * @return The position of the entity in the sparse set.
      */
     [[nodiscard]] size_type index(const entity_type entt) const noexcept {
+    	if(!contains(entt)) 
+            for(;;);
         ENTT_ASSERT(contains(entt), "Set does not contain entity");
         return static_cast<size_type>(traits_type::to_entity(sparse_ref(entt)));
     }

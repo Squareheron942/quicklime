@@ -1,13 +1,25 @@
 #pragma once
-#include <citro3d.h>
 
-/**
- * @brief General renderer, abstract class that is only meant to be inherited
- * 
- */
+#include <variant>
+#include "dummyrenderer.h"
+#include "meshrenderer.h"
+
+class TextRenderer;
+class GameObject;
+
+enum RendererType {
+	RENDERER_NONE,
+    RENDERER_MESH,
+    RENDERER_TEXT,
+    RENDERER_UI
+};
+
+// composition based renderer type
 class Renderer {
-    protected:
-    Renderer() {}
+    std::variant<DummyRenderer, MeshRenderer> rnd;
+    RendererType t;
+    GameObject* parent;
     public:
-        virtual void render(C3D_Mtx& view, C3D_Mtx& projection, C3D_Mtx* replacement = NULL) = 0;
+    Renderer(GameObject& obj, const void* data);
+    void render(C3D_Mtx& view, C3D_Mtx& projection);
 };

@@ -27,7 +27,7 @@ cube[
 Basically just acts as the parameters for constructing an object, always formatted as: 
 - left curly bracket
 - 32 bit size specifier
-- base64 data
+- binary data
 - right curly bracket
 
-Use a base64 encoder along with something to figure out the binary to write this part out, eventually will be replaced when a proper editor gets made (if ever)
+Use a hex editor to write this part out, eventually will be replaced when a proper editor gets made (if ever)

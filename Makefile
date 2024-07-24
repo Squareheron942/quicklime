@@ -33,20 +33,20 @@ include $(DEVKITARM)/3ds_rules
 #     - <libctru folder>/default_icon.png
 #---------------------------------------------------------------------------------
 
-VERSION			:=  v0.0.1.1
+VERSION			:=  v0.0.0.3
 TARGET			:=	$(notdir $(CURDIR))
 PYTHON      	:=  python3
 BUILD			:=	build
 TEMPSOURCE		:= 	tempsource
-SOURCES			:=	source $(TEMPSOURCE) source/components source/audio
+SOURCES			:=	source $(TEMPSOURCE) source/components source/scenes source/audio source/util source/shaders
 DATA			:=
 MODEL			:=  assets
 TEMPINCLUDE		:=  tempinclude
-INCLUDES		:=	include entt include/materials include/scripts include/components include/deprecated include/audio include/scenes $(TEMPINCLUDE)
+INCLUDES		:=	include entt include/components include/audio include/scenes include/util include/shaders $(TEMPINCLUDE)
 GRAPHICS		:=	gfx
 ROMFS		    :=	romfs
-APP_TITLE       := 	CitroEn test
-APP_DESCRIPTION := 	$(VERSION)
+APP_TITLE       := 	quicklime
+APP_DESCRIPTION := 	beta $(VERSION)
 APP_AUTHOR		:= 	nontendo
 GFXBUILD		:=	$(ROMFS)/gfx
 ASSETS			:=	assets
@@ -57,7 +57,7 @@ EXTTOOL     	:=  @$(PYTHON) buildscripts/build.py --romfs $(ROMFS) --models $(MO
 #---------------------------------------------------------------------------------
 ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
-CFLAGS	:= -Wall -O2 -ffast-math -ggdb -mword-relocations \
+CFLAGS	:= -Wall -O0 -ggdb -mword-relocations \
 			-ffunction-sections \
 			$(ARCH)
 

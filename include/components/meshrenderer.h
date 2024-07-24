@@ -1,20 +1,18 @@
 #pragma once
 
-#include "renderer.h"
-#include <citro3d.h>
+#include "threads.h"
+#include "mesh.h"
+#include "shader.h"
+#include <memory>
 
 class GameObject;
-class material;
 
-class MeshRenderer : public Renderer {
-    GameObject* parent;
-    material* mat;
-
-    public:
-
-    MeshRenderer(GameObject& parent, const void* args);
-    MeshRenderer(GameObject& parent, material* mat);
-    ~MeshRenderer();
-
-    virtual void render(C3D_Mtx& view, C3D_Mtx& projection, C3D_Mtx* replacement = NULL);
+class MeshRenderer {
+	std::shared_ptr<LightLock_Mutex<mesh>> meshdata;
+	std::unique_ptr<shader> mat;
+	GameObject* parent;
+	public:
+	MeshRenderer(GameObject& obj, const void* data);
+	void render(C3D_Mtx& view, C3D_Mtx& projection);
+	MeshRenderer& operator=(MeshRenderer&& other);
 };

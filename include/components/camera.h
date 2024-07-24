@@ -1,9 +1,11 @@
 #pragma once
 
+#include <3ds.h>
 #include <citro3d.h>
 #include <vector>
 
 class GameObject;
+class Renderer;
 
 #define CAM_DISPLAY_TRANSFER_FLAGS \
 	(GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(0) | GX_TRANSFER_RAW_COPY(0) | \
@@ -29,14 +31,13 @@ public:
      * @param iod The inputted slider value
      */
     float(*iodMapFunc)(float);
-    bool stereo, orthographic, highRes;
+    bool stereo, orthographic, highRes, active;
     unsigned int bgcolor;
     RenderType type;
-    C3D_RenderTarget* target[3] = {NULL, NULL, NULL}; // 2 targets in case of stereoscopic view, plus one for if wide view is also enabled (since it's a different resolution)
-    static Camera *mainTop, *mainBottom; // main cameras for top and bottom screen respectively
-    GameObject* sceneRoot;
-    std::vector<GameObject*> culledList;
+    static C3D_RenderTarget* target[4];
+    std::vector<Renderer*> culledList;
     float aspectRatio;
+    void setActive(bool active);
     unsigned short cullingMask; // sees all 16 layers by default
     Camera(GameObject& parent, const void* args);
     ~Camera();

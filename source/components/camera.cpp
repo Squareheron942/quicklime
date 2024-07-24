@@ -1,22 +1,25 @@
 #include "camera.h"
-#include "c3d/maths.h"
-#include "c3d/renderqueue.h"
+#include <3ds.h>
+#include <citro3d.h>
 #include "gameobject.h"
 #include "entt.hpp"
+#include "threads.h"
 #include "transform.h"
 #include "config.h"
 #include "componentmanager.h"
 #include "renderer.h"
-#include "meshrenderer.h"
 #include "lights.h"
 #include "light.h"
-#include "renderertypes.h"
-#include "ui_text.h"
 #include "citro2d.h"
 #include "stats.h"
+#include "scene.h"
 
-Camera* Camera::mainTop = NULL;
-Camera* Camera::mainBottom = NULL;
+C3D_RenderTarget* Camera::target[4] = {
+	C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8), 
+ 	C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8), 
+  	C3D_RenderTargetCreate(240, 800, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8),
+   	C3D_RenderTargetCreate(240, 320, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8)
+}; // 2 targets in case of stereoscopic view, plus one for if wide view is also enabled (since it's a different resolution)
 
 namespace {
     /**
@@ -29,47 +32,41 @@ namespace {
 
     struct cam_args {
         // general camera properties
+        bool active = true;
+        bool wide = true; // whether or not to use the 240x800 mode on supported models
+        bool ortho = false;
+        unsigned short cull = 0xFFFF; // shows everything
 
-        bool wide = true; // whether or not to use the 240x800 mode on supported models // @0
-        bool ortho = false; // @1
-        unsigned short cull = 0xFFFF; // shows everything // @2
+        RenderType type = RENDER_TYPE_TOPSCREEN; // what to render to
 
-        RenderType type = RENDER_TYPE_TOPSCREEN; // what to render to // @4
+        float nearClip = 0.1f, farClip = 1000.f;
 
-        float nearClip = 0.1f, farClip = 1000.f; // @8, @12
-
-        unsigned int bgcolor = 0x3477ebFF; // defaults to dark blue // @16
+        unsigned int bgcolor = 0x3477ebFF; // defaults to dark blue 
 
         // texture render properties
-        unsigned short resolution; // min 8x8, max 1024x1024 (must be square) @20
+        unsigned short resolution; // min 8x8, max 1024x1024 (must be square) 
 
         // ortho camera properties
-        float height = 24.f; // @24
+        float height = 24.f;
 
-        float width = 40.f; // @28
+        float width = 40.f; 
 
         // perspective camera properties
-        bool stereo = true; // whether to use 3D // @32
-        float fovY = 55.f; // default for splatoon human form // @36
+        bool stereo = true; // whether to use 3D
+        float fovY = 55.f; // default for splatoon human form 
         /**
          * @brief Dictates how to map the iod input from the slider to the rendering iod
          * @param iod The inputted slider value
          */
-        float(*iodMapFunc)(float) = NULL; // @40
-
-
+        float(*iodMapFunc)(float) = NULL;
     };
 }
 
 Camera::~Camera() {
 	Console::log("Camera destructor");
-	for (auto t : target) if (t) C3D_RenderTargetDelete(t);
-	Console::log("End of Camera destructor");
 }
 
 Camera::Camera(GameObject& parent, const void* args) {
-	LightLock_Init(&lock);
-	LightLock_Lock(&lock);
     cam_args c;
     if (args)
         c = *(cam_args*)args;
@@ -82,6 +79,7 @@ Camera::Camera(GameObject& parent, const void* args) {
     cullingMask = c.cull;
     // cullingMask = ~0;
     bgcolor = c.bgcolor;
+    active = c.active;
 
     if (c.ortho) {
         fovY = 0.f;
@@ -102,17 +100,13 @@ Camera::Camera(GameObject& parent, const void* args) {
             highRes = c.wide && !config::wideIsUnsupported; // disable if not supported
             if (config::wideIsUnsupported) Console::warn("wide mode not supported");
             stereo = c.stereo && !c.ortho;
-            target[0] = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8); // only type to be used for display
-            if (!target[0]) Console::warn("Could not create render target");
-            if (stereo) target[1] = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8); // only type to be used for display
-            if (highRes) target[2] = C3D_RenderTargetCreate(240, 800, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8); // only type to be used for display
+            if (!target[0]) Console::warn("Could not create render targets");
             aspectRatio = C3D_AspectRatioTop;
             break;
         case RENDER_TYPE_BOTTOMSCREEN:
             aspectRatio = C3D_AspectRatioBot;
             stereo = false;
             highRes = false;
-            target[0] = C3D_RenderTargetCreate(240, 320, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
             break;
         case RENDER_TYPE_TEXTURE:
             aspectRatio = 1.f;
@@ -125,18 +119,20 @@ Camera::Camera(GameObject& parent, const void* args) {
     }
 
     this->parent = &parent;
-    // Camera::mainTop = this;
-    LightLock_Unlock(&lock);
 }
 
 void transformobjs_r(GameObject* root, C3D_FVec topN, C3D_FVec botN, C3D_FVec leftN, C3D_FVec rightN, C3D_FVec nearN, C3D_FVec farN) {
 
 }
 
-void Camera::Render() {
+void Camera::setActive(bool active) {
+	this->active = active;
+}
 
+void Camera::Render() {
+	if (!active) return;
+	
     culledList.clear(); // remove all the old objects without deallocating the space since 99% of the time it won't need to change the space
-    stats::_drawcalls = 0;
 
     // camera setup
 
@@ -149,35 +145,27 @@ void Camera::Render() {
     switch (type) {
         case RENDER_TYPE_TOPSCREEN:
             if (useWide) {
-
                 C3D_RenderTargetSetOutput(target[2], GFX_TOP, GFX_LEFT, CAM_DISPLAY_TRANSFER_FLAGS);
-
                 C3D_RenderTargetClear(target[2], C3D_CLEAR_ALL, bgcolor, 0);
-
                 C3D_FrameDrawOn(target[2]);
 
             } else {
-
                 C3D_RenderTargetSetOutput(target[0], GFX_TOP, GFX_LEFT, CAM_DISPLAY_TRANSFER_FLAGS);
-
                 C3D_RenderTargetClear(target[0], C3D_CLEAR_ALL, bgcolor, 0);
-
                 C3D_FrameDrawOn(target[0]);
 
             }
             break;
         case RENDER_TYPE_BOTTOMSCREEN:
-            C3D_RenderTargetSetOutput(target[0], GFX_BOTTOM, GFX_LEFT, CAM_DISPLAY_TRANSFER_FLAGS);
-            C3D_RenderTargetClear(target[0], C3D_CLEAR_ALL, bgcolor, 0);
-            C3D_FrameDrawOn(target[0]);
+            C3D_RenderTargetSetOutput(target[3], GFX_BOTTOM, GFX_LEFT, CAM_DISPLAY_TRANSFER_FLAGS);
+            C3D_RenderTargetClear(target[3], C3D_CLEAR_ALL, bgcolor, 0);
+            C3D_FrameDrawOn(target[3]);
             break;
         case RENDER_TYPE_TEXTURE:
             // TODO add handling for this
             break;
     }
     
-
-
     if (orthographic) Mtx_OrthoTilt(&projection, -width / 2, width / 2, -height / 2, height / 2, nearClip, farClip, false); // no perspective
     else if (stereo) // both perspective and 3D
         Mtx_PerspStereoTilt(
@@ -191,7 +179,7 @@ void Camera::Render() {
     else // perspective but no 3D
         Mtx_PerspTilt(&projection, C3D_AngleFromDegrees(fovY), aspectRatio, nearClip, farClip, false);
 
-    gfxSetWide(useWide); // Enable wide mode if wanted and if not rendering in stereo
+    // gfxSetWide(useWide); // Enable wide mode if wanted and if not rendering in stereo
 
 
     
@@ -274,16 +262,14 @@ void Camera::Render() {
     // rightN.x *= invrightM;
     // rightN.y *= invrightM;
     // rightN.z *= invrightM;
-
-
+    // 
     // culling prepass
-    for (GameObject* obj : sceneRoot->children) {
+    for (GameObject& obj : parent->s.objects) {
         // mesh* m = NULL;
-        if (!obj) continue; // skip null objects, there shouldn't be any so I think it can be removed, and I can't remove it from the list at this step so it might end up being kinda slow
-        if (!(obj->layer & cullingMask)) continue; // skip culled objects
-        if (!obj->renderer) continue; // skip objects with no set renderer
-        // if (!(m = obj->getComponent<mesh>())) continue; // skip objects with no mesh
-        // if (!obj->getComponent<MeshRenderer>()) continue; // skip objects with no renderer
+        // if (!obj) continue; // skip null objects, there shouldn't be any so I think it can be removed, and I can't remove it from the list at this step so it might end up being kinda slow
+        if (!(obj.layer & cullingMask)) continue; // skip culled objects
+        Renderer* r;
+        if (!(r = obj.getComponent<Renderer>())) continue; // skip objects with no set renderer
 
         // transform* t = obj->getComponent<transform>();
         // C3D_FVec p = FVec3_Subtract(pos, t->position);
@@ -302,7 +288,7 @@ void Camera::Render() {
         // if (!front) continue;
 
         // if (!(left + right + back + front + top + bot)) continue; // if not in any then skip it (this means it is outside the frustum)
-        culledList.push_back(obj);
+        culledList.push_back(r);
     }
     osTickCounterUpdate(&stats::profiling::cnt_cull);
     stats::profiling::rnd_cull = osTickCounterRead(&stats::profiling::cnt_cull);
@@ -312,23 +298,19 @@ void Camera::Render() {
     // actually render stuff for left eye
     osTickCounterStart(&stats::profiling::cnt_meshrnd);
     // render objects
-    for (GameObject* obj : culledList) {
-        if (obj->renderer & RENDERER_MESH) obj->getComponent<MeshRenderer>()->render(view, projection);
-        if (obj->renderer & RENDERER_TEXT) {
-	        C2D_SceneTarget(target[0]); //TODO defer text/ui rendering
-	        obj->getComponent<Text>()->Render();
-        }
-    }
+    for (Renderer* rend : culledList) rend->render(view, projection);
     osTickCounterUpdate(&stats::profiling::cnt_meshrnd);
     stats::profiling::rnd_meshrnd = osTickCounterRead(&stats::profiling::cnt_meshrnd);
 
-
-
-    if (!(stereo && iod > 0.0f)) return; // stop after first eye is drawn unless 3d is enabled
+    
+    // render text
+    // C2D_SceneTarget(target[(type == RENDER_TYPE_TOPSCREEN) ? (stereo ? 0 : 2) : 3]); //TODO defer text/ui rendering
+    
+    if (!(stereo && iod > 0.0f) || type == RENDER_TYPE_BOTTOMSCREEN) return; // stop after first eye is drawn unless 3d is enabled and on top screen
 
     // render right eye
 
-    gfxSet3D(true);
+    // gfxSet3D(true);
     C3D_RenderTargetSetOutput(target[1], GFX_TOP, GFX_RIGHT, CAM_DISPLAY_TRANSFER_FLAGS);
     Mtx_PerspStereoTilt(
         &projection,
@@ -344,16 +326,12 @@ void Camera::Render() {
 
     osTickCounterStart(&stats::profiling::cnt_meshrnd);
     // render objects
-    // C2D_SceneTarget(target[1]);
-    for (GameObject* obj : culledList) {
-        if (obj->renderer & RENDERER_MESH) obj->getComponent<MeshRenderer>()->render(view, projection);
-        if (obj->renderer & RENDERER_TEXT) {
-        	C2D_SceneTarget(target[1]);
-        	obj->getComponent<Text>()->Render();
-        }
-    }
+    for (Renderer* rend : culledList) rend->render(view, projection);
     osTickCounterUpdate(&stats::profiling::cnt_meshrnd);
     stats::profiling::rnd_meshrnd += osTickCounterRead(&stats::profiling::cnt_meshrnd);
+    
+    // render text
+    // C2D_SceneTarget(target[(type == RENDER_TYPE_TOPSCREEN) ? (stereo ? 1 : 2) : 3]); //TODO defer text/ui rendering
 
 }
 

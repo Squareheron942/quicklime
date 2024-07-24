@@ -1,8 +1,10 @@
 #include "gameobject.h"
 #include "console.h"
 #include "script.h"
+#include "threads.h"
 
 void GameObject::Awake() {
+	LightLock_Guard l(_scriptL);
     for (Script* s : scripts) {
         s->Awake();
         s->SetEnabled(true);
@@ -10,23 +12,28 @@ void GameObject::Awake() {
 }
 
 void GameObject::Start() {
+	LightLock_Guard l(_scriptL);
     for (Script* s : scripts) if (s->enabled) s->Start();
 }
 
 void GameObject::Update() {
+	LightLock_Guard l(_scriptL);
     for (Script* s : scripts) if (s->enabled) s->Update();
 }
 
 void GameObject::LateUpdate() {
+	LightLock_Guard l(_scriptL);
     for (Script* s : scripts) if (s->enabled) s->LateUpdate();
 }
 
 void GameObject::FixedUpdate() {
+	LightLock_Guard l(_scriptL);
     for (Script* s : scripts) if (s->enabled) s->FixedUpdate();
 }
 
 
 GameObject* GameObject::r_search(std::string name) {
+	LightLock_Guard l(_l);
     GameObject* out = NULL;
     for (GameObject* child : children) {
         if (child->name == name) return child;
@@ -37,6 +44,7 @@ GameObject* GameObject::r_search(std::string name) {
 }
 
 GameObject* GameObject::find(std::string name) {
+	LightLock_Guard l(_l);
     /**
      *     in front of name will search top down
      * /   in front of name will only search root (then find children based on '/' "subdirectories")
@@ -57,7 +65,7 @@ GameObject* GameObject::find(std::string name) {
                     */
                     return parent->find(name.substr(1));
                 } else Console::warn("Object %s not found");
-                return NULL;
+                return nullptr;
             }
         } else if (name[1] == '/') // find in own children
         {
@@ -74,7 +82,7 @@ GameObject* GameObject::find(std::string name) {
                         break;
                     }
                 }
-                if (temp == out) return NULL; // if a child was not found in one level, it was not found so return nothing
+                if (temp == out) return nullptr; // if a child was not found in one level, it was not found so return nothing
             }
 
 
@@ -110,12 +118,13 @@ GameObject* GameObject::find(std::string name) {
 
         return root;
     }
-    return NULL;
+    return nullptr;
 };
 
 GameObject::~GameObject() {
-	Console::log("GameObject destructor");
-    if (parent) parent->removeChild(*this);
-    reg.destroy(id);
-    Console::log("End of gameobject destructor code");
+	// Console::log("GameObject destructor");
+    if (parent) parent->removeChild(this);
+    if (id != entt::null) reg.destroy(id);
+    for (auto* s : scripts) delete s;
+    // Console::log("End of gameobject destructor code");
 }
