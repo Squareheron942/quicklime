@@ -4,7 +4,7 @@
 #include "threads.h"
 
 void GameObject::Awake() {
-	LightLock_Guard l(_scriptL);
+	LightLock_Guard l{_scriptL};
     for (Script* s : scripts) {
         s->Awake();
         s->SetEnabled(true);
@@ -12,28 +12,28 @@ void GameObject::Awake() {
 }
 
 void GameObject::Start() {
-	LightLock_Guard l(_scriptL);
+	LightLock_Guard l{_scriptL};
     for (Script* s : scripts) if (s->enabled) s->Start();
 }
 
 void GameObject::Update() {
-	LightLock_Guard l(_scriptL);
+	LightLock_Guard l{_scriptL};
     for (Script* s : scripts) if (s->enabled) s->Update();
 }
 
 void GameObject::LateUpdate() {
-	LightLock_Guard l(_scriptL);
+	LightLock_Guard l{_scriptL};
     for (Script* s : scripts) if (s->enabled) s->LateUpdate();
 }
 
 void GameObject::FixedUpdate() {
-	LightLock_Guard l(_scriptL);
+	LightLock_Guard l{_scriptL};
     for (Script* s : scripts) if (s->enabled) s->FixedUpdate();
 }
 
 
 GameObject* GameObject::r_search(std::string name) {
-	LightLock_Guard l(_l);
+	LightLock_Guard l{_l};
     GameObject* out = NULL;
     for (GameObject* child : children) {
         if (child->name == name) return child;
@@ -44,7 +44,7 @@ GameObject* GameObject::r_search(std::string name) {
 }
 
 GameObject* GameObject::find(std::string name) {
-	LightLock_Guard l(_l);
+	LightLock_Guard l{_l};
     /**
      *     in front of name will search top down
      * /   in front of name will only search root (then find children based on '/' "subdirectories")
@@ -97,8 +97,6 @@ GameObject* GameObject::find(std::string name) {
     } else // find anywhere
     {
         GameObject* root = this;
-        if (!root)
-            for(;;);
         while (root->parent) root = root->parent; // get root of all objects (that way we don't need to store this at all times)
 
         int i = 0;

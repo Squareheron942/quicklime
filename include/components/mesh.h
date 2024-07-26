@@ -3,6 +3,7 @@
 #include <citro3d.h>
 #include <memory>
 #include <vector>
+#include "slmdlloader.h"
 
 class GameObject;
 
@@ -23,6 +24,6 @@ class mesh {
     std::vector<LOD_info> LOD_levels;
     public:
     const void* vertices() { return _vertices; }
-    mesh(void* vertices, unsigned int numVerts, unsigned char vertsize, float radius, unsigned char attrnum, unsigned char attrtypes[], unsigned char attrlen[]);
+    mesh(void* vertices, const mdlLoader::mdl_header& hdr);
     ~mesh();
 };

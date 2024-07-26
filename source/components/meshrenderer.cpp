@@ -8,6 +8,7 @@
 #include "defines.h"
 #include "stats.h"
 #include "renderer.h"
+#include "slmdlloader.h"
 
 
 namespace {
@@ -25,8 +26,9 @@ MeshRenderer::MeshRenderer(GameObject& obj, const void* data): parent(&obj) { //
 	std::string matpath = (char*)data + meshpath.size() + 1;
 	ASSERT(matpath.size() > 0, "Material path is empty");
 	mat = mdlLoader::parseMat(matpath);
-	meshdata = mdlLoader::parseModel(meshpath);
-	assert(meshdata != nullptr);
+	std::optional<std::shared_ptr<mesh>> mesh_opt = mdlLoader::parseModel(meshpath);
+	ASSERT(mesh_opt.has_value(), "Invalid mesh");
+	meshdata = mesh_opt.value();
     assert(mat != nullptr);
 }
 
@@ -34,10 +36,12 @@ void MeshRenderer::render(C3D_Mtx &view, C3D_Mtx &projection) {
 	#if DEBUG
     stats::_drawcalls++;
     #endif
-    C3D_SetBufInfo(&(*meshdata.get())->buf);
-    C3D_SetAttrInfo(&(*meshdata.get())->attrInfo);
+    C3D_SetBufInfo(&meshdata->buf);
+    C3D_SetAttrInfo(&meshdata->attrInfo);
     
-    C3D_Mtx model = *parent->getComponent<transform>(); // always will have a transform by default
+    // always will have a transform by default
+    // safe since pointer isn't stored
+    C3D_Mtx model = *parent->getComponent<transform>();
     
     Mtx_Multiply(&model, &view, &model);
     
@@ -46,7 +50,7 @@ void MeshRenderer::render(C3D_Mtx &view, C3D_Mtx &projection) {
     // LOD system
     float distance2 = model.r[0].w * model.r[0].w + model.r[1].w * model.r[1].w + model.r[2].w * model.r[2].w;
     
-    for (LOD_info& inf : (*meshdata.get())->LOD_levels) {
+    for (LOD_info& inf : meshdata->LOD_levels) {
     	if (inf.distance2 <= distance2) {
             C3D_DrawArrays(GPU_TRIANGLES, inf.beginindex, inf.size);
             break;

@@ -4,6 +4,7 @@
 #include "controls.h"
 #include "sl_time.h"
 #include "threads.h"
+#include "scenemanager.h"
 
 
 int Console::line = 0;
@@ -33,34 +34,6 @@ void Console::print_console_lines() {
 
 void Console::init() {
 	LightLock_Init(&_l);
-}
-
-inline void setFrameTime() {
-    #if CONSOLE
-    printf("\e[s\e[%u;%uHFPS: %.0f       \e[u", FPS_Y, FPS_X, 1.f/Time::deltaTime);
-    printf("\e[s\e[%u;%uHCPU: %.2f       \e[u", CPU_Y, CPU_X, C3D_GetProcessingTime());
-    printf("\e[s\e[%u;%uHGPU: %.2f       \e[u", GPU_Y, GPU_X, C3D_GetDrawingTime());
-    #endif
-}
-
-inline void setPosition(int x = stats::_x, int y = stats::_y, int z = stats::_z, int w = stats::_w) {
-    #if CONSOLE
-    printf("\e[s\e[%u;%uHPosition: %d %d %d %d        \e[u", POS_Y, POS_X, x, y, z, w);
-    #endif
-}
-
-inline void setDrawCalls(int dc = stats::_drawcalls) {
-    #if CONSOLE
-    printf("\e[s\e[%u;%uHDraw Calls: %u         \e[u", DRAW_Y, DRAW_X, dc);
-    #endif
-}
-
-inline void updateMemUsage() {
-    #if CONSOLE
-    printf("\e[s\e[%u;%uHHeap Usage: %u KiB         \e[u", MEM_Y, MEM_X, mallinfo().uordblks/1024);
-    printf("\e[s\e[%u;%uHLinear RAM Free: %lu KiB         \e[u", MEM_Y + 1, MEM_X, linearSpaceFree()/1024);
-    printf("\e[s\e[%u;%uHVRAM Free: %lu KiB         \e[u", MEM_Y + 2, MEM_X, vramSpaceFree()/1024);
-    #endif
 }
 
 inline void dispSensitivity() {
@@ -94,12 +67,6 @@ inline void dispProfiling() {
     #endif
 }
 
-inline void showNumVertices() {
-    #if CONSOLE
-    printf("\e[s\e[%u;%uHVertices: %u\e[u", NV_Y, NV_X, stats::_vertices);
-    #endif
-}
-
 void Console::nextMenu() {
     menu++;
     menu %= 4;
@@ -129,7 +96,7 @@ void Console::basic_log(CONSOLE_LOG_LEVEL loglevel, const char* text, va_list ar
     } else
     {
     	strncpy(textbuf[line], base, 55);
-        if (menu == MENU_CONSOLE) printf("\e[s\e[%u;0H%s\e[u", CONSOLE_TOP + line, textbuf[line]);
+        if (menu == MENU_CONSOLE) printf("\e[s\e[%u;1H%s\e[u", CONSOLE_TOP + line, textbuf[line]);
         line++;
     }
     console_needs_updating = true;
@@ -147,11 +114,15 @@ void Console::update() {
     if (controls::getDown(controls::key::KEY_SELECT)) nextMenu();
     switch (menu) {
         case MENU_STATS:
-            setFrameTime();
-            setDrawCalls();
-            setPosition();
-            updateMemUsage();
-            showNumVertices();
+	        printf("\e[s\e[%u;%uHFPS: %.0f       \e[u", FPS_Y, FPS_X, 1.f/Time::deltaTime);
+	        printf("\e[s\e[%u;%uHCPU: %.2f       \e[u", CPU_Y, CPU_X, C3D_GetProcessingTime());
+	        printf("\e[s\e[%u;%uHGPU: %.2f       \e[u", GPU_Y, GPU_X, C3D_GetDrawingTime());
+            printf("\e[s\e[%u;%uHDraw Calls: %u\e[u", DRAW_Y, DRAW_X, stats::_drawcalls);
+            printf("\e[s\e[%u;%uHCurrent Scene: %s            \e[u", SCN_Y, SCN_X, SceneManager::currentScene->name.c_str());
+            printf("\e[s\e[%u;%uHHeap Usage: %u KiB         \e[u", MEM_Y, MEM_X, mallinfo().uordblks/1024);
+            printf("\e[s\e[%u;%uHLinear RAM Free: %lu KiB         \e[u", MEM_Y + 1, MEM_X, linearSpaceFree()/1024);
+            printf("\e[s\e[%u;%uHVRAM Free: %lu KiB         \e[u", MEM_Y + 2, MEM_X, vramSpaceFree()/1024);
+            printf("\e[s\e[%u;%uHVertices: %u\e[u", NV_Y, NV_X, stats::_vertices);
             printf("\e[s\e[1;0H<                Stats                 >\e[u"); // 40 chars wide
             break;
         case MENU_CONSOLE:

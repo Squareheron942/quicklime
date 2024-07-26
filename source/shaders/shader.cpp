@@ -14,7 +14,7 @@ namespace {
         GPU_TEXTURE_FILTER_PARAM magFilter : 1 = GPU_LINEAR, minFilter: 1 = GPU_NEAREST;
         GPU_TEXTURE_WRAP_PARAM wrapS: 2 = GPU_REPEAT, wrapT: 2 = GPU_REPEAT;
     };
-    std::unordered_map<std::string, std::weak_ptr<Texture>> loadedTex;
+    LightLock_Mutex<std::unordered_map<std::string, std::weak_ptr<Texture>>> loadedTex;
 }
 
 std::optional<std::shared_ptr<Texture>> createTextureInstance(const std::string& name) {
@@ -45,20 +45,23 @@ std::optional<std::shared_ptr<Texture>> createTextureInstance(const std::string&
 shader::~shader() {}
 
 [[nodiscard]] std::optional<std::shared_ptr<Texture>> shader::loadTextureFromFile(std::string name) {
+	// scope aware mutex locking, necessary since the function might yield
+	LightLock_Mutex_Guard mut(loadedTex); 
 	if (name.size() == 0) return std::nullopt; // no texture so do nothing
+	auto it = loadedTex->find(name);
+	// texture exists in map
+	if (it != loadedTex->end() && !it->second.expired()) return (*loadedTex)[name].lock();
 	
+	// texture needs to be loaded from scratch
 	std::optional<std::shared_ptr<Texture>> out;
 	
-	auto it = loadedTex.find(name);
-    if (it == loadedTex.end() || it->second.expired()) { // texture needs to be loaded from scratch
-    	out = createTextureInstance(name);
-        if (!out.has_value()) return std::nullopt; // texture couldn't be found
-        loadedTex[name] = out.value(); 
-    }
-    return out; // if it already exists just return a pointer to it
+    out = createTextureInstance(name); // yields thread since it calls OS process
+    if (!out.has_value()) return std::nullopt; // texture couldn't be found
+    (*loadedTex)[name] = out.value(); 
+    return out;
 }
 
-bool shader::loadTextureFromMem(C3D_Tex* tex, C3D_TexCube* cube, const void* data, size_t size)
+__attribute__((deprecated)) bool shader::loadTextureFromMem(C3D_Tex* tex, C3D_TexCube* cube, const void* data, size_t size)
 {
     Tex3DS_Texture t3x = Tex3DS_TextureImport(data, size, tex, cube, false);
     if (!t3x)

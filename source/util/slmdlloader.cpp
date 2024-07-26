@@ -1,19 +1,16 @@
 #include "slmdlloader.h"
-#include <stdio.h>
 #include <string>
+#include <memory>
+#include <unordered_map>
+#include <string.h>
+
 #include "mesh.h"
 #include "shader.h"
-#include "defines.h"
-#include "entt.hpp"
 #include "console.h"
 #include "materialmanager.h"
 #include "bone.h"
-#include "meshrenderer.h"
 #include "threads.h"
-#include <memory>
-#include <unordered_map>
 #include "sl_assert.h"
-#include <string.h>
 
 namespace {
 	LightLock _loader_l = {1}, _mesh_l = {1};
@@ -37,19 +34,7 @@ namespace {
         } while ((*(str++) != '\0') && (count < max_size));
         return count;
     }
-    std::unordered_map<std::string, LightLock_Mutex<mesh>*> loadedMeshes;
-    void meshdeleter(LightLock_Mutex<mesh>* data) {
-    	LightLock_Guard l(_mesh_l);
-        data->lock();
-        auto it = std::find_if(std::begin(loadedMeshes), std::end(loadedMeshes), [& data](auto && pair) { return pair.second == data; });
-        loadedMeshes.erase(it);
-    }
-    struct mdl_header {
-   		unsigned int numVerts = 0;
-	    unsigned char sv = 0;
-	    float radius = 0.f;
-	    unsigned char attrnum, attrtypes[16], attrlen[16];
-    };
+    LightLock_Mutex<std::unordered_map<std::string, std::weak_ptr<mesh>>> loadedMeshes;
 }
 
 namespace mdlLoader {
@@ -70,42 +55,59 @@ namespace mdlLoader {
         return bones;
     }
 
-    std::shared_ptr<LightLock_Mutex<mesh>> parseModel(const std::string path, bool createnew) {
+    std::optional<std::shared_ptr<mesh>> parseModel(const std::string& path, bool createnew) {
     	LightLock_Guard ll(_loader_l);
         LightLock_Guard ml(_mesh_l);
-        if (loadedMeshes.find(path) == loadedMeshes.end()) {
-			FILE *f = fopen(path.c_str(), "r");
+        LightLock_Mutex_Guard mut(loadedMeshes);
+        
+        if (path.size() == 0) return std::nullopt; // empty name so nothing to be done
+        if (loadedMeshes->find(path) != loadedMeshes->end() && !loadedMeshes->find(path)->second.expired()) 
+        	return (*loadedMeshes)[path].lock(); // already been loaded and is valid
+         
+        // not already loaded or previously loaded but expired
+        FILE *f;
+        {
+	        std::shared_ptr<mesh> m;
+	        
+			f = fopen(path.c_str(), "r");
 			ASSERT(f != nullptr, "Model not found");
+			if (!f) goto exit_0;
+			
 			char str[4] = "";
 			fread(str, sizeof(char), 3, f);
 			ASSERT(strcmp(str, "mdl"), "Error loading model");
+			if (!strcmp(str, "mdl")) goto exit_1;
 			
 			// read header info
 			
-			mdl_header mh = {0};
-
+			mdl_header mdlheader;
+	
 			// read basic info
-			fread(&mh, sizeof(mdl_header), 1, f);
+			fread(&mdlheader, sizeof(mdl_header), 1, f);
 			
 	        // read obj section
 	        fread(str, sizeof(char), 3, f);
-
-	        // read obj section
 	        ASSERT(strcmp(str, "obj"), "Error loading model");
+	        if (!strcmp(str, "obj")) goto exit_1;
 			
 			// read bones
 			[[maybe_unused]] bone* bones = parseBones(f);
 			
-			void* v = linearMemAlign(mh.numVerts * mh.sv, 0x1000); // aligned to page size
+			void* v = linearMemAlign(mdlheader.numVerts * mdlheader.sv, 0x1000); // aligned to page size
 			
-			fread(v, mh.sv, mh.numVerts, f);
-
-			loadedMeshes[path] = new LightLock_Mutex<mesh>(mesh(v, mh.numVerts, mh.sv, mh.radius, mh.attrnum, mh.attrtypes, mh.attrlen));
-
+			fread(v, mdlheader.sv, mdlheader.numVerts, f);
 			fclose(f);
+	
+			m = std::make_shared<mesh>(v, mdlheader);
+			
+			// If the user explicitly wants to create a new mesh, make it completely independent
+			if (!createnew) (*loadedMeshes)[path] = m;
+			
+	        return m;
         }
-        std::shared_ptr<LightLock_Mutex<mesh>> m;
-        m.reset(loadedMeshes[path], meshdeleter);
-        return m;
+        exit_1:
+        fclose(f);
+        exit_0:
+        return std::nullopt;
     }
 } 

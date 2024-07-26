@@ -25,3 +25,11 @@ class LightLock_Mutex {
 	void unlock() { LightLock_Unlock(&_lock); }
 	~LightLock_Mutex() { LightLock_Unlock(&_lock); }
 };
+
+template<typename T> 
+class LightLock_Mutex_Guard {
+	LightLock_Mutex<T>& mut;
+	public:
+	LightLock_Mutex_Guard(LightLock_Mutex<T>& mut): mut(mut) { mut.lock(); }
+	~LightLock_Mutex_Guard() { mut.unlock(); }
+};

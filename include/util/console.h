@@ -11,8 +11,8 @@
 #define CPU_Y 2
 #define GPU_X 19
 #define GPU_Y 2
-#define POS_X 0
-#define POS_Y 3
+#define SCN_X 0
+#define SCN_Y 3
 #define DRAW_X 0
 #define DRAW_Y 4
 #define MEM_X 0

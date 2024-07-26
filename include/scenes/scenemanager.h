@@ -18,6 +18,7 @@ class SceneManager {
 	static void setScene(std::unique_ptr<Scene>& s);
     static void setScene(std::unique_ptr<Scene>&& s);
     friend class SceneLoader;
+    friend class Console; // given access to read scene name
     friend void sceneLoadThread(void* params);
 	public:
 	static void init();

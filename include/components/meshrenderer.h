@@ -8,7 +8,7 @@
 class GameObject;
 
 class MeshRenderer {
-	std::shared_ptr<LightLock_Mutex<mesh>> meshdata;
+	std::shared_ptr<mesh> meshdata;
 	std::unique_ptr<shader> mat;
 	GameObject* parent;
 	public:
