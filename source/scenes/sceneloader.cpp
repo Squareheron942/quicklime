@@ -13,10 +13,10 @@
 #include "slmdlloader.h"
 #include <type_traits>
 #include <iostream>
-#include "controls.h"
 #include "scenemanager.h"
 #include "config.h"
 #include "exceptions.h"
+#include "sl_assert.h"
 
 
 #define SCENELOADER_THREAD_STACK_SZ (32 * 1024)    // 32kB stack for scene loader thread
@@ -27,18 +27,19 @@
 // need to pass in scene for the object constructor
 
 
-std::string readFile(std::ifstream& stream)
+std::string readFile(const std::string& filename)
 {
-    std::stringstream str;
-    if(stream.is_open())
-    {
-        while(stream.peek() != EOF)
-        {
-            str << (char) stream.get();
-        }
-        stream.close();
-        return str.str();
-    }
+	std::ifstream in(filename, std::ios::in | std::ios::binary);
+	if (in)
+	{ // only works with c++11 or higher, lower versions don't guarantee contiguous string data
+		std::string contents;
+		in.seekg(0, std::ios::end);
+		contents.resize(in.tellg());
+		in.seekg(0, std::ios::beg);
+		in.read(&contents[0], contents.size());
+		in.close();
+		return contents;
+	}
     return "";
 }
 
@@ -78,14 +79,9 @@ void sceneLoadThread(void* params) {
 	
 	LightEvent_Init(&p.event, RESET_ONESHOT);
 
-	std::ifstream scenefile;
-	scenefile.open(p.name);
-	Console::log("scene file is open: %s", scenefile.is_open() ? "true" : "false");
-
-	std::string textstr = readFile(scenefile);
+	std::string textstr = readFile(p.name);
 
     Console::log("read file, length %lu", textstr.size());
-    scenefile.close();
 
     // remove whitespace
     textstr.erase(std::remove_if(textstr.begin(), textstr.end(), [](unsigned char x) { return std::isspace(x); }), textstr.end()); // remove all whitespace from text
@@ -143,20 +139,11 @@ AsyncSceneLoadOperation SceneLoader::loadAsync(std::string name) {
 }
 
 bool SceneLoader::load(std::string name) {
-    std::ifstream scenefile;
-    scenefile.open(("romfs:/scenes/" + name + ".scene"));
-
-    if (!scenefile.is_open()) {
-        Console::error("No scene file");
-        return false;
-    }
+    std::string text = readFile("romfs:/scenes/" + name + ".scene");
+    ASSERT(text.size() > 0, "Scene file empty");
+    Console::success("read scene file");
 
     std::unique_ptr<Scene> out = std::make_unique<Scene>(name);
-
-    std::string text = readFile(scenefile);
-
-    Console::log("read file");
-    scenefile.close();
 
     // remove whitespace
     text.erase(std::remove_if(text.begin(), text.end(), [](unsigned char x) { return std::isspace(x); }), text.end()); // remove all whitespace from text
