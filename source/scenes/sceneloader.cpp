@@ -17,6 +17,7 @@
 #include "config.h"
 #include "exceptions.h"
 #include "sl_assert.h"
+#include <stdlib.h>
 
 
 #define SCENELOADER_THREAD_STACK_SZ (32 * 1024)    // 32kB stack for scene loader thread
@@ -24,8 +25,37 @@
 
 // helper functions for the loader
 
-// need to pass in scene for the object constructor
+template <class T> using unique_ptr_aligned = 
+	std::unique_ptr<T, decltype(&free)>;
+template<class T>
+unique_ptr_aligned<T> aligned_uptr(size_t align, size_t size) {
+	return unique_ptr_aligned<T>(
+		static_cast<T*>(aligned_alloc(align, size)),
+		&free
+	);
+}
 
+auto readFileAligned(const std::string& filename)
+{
+	std::ifstream in("romfs:/scenes/" + filename + ".scene", std::ios::in | std::ios::binary);
+	if (in)
+	{ // only works with c++11 or higher, lower versions don't guarantee contiguous string data
+		unsigned long size;
+		in.seekg(0, std::ios::end);
+		size = in.tellg();
+		auto c = aligned_uptr<char>(0x1000, size), d = aligned_uptr<char>(0x1000, size);
+		in.seekg(0, std::ios::beg);
+		in.read(c.get(), size);
+		in.close();
+		char* pc = c.get(), *pd = d.get();
+		do { while (std::isspace(*pc)) pc++; } while ((*pd++ = *pc++));
+		Console::log("loaded scene file, length %lu", size);
+		return d;
+	}
+	auto r = aligned_uptr<char>(alignof(char), 0);
+	r.reset(nullptr);
+    return r;
+}
 
 std::string readFile(const std::string& filename)
 {
@@ -42,6 +72,9 @@ std::string readFile(const std::string& filename)
 	}
     return "";
 }
+
+
+
 
 struct sceneLoadThreadParams {
 	std::unique_ptr<Scene> s; // scene pointer we are writing to
@@ -67,7 +100,7 @@ void sceneLoadThread(void* params) {
 	// setup exception handler
 	// installExceptionHandler(exceptionHandler2);
 
-	if (!params) { // don't need to delete p since it's nonexistent
+	if (!params) {
 		Console::error("Params are null");
 		return;
 	}
@@ -79,13 +112,9 @@ void sceneLoadThread(void* params) {
 	
 	LightEvent_Init(&p.event, RESET_ONESHOT);
 
-	std::string textstr = readFile(p.name);
-
-    Console::log("read file, length %lu", textstr.size());
-
-    // remove whitespace
-    textstr.erase(std::remove_if(textstr.begin(), textstr.end(), [](unsigned char x) { return std::isspace(x); }), textstr.end()); // remove all whitespace from text
-    std::string_view text{textstr};
+	auto textstr{readFile(p.name)};
+	ASSERT(textstr != nullptr, "Invalid scene file");
+    std::string_view text{textstr.get()};
 
     SceneLoader::parseObjectAsync(p.s, text, text.size(), p.progress); // parse the whole object tree
     p.s->root = &p.s->objects.front();
@@ -139,14 +168,12 @@ AsyncSceneLoadOperation SceneLoader::loadAsync(std::string name) {
 }
 
 bool SceneLoader::load(std::string name) {
-    std::string text = readFile("romfs:/scenes/" + name + ".scene");
-    ASSERT(text.size() > 0, "Scene file empty");
+	std::unique_ptr<Scene> out = std::make_unique<Scene>(name);
+
+    auto textstr{readFile(name)};
+    ASSERT(textstr != nullptr, "Invalid scene file");
+    std::string_view text{textstr.get()};
     Console::success("read scene file");
-
-    std::unique_ptr<Scene> out = std::make_unique<Scene>(name);
-
-    // remove whitespace
-    text.erase(std::remove_if(text.begin(), text.end(), [](unsigned char x) { return std::isspace(x); }), text.end()); // remove all whitespace from text
 
     std::string_view t{text};
     // parse the whole object tree recursively
