@@ -4,8 +4,8 @@ import os, argparse, io, struct, json, re, math
 file_edit_times = {} # stores when the model source files were last edited
 
 def convfile(inp: et.Element, path: str) -> None:
-    writematerials(inp, path) # create the slmtl files
-    writeobjs(inp, path) # create the slmdl files
+    writematerials(inp, path) # create the qlmtl files
+    writeobjs(inp, path) # create the qlmdl files
 
 
 # writes C3D_Mtx type thingy to file which represents material (used for default fragment lit dae shader) as well as the diffuse textyre
@@ -14,7 +14,7 @@ def writematerials(inp: et.Element, path: str) -> list:
     for image in inp.findall('library_images/image'):
         tex[image.attrib['id']] = image.find('init_from').text
     for mat in inp.findall('library_materials/material'):
-        with open(os.path.join(path, mat.attrib['id']) + '.slmtl', 'wb+') as out:
+        with open(os.path.join(path, mat.attrib['id']) + '.qlmtl', 'wb+') as out:
             print(out.name)
             effect = inp.find('library_effects/effect[@id="' + mat.find('instance_effect').attrib['url'].split('#')[1] + '"]')
             inputs = {}
@@ -136,7 +136,7 @@ def writeobjs(inp: et.Element, path: str) -> None:
     geoms = inp.findall('library_geometries/geometry')
     # parse the scene section (since it's the only place where the material is specified)
     for node in inp.findall('library_visual_scenes/visual_scene/node'): # iterate through all nodes in the first scene (i'm going to ignore having multiple scenes because just why) 
-        with open(os.path.join(path, node.attrib['id']) + '.slmdl', 'wb+') as m: 
+        with open(os.path.join(path, node.attrib['id']) + '.qlmdl', 'wb+') as m: 
             try:
                 geom = inp.find('library_geometries/geometry[@id="' + node.find('instance_geometry').attrib['url'].split('#')[1] + '"]') # get the geometry tag
             except:
@@ -234,7 +234,7 @@ def add_args(parser: argparse.ArgumentParser):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='DAE model parser for SL engine')
+    parser = argparse.ArgumentParser(description='DAE model parser for quicklime engine')
     add_args(parser)
     args = parser.parse_args()
     process(args)
