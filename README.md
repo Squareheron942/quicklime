@@ -29,7 +29,7 @@ Some stuff is not yet implemented (FixedUpdate() for example as well as just mul
 
 #### Material source code
 To create a material, copy one of the examples and edit the code as you need.
-You can store the data to be passed to the constructor in a .slmtl file, which needs to be placed in the same location as the .slmdl model and said model needs to reference it by name.
+You can store the data to be passed to the constructor in a .qlmtl file, which needs to be placed in the same location as the .qlmdl model and said model needs to reference it by name.
 Eventually I might make an app for this (currently in the works but not done). Then, you can get back those parameters however you choose, since the model loader will just give you a file pointer to whatever file is specified in the model. 
 Again, see the example materials to see how to read a file.
 
@@ -38,7 +38,7 @@ These contain the data to be input to the shader code. This will vary depending 
 
 ### Models
 
-Models can be imported by adding the collada model to the asset folder, then when building, a script will generate a .slmdl model and .slmtl material. You can then optionally move those models back to the original folder and remove the collada model (so that the models aren't regenerated every build), and you can edit the material file to select what shader is being used. 
+Models can be imported by adding the collada model to the asset folder, then when building, a script will generate a .qlmdl model and .qlmtl material. You can then optionally move those models back to the original folder and remove the collada model (so that the models aren't regenerated every build), and you can edit the material file to select what shader is being used. 
 
 ### Objects
 
