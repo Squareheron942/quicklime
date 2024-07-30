@@ -35,46 +35,28 @@ unique_ptr_aligned<T> aligned_uptr(size_t align, size_t size) {
 	);
 }
 
-auto readFileAligned(const std::string& filename)
+auto readFile(const std::string& filename)
 {
-	std::ifstream in("romfs:/scenes/" + filename + ".scene", std::ios::in | std::ios::binary);
+	std::ifstream in(("romfs:/scenes/" + filename + ".scene"), std::ios::in | std::ios::binary);
+	Console::log(("romfs:/scenes/" + filename + ".scene").c_str());
 	if (in)
 	{ // only works with c++11 or higher, lower versions don't guarantee contiguous string data
 		unsigned long size;
 		in.seekg(0, std::ios::end);
 		size = in.tellg();
-		auto c = aligned_uptr<char>(0x1000, size), d = aligned_uptr<char>(0x1000, size);
+		auto c = aligned_uptr<char>(0x1000, size);
 		in.seekg(0, std::ios::beg);
 		in.read(c.get(), size);
 		in.close();
-		char* pc = c.get(), *pd = d.get();
-		do { while (std::isspace(*pc)) pc++; } while ((*pd++ = *pc++));
+		char* pc = c.get(), *pd = pc;
+		do { while (std::isspace(*pc)) pc++; } while ((*pd++ = *pc++)); // remove whitespace
 		Console::log("loaded scene file, length %lu", size);
-		return d;
+		return c;
 	}
 	auto r = aligned_uptr<char>(alignof(char), 0);
 	r.reset(nullptr);
     return r;
 }
-
-std::string readFile(const std::string& filename)
-{
-	std::ifstream in(filename, std::ios::in | std::ios::binary);
-	if (in)
-	{ // only works with c++11 or higher, lower versions don't guarantee contiguous string data
-		std::string contents;
-		in.seekg(0, std::ios::end);
-		contents.resize(in.tellg());
-		in.seekg(0, std::ios::beg);
-		in.read(&contents[0], contents.size());
-		in.close();
-		return contents;
-	}
-    return "";
-}
-
-
-
 
 struct sceneLoadThreadParams {
 	std::unique_ptr<Scene> s; // scene pointer we are writing to
@@ -145,7 +127,7 @@ AsyncSceneLoadOperation SceneLoader::loadAsync(std::string name) {
     // needs to be a raw pointer otherwise I would make it a smart pointer
     sceneLoadThreadParams* p = new sceneLoadThreadParams {
     	std::make_unique<Scene>(name),
-        ("romfs:/scenes/" + name + ".scene"),
+        name,
         0.f,
         false,
         true,
@@ -174,8 +156,8 @@ bool SceneLoader::load(std::string name) {
     ASSERT(textstr != nullptr, "Invalid scene file");
     std::string_view text{textstr.get()};
     Console::success("read scene file");
-
     std::string_view t{text};
+    
     // parse the whole object tree recursively
     parseObject(out, t);
     out->root = &out->objects.back();
