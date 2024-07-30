@@ -23,13 +23,13 @@ LightLock Console::_l;
 unsigned int getnumlines(char* text) { 
 	unsigned int i = 0; 
 	strtok(text, "\n");
-	do { ++i; } while(strtok(NULL, "\n"));
+	do ++i; while(strtok(NULL, "\n"));
 	return i;
 }	
 
 void Console::print_console_lines() {
     for (int i = 0; i < CONSOLE_NUM_LINES - 1; i++)
-        printf("\e[s\e[%u;0H\e[2K%s\e[u", CONSOLE_TOP + i, textbuf[i]);
+        printf("\e[%u;1H%s\e[K", CONSOLE_TOP + i, textbuf[i]);
 }
 
 void Console::init() {
@@ -77,15 +77,14 @@ void Console::nextMenu() {
 void Console::basic_log(CONSOLE_LOG_LEVEL loglevel, const char* text, va_list args) {
     #if CONSOLE
     LightLock_Guard l(_l);
-    const char* endcap = "\e[0m";
-    static char base[40 + 15 + 1] = {"\e[2K\e[1;3_m"}; // same between all so might as well leave it that way
+    // same between all so might as well leave it that way
+    // 40 char space in the middle is where the actual text goes
+    char base[7 + 40 + 4 + 1] = {"\e[1;3_m                                        \e[0m"};
 
-    base[9] = loglevel; // silly hack that works bc the loglevel enum
+    base[5] = loglevel; // silly hack that works bc the loglevel enum
     
-    vsnprintf(base + 11, 40, text, args); // add text after formatting
-    unsigned int i = 0;
-    while (base[++i] && i <= 40); // advance to null byte, stop at theoretical max
-    strcpy(base + i, endcap); // safe because it is constant
+    base[vsnprintf(base + 7, 40, text, args) + 7] = ' '; // add text after formatting
+    
 
     if (line >= CONSOLE_NUM_LINES - 2)
     {
@@ -96,7 +95,7 @@ void Console::basic_log(CONSOLE_LOG_LEVEL loglevel, const char* text, va_list ar
     } else
     {
     	strncpy(textbuf[line], base, 55);
-        if (menu == MENU_CONSOLE) printf("\e[s\e[%u;1H%s\e[u", CONSOLE_TOP + line, textbuf[line]);
+        if (menu == MENU_CONSOLE) printf("\e[%u;1H%s\e[K", CONSOLE_TOP + line, textbuf[line]);
         line++;
     }
     console_needs_updating = true;
