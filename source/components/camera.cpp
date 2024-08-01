@@ -62,9 +62,7 @@ namespace {
     };
 }
 
-Camera::~Camera() {
-	Console::log("Camera destructor");
-}
+Camera::~Camera() {}
 
 Camera::Camera(GameObject& parent, const void* args) {
     cam_args c;

@@ -18,6 +18,8 @@ class Scene {
     
     friend class SceneLoader;
     friend class Camera;
+    friend class AudioSource;
+    friend class AudioManager;
     friend void sceneLoadThread(void* params);
     
     void act_on_objects(void(GameObject::*action)()) { for (GameObject& child : objects) (child.*action)(); } 

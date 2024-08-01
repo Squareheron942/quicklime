@@ -14,6 +14,7 @@ class Script;
 class GameObject {
 	friend class Camera;
     friend class ComponentManager;
+    friend class AudioSource;
     
     GameObject* r_search(std::string name);
     LightLock _l, _componentL, _scriptL;

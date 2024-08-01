@@ -19,6 +19,7 @@ class SceneManager {
     static void setScene(std::unique_ptr<Scene>&& s);
     friend class SceneLoader;
     friend class Console; // given access to read scene name
+    friend class AudioManager;
     friend void sceneLoadThread(void* params);
 	public:
 	static void init();
