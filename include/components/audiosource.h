@@ -1,7 +1,7 @@
 #pragma once
 
-#include <array>
 #include <cstdlib>
+#include <string>
 #include "componentmanager.h"
 #include "audiomanager.h"
 
@@ -14,16 +14,19 @@ enum AudioRolloff {
 class GameObject;
 
 class AudioSource {
-	friend class Scene; // allow scene to call update
-	friend class AudioManager; // allow audio manager to access/modify info
-	GameObject* parent;
-	ndsp_channel voiceID = -1; // 0 to 24
-	AudioRolloff rolloffMode;
-	float distMin, distMax;
 	static const float panVolLeft[256], panVolRight[256];
 	static float volRollOffLog(const float dist, const float min, const float max);
 	static float volRollOffLin(const float dist, const float min, const float max);
+	friend class Scene; // allow scene to call update
+	friend class AudioManager; // allow audio manager to access/modify info
 	void update();
+	GameObject* parent;
+	ndsp_channel voiceID = -1; // 0 to 24
+	channel_prio priority;
+	AudioRolloff rolloffMode;
+	float distMin, distMax;
+	std::string file;
+	bool playing, playOnWake;
 	public:
 	bool paused, mute;
 	float volume, stereoPan;

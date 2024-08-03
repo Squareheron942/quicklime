@@ -8,23 +8,40 @@
 #include "transform.h"
 #include "scene.h"
 #include "audiolistener.h"
+#include "audiomanager.h"
 #include "audiofilter.h"
 #include "sl_assert.h"
 
 struct AudioSourceParams {
+	AudioRolloff rolloffMode;
 	bool mute, playOnWake, loop;
-	char priority;
-	float volume, pitch, stereoPan;
-	// file name (not included since string so variable size)
+	channel_prio priority;
+	float distMin, distMax, volume, stereoPan;
+	char fname; // only here to signal the start of the file name
 };
 
 AudioSource::AudioSource(GameObject& obj, const void* data) {
-	
+	parent = &obj;
+	AudioSourceParams p;
+	if (data) p = *(AudioSourceParams*)data;
+	mute = p.mute;
+	priority = p.priority;
+	rolloffMode = p.rolloffMode;
+	distMin = p.distMin,;
+	distMax = p.distMax;
+	volume = p.volume;
+	stereoPan = p.stereoPan;
+	paused = false;
+	playing = false;
+	file = &p.fname;
 }
 
 void AudioSource::update() {
+	if (voiceID < 0 || voiceID > 24) return; // invalid channel
 	// pause channel if asked
 	ndspChnSetPaused(voiceID, paused);
+
+	if (!playing) return;
 	
 	// set mix based on distance, muting, volume, etc
 	float lvol, rvol;
@@ -60,10 +77,11 @@ void AudioSource::update() {
 			break;
 		}
 		std::clamp(stereoPan, -1.f, 1.f);
-		unsigned char panidx = (unsigned char)((0.5f * stereoPan + 0.5f) * 255);
+		unsigned char panidx = (uint8_t)((0.5f * stereoPan + 0.5f) * 255);
 		lvol = volume * panVolLeft[panidx] * distatten;
 		rvol = volume * panVolRight[panidx] * distatten;
 	}
+	
 	std::clamp(lvol, 0.f, 1.f);
 	std::clamp(rvol, 0.f, 1.f);
 	
@@ -75,8 +93,16 @@ void AudioSource::update() {
 		filter->apply(voiceID);
 }
 
-void AudioSource::Play() {};
-void AudioSource::Stop() {};
+void AudioSource::Play() {
+	Stop(); // end anything still playing
+	voiceID = AudioManager::requestChannel(priority);
+	playing = true;
+	// start audio thread
+};
+void AudioSource::Stop() {
+	playing = false;
+	// stop audio thread
+};
 
 
 // log_10 falloff

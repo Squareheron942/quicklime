@@ -4,17 +4,20 @@
 #include "audiomanager.h"
 
 enum FilterType {
-	HighPass,
-	LowPass,
-	BandPass,
-	Notch
+	FILTER_HIGHPASS,
+	FILTER_LOWPASS,
+	FILTER_BANDPASS,
+	FILTER_NOTCH
 };
 
 class GameObject;
+
 class AudioFilter {
+	GameObject* p;
 	FilterType t;
 	bool onListener;
 	public:
 	AudioFilter(GameObject& obj, const void* params);
-	void apply(ndsp_channel channel = -1); // applies to specific channel
+	void apply(ndsp_channel channel = -1);
+	void disable(ndsp_channel channel = -1);
 };
