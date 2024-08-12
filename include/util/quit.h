@@ -1,3 +1,5 @@
 #pragma once
 
-static bool _quit = false;
+namespace ql {
+	void QuitApplication();
+}

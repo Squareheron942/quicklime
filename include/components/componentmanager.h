@@ -3,10 +3,9 @@
 #include <unordered_map>
 #include <utility>
 #include "script.h"
-#include "entt.hpp"
 #include <string>
 #include <3ds.h>
-#include <entt.hpp>
+#include <entt/entt.hpp>
 #include "gameobject.h"
 #include <type_traits>
 

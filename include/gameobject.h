@@ -1,8 +1,8 @@
 #pragma once
 
-#include <entt.hpp>
-#include "console.h"
-#include "threads.h"
+#include <entt/entt.hpp>
+#include "util/console.h"
+#include "util/threads.h"
 #include <vector>
 #include <algorithm>
 #include <string>

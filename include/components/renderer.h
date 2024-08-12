@@ -1,8 +1,8 @@
 #pragma once
 
 #include <variant>
-#include "dummyrenderer.h"
-#include "meshrenderer.h"
+#include "util/dummyrenderer.h"
+#include "components/meshrenderer.h"
 
 class TextRenderer;
 class GameObject;

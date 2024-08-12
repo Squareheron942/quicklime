@@ -12,9 +12,7 @@
 //TODO needs to be basically completely rewritten/remade
 class SceneManager {
 	SceneManager() = delete;
-	static LightLock lock;
 	static bool loadSceneNextFrame;
-	static std::unique_ptr<Scene> currentScene, sceneToBeLoaded;
 	static void setScene(std::unique_ptr<Scene>& s);
     static void setScene(std::unique_ptr<Scene>&& s);
     friend class SceneLoader;
@@ -22,6 +20,8 @@ class SceneManager {
     friend class AudioManager;
     friend void sceneLoadThread(void* params);
 	public:
+	static LightLock lock;
+	static std::unique_ptr<Scene> currentScene, sceneToBeLoaded;
 	static void init();
 	static void update();
 	static void draw();

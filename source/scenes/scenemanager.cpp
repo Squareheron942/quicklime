@@ -22,8 +22,9 @@ void SceneManager::setScene(std::unique_ptr<Scene>& s) {
 }
 
 void SceneManager::setScene(std::unique_ptr<Scene> &&s) {
-	LightLock_Guard l(lock);
 	if (!s)	return; // make sure it is a real scene (non null)
+	
+	LightLock_Guard l(lock);
     sceneToBeLoaded = std::move(s);
     loadSceneNextFrame = true;
 }

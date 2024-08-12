@@ -1,8 +1,8 @@
 #pragma once
 
-#include "threads.h"
-#include "mesh.h"
-#include "shader.h"
+#include "util/threads.h"
+#include "components/mesh.h"
+#include "shaders/shader.h"
 #include <memory>
 
 class GameObject;
