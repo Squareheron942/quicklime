@@ -1,8 +1,8 @@
 #pragma once
 
-#include "citro3d.h"
+#include <citro3d.h>
 #include <string>
-#include "console.h"
+#include <util/console.h>
 
 class Texture {
     public:

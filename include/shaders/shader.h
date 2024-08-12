@@ -1,12 +1,12 @@
 #pragma once
 
-#include "color.h"
-#include "citro3d.h"
+#include "shaders/color.h"
+#include <citro3d.h>
 #include <stdio.h>
 #include <string>
 #include <memory>
 #include <optional>
-#include "texture.h"
+#include "shaders/texture.h"
 
 #define float3torgb32(color) ((((int)(color[0] * 255) & 0xFF) << 24) | (((int)(color[1] * 255) & 0xFF) << 16) | (((int)(color[2] * 255) & 0xFF) << 8) | (0xFF << 0))
 

@@ -3,7 +3,7 @@
 #include <citro3d.h>
 #include <memory>
 #include <vector>
-#include "slmdlloader.h"
+#include "util/slmdlloader.h"
 
 class GameObject;
 
