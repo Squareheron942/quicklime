@@ -19,7 +19,7 @@ TARGET		:=	$(shell basename $(CURDIR))
 BUILD		:=	build
 SOURCES		:=  source $(TEMPSOURCE) source/components source/scenes source/audio source/util source/shaders source/physics
 DATA		:=	data
-INCLUDES	:=	include entt $(TEMPINCLUDE) include/components include/audio include/scenes include/util include/shaders include/physics include/entt
+INCLUDES	:=	include $(TEMPINCLUDE) include/components include/audio include/scenes include/util include/shaders include/physics include/entt
 
 #---------------------------------------------------------------------------------
 # options for code generation

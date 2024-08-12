@@ -4,8 +4,6 @@
 
 #include "physics.h"
 #include "sceneloader.h"
-// #include "scripts.inc"
-// #include "shaders.inc"
 
 #include "controls.h"
 #include "defines.h"
@@ -14,8 +12,7 @@
 #include "componentmanager.h"
 #include "scenemanager.h"
 
-#include "shader.h"
-#include "quit.h"
+#include "shared.h"
 #include "physics.h"
 #include "scenename.h"
 
