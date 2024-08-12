@@ -23,7 +23,7 @@ class mesh {
     float radius;
     std::vector<LOD_info> LOD_levels;
     public:
-    const void* vertices() { return _vertices; }
+    const void* vertices() const { return _vertices; }
     mesh(void* vertices, const mdlLoader::mdl_header& hdr);
     ~mesh();
 };

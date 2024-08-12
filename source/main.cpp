@@ -2,6 +2,7 @@
 #include <citro3d.h>
 #include <citro2d.h>
 
+#include "physics.h"
 #include "sceneloader.h"
 #include "scripts.inc"
 #include "shaders.inc"
@@ -15,10 +16,12 @@
 
 #include "shader.h"
 #include "quit.h"
+#include "physics.h"
 
 void init();
 void update();
 void draw();
+void exit();
 
 int main() {
 	init();
@@ -26,6 +29,7 @@ int main() {
 		update();
 		draw();
 	}
+	exit();
 	return 0;
 }
 
@@ -44,9 +48,18 @@ void init() {
 	ndspInit();
 	romfsInit();
 	osSetSpeedupEnable(true);
+	ql::physicsInit(21887825); // 20ms tick speed
+	// ql::physicsInit(54719563); // 50ms tick speed
 
-	SceneLoader::load("test_loading_perf");
+	SceneLoader::load("test_physics");
+}
 
+void exit() {
+	ql::physicsExit();
+	gfxExit();
+	C3D_Fini();
+	ndspExit();
+	romfsExit();
 }
 
 void update() {

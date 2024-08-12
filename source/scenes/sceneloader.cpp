@@ -18,10 +18,7 @@
 #include "exceptions.h"
 #include "sl_assert.h"
 #include <stdlib.h>
-
-
-#define SCENELOADER_THREAD_STACK_SZ (32 * 1024)    // 32kB stack for scene loader thread
-#define THREAD_YIELD svcSleepThread(0)
+#include "defines.h"
 
 // helper functions for the loader
 
@@ -38,7 +35,6 @@ unique_ptr_aligned<T> aligned_uptr(size_t align, size_t size) {
 auto readFile(const std::string& filename)
 {
 	std::ifstream in(("romfs:/scenes/" + filename + ".scene"), std::ios::in | std::ios::binary);
-	Console::log(("romfs:/scenes/" + filename + ".scene").c_str());
 	if (in)
 	{ // only works with c++11 or higher, lower versions don't guarantee contiguous string data
 		unsigned long size;
@@ -146,7 +142,7 @@ AsyncSceneLoadOperation SceneLoader::loadAsync(std::string name) {
     // Start the thread
     threadCreate(sceneLoadThread, p, SCENELOADER_THREAD_STACK_SZ, priority, -1, true);
 
-    return AsyncSceneLoadOperation{&p->progress, &p->isdone, &p->event};
+    return AsyncSceneLoadOperation{&p->progress, &p->isdone, &p->event}; // changed to shared/weak ptr for safety
 }
 
 bool SceneLoader::load(std::string name) {
