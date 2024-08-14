@@ -1,15 +1,15 @@
 /*
  * Fast, threaded Opus audio streaming example using libopusfile
  * for libctru on Nintendo 3DS
- * 
+ *
  *     Originally written by Lauren Kelly (thejsa) with lots of help
  * from mtheall, who re-architected the decoding and buffer logic to be
  * much more efficient as well as overall making the code half decent :)
- * 
+ *
  *     Thanks also to David Gow for his example code, which is in the
  * public domain & explains in excellent detail how to use libopusfile:
  * https://davidgow.net/hacks/opusal.html
- * 
+ *
  * Last update: 2020-05-16
  */
 
@@ -113,7 +113,7 @@ bool fillBuffer(OggOpusFile *opusFile_, ndspWaveBuf *waveBuf_) {
                    opusStrError(samples));
             break;
         }
-        
+
         totalSamples += samples;
     }
 
@@ -149,7 +149,7 @@ void audioCallback(void *const nul_) {
     if(s_quit) { // Quit flag
         return;
     }
-    
+
     LightEvent_Signal(&s_event);
 }
 
@@ -165,7 +165,7 @@ void audioThread(void *const opusFile_) {
             if(s_waveBufs[i].status != NDSP_WBUF_DONE) {
                 continue;
             }
-            
+
             if(!fillBuffer(opusFile, &s_waveBufs[i])) {   // Playback complete
                 return;
             }
@@ -183,7 +183,7 @@ int main(int argc, char* argv[]) {
     romfsInit();
     ndspInit();
     gfxInitDefault();
-    
+
     consoleInit(GFX_TOP, NULL);
 
     // Enable N3DS 804MHz operation, where available

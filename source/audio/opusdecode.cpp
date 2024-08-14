@@ -1,5 +1,3 @@
 #include "opusdecode.h"
 
-void opusdecode() {
-	
-}
+void opusdecode() {}

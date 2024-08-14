@@ -1,7 +1,7 @@
 #pragma once
 
-#include "componentmanager.h"
 #include "audiomanager.h"
+#include "componentmanager.h"
 
 enum FilterType {
 	FILTER_HIGHPASS,
@@ -13,11 +13,12 @@ enum FilterType {
 class GameObject;
 
 class AudioFilter {
-	GameObject* p;
+	GameObject *p;
 	FilterType t;
 	bool onListener;
-	public:
-	AudioFilter(GameObject& obj, const void* params);
+
+  public:
+	AudioFilter(GameObject &owner, const void *data);
 	void apply(ndsp_channel channel = -1);
 	void disable(ndsp_channel channel = -1);
 };

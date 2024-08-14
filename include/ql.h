@@ -2,8 +2,8 @@
 
 // 3ds stuff
 #include <3ds.h>
-#include <citro3d.h>
 #include <citro2d.h>
+#include <citro3d.h>
 
 // scenes
 #include "scenes/sceneloader.h"

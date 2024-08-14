@@ -1,9 +1,9 @@
 #pragma once
 
-#include <stdio.h>
 #include <3ds.h>
-#include <stdarg.h>
 #include <malloc.h>
+#include <stdarg.h>
+#include <stdio.h>
 
 #define FPS_X 0
 #define FPS_Y 2
@@ -31,36 +31,35 @@
 
 class Console {
 	Console() = delete;
-	enum DEBUG_MENU {
-        MENU_STATS,
-        MENU_CONSOLE,
-        MENU_SETTINGS,
-        MENU_PROFILING
-    };
+	enum DEBUG_MENU { MENU_STATS, MENU_CONSOLE, MENU_SETTINGS, MENU_PROFILING };
 
-    enum CONSOLE_LOG_LEVEL {
-        LOG_LEVEL_LOW = '7',
-        LOG_LEVEL_WARN = '3',
-        LOG_LEVEL_ERROR = '1',
-        LOG_LEVEL_SUCCESS = '2'
-    };
+	enum CONSOLE_LOG_LEVEL {
+		LOG_LEVEL_LOW	  = '7',
+		LOG_LEVEL_WARN	  = '3',
+		LOG_LEVEL_ERROR	  = '1',
+		LOG_LEVEL_SUCCESS = '2'
+	};
 
-    static void print_console_lines();
+	static void print_console_lines();
 
-    static int menu, line, scrolloffset;
-    static bool console_needs_updating;
-    static LightLock _l;
+	static int menu, line, scrolloffset;
+	static bool console_needs_updating;
+	static LightLock _l;
 
-    static void basic_log(CONSOLE_LOG_LEVEL loglevel, const char* text, va_list args);
-    public:
-    static char textbuf[CONSOLE_NUM_LINES][40 + 15 + 1]; // Stores a buffer containing all of the text previously inputted
+	static void basic_log(CONSOLE_LOG_LEVEL loglevel, const char *text,
+						  va_list args);
 
-    static void nextMenu();
-    static void update();
-    static void init();
+  public:
+	static char textbuf[CONSOLE_NUM_LINES]
+					   [40 + 15 + 1]; // Stores a buffer containing all of the
+									  // text previously inputted
 
-    static void log(const char* text, ...);
-    static void warn(const char* text, ...);
-    static void error(const char* text, ...);
-    static void success(const char* text, ...);
+	static void nextMenu();
+	static void update();
+	static void init();
+
+	static void log(const char *text, ...);
+	static void warn(const char *text, ...);
+	static void error(const char *text, ...);
+	static void success(const char *text, ...);
 };

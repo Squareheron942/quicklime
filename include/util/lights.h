@@ -7,9 +7,9 @@
 
 class Light;
 namespace lights {
-    extern C3D_LightEnv lightenv;
-    extern C3D_Light lights[HW_MAX_LIGHTS];
-    extern Light *active[HW_MAX_LIGHTS];
-    extern unsigned char n;
-    extern bool lightenvneedsupdating;
-}
+	extern C3D_LightEnv lightenv;
+	extern C3D_Light lights[HW_MAX_LIGHTS];
+	extern Light *active[HW_MAX_LIGHTS];
+	extern unsigned char n;
+	extern bool lightenvneedsupdating;
+} // namespace lights
