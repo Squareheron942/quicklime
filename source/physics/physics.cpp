@@ -1,7 +1,4 @@
-#include "physics/physics.h"
-#include "3ds/os.h"
-#include "3ds/svc.h"
-#include "config.h"
+#include "physics.h"
 #include "console.h"
 #include "defines.h"
 #include "scenemanager.h"

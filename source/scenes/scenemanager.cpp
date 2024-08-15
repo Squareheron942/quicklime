@@ -1,6 +1,6 @@
 #include "scenemanager.h"
 // #include "camera.h"
-#include "3ds/synchronization.h"
+#include "console.h"
 #include "threads.h"
 #include <memory>
 

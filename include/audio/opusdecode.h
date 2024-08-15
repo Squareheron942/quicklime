@@ -1,3 +1,5 @@
 #pragma once
 
-void opusdecode();
+namespace ql {
+	void opusdecode(void *);
+}

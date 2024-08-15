@@ -1,4 +1,5 @@
 #include "audiofilter.h"
+#include "componentmanager.h"
 
 void applyFilter(FilterType t, ndsp_channel c, bool biquad) {
 	if (biquad)

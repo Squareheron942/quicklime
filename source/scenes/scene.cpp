@@ -1,5 +1,7 @@
 #include "scene.h"
 #include "camera.h"
+#include "console.h"
+#include "audiosource.h"
 
 Scene::Scene(std::string name) : _name(name), name(_name) {
 	LightLock_Init(&lock);
@@ -30,7 +32,8 @@ void Scene::update() {
 										 // (propagates from root)
 
 	// whatever other per frame logic stuff will get called here
-
+	// reg.view<AudioSource>().each([](auto &as) { as.update(); });
+	
 	// call lateupdate() on every gameobject (propagates from root).
 	// Used to ensure stuff like cameras move only when everything else is done
 	// moving

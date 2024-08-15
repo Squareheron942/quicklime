@@ -1,1 +1,0 @@
-$DEVKITARM/bin/arm-none-eabi-gdb Lime.elf

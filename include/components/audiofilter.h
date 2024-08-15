@@ -1,7 +1,6 @@
 #pragma once
 
-#include "audiomanager.h"
-#include "componentmanager.h"
+#include "audio/audiomanager.h"
 
 enum FilterType {
 	FILTER_HIGHPASS,

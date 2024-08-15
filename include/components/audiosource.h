@@ -1,7 +1,6 @@
 #pragma once
 
-#include "audiomanager.h"
-#include "componentmanager.h"
+#include "audio/audiomanager.h"
 #include <cstdlib>
 #include <string>
 
@@ -35,5 +34,6 @@ class AudioSource {
 	float volume, stereoPan;
 	AudioSource(GameObject &obj, const void *params);
 	void Play();
+	void Play(const char* clip);
 	void Stop();
 };

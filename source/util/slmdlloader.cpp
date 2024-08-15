@@ -30,7 +30,7 @@ namespace {
 namespace mdlLoader {
 	std::unique_ptr<shader> parseMat(const std::string file) {
 		FILE *f = fopen(file.c_str(), "r");
-		ASSERT(f != nullptr, "Material file not found")
+		ASSERT(f != nullptr, "Material file not found");
 		char m_name[255] = {};
 		freadstr(f, m_name, 254); // get name of material from here
 		return MaterialManager::makeMaterial(m_name, f);

@@ -5,6 +5,7 @@
 #include "physics.h"
 #include "sceneloader.h"
 
+#include "audiomanager.h"
 #include "componentmanager.h"
 #include "console.h"
 #include "controls.h"
@@ -25,12 +26,13 @@ namespace {
 		consoleInit(GFX_BOTTOM, NULL);
 #endif
 
-		controls::init();
-		Console::init();
-		ComponentManager::init();
 		ndspInit();
 		romfsInit();
 		osSetSpeedupEnable(true);
+		controls::init();
+		Console::init();
+		ComponentManager::init();
+		AudioManager::init();
 		ql::physicsInit(21887825); // 20ms tick speed
 		// ql::physicsInit(54719563); // 50ms tick speed
 

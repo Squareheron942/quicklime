@@ -89,12 +89,6 @@ void audioExit(void) {
 // Main audio decoding logic
 // This function pulls and decodes audio samples from opusFile_ to fill waveBuf_
 bool fillBuffer(OggOpusFile *opusFile_, ndspWaveBuf *waveBuf_) {
-    #ifdef DEBUG
-    // Setup timer for performance stats
-    TickCounter timer;
-    osTickCounterStart(&timer);
-    #endif  // DEBUG
-
     // Decode samples until our waveBuf is full
     int totalSamples = 0;
     while(totalSamples < SAMPLES_PER_BUF) {
@@ -128,13 +122,6 @@ bool fillBuffer(OggOpusFile *opusFile_, ndspWaveBuf *waveBuf_) {
     ndspChnWaveBufAdd(0, waveBuf_);
     DSP_FlushDataCache(waveBuf_->data_pcm16,
         totalSamples * CHANNELS_PER_SAMPLE * sizeof(int16_t));
-
-    #ifdef DEBUG
-    // Print timing info
-    osTickCounterUpdate(&timer);
-    printf("fillBuffer %lfms in %lfms\n", totalSamples * 1000.0 / SAMPLE_RATE,
-           osTickCounterRead(&timer));
-    #endif  // DEBUG
 
     return true;
 }
@@ -191,19 +178,6 @@ int main(int argc, char* argv[]) {
 
     // Setup LightEvent for synchronisation of audioThread
     LightEvent_Init(&s_event, RESET_ONESHOT);
-
-    printf("Opus audio streaming example\n"
-           "thejsa and mtheall, May 2020\n"
-           "Press START to exit\n"
-           "\n"
-           "Using %d waveBufs, each of length %d bytes\n"
-           "    (%d samples; %lf ms @ %d Hz)\n"
-           "\n"
-           "Loading audio data from path: %s\n"
-           "\n",
-           ARRAY_SIZE(s_waveBufs), WAVEBUF_SIZE, SAMPLES_PER_BUF,
-           SAMPLES_PER_BUF * 1000.0 / SAMPLE_RATE, SAMPLE_RATE,
-           PATH);
 
     // Open the Opus audio file
     int error = 0;
