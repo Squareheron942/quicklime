@@ -1,28 +1,29 @@
 #include "audiomanager.h"
+#include "3ds/types.h"
 #include "audiosource.h"
 #include "console.h"
 #include "defines.h"
-#include "opusdecode.h"
+#include "decoders.h"
 #include "scenemanager.h"
 #include "sl_assert.h"
 #include "threads.h"
 #include <3ds.h>
+#include <cstdint>
 #include <cstdio>
-
-static bool channelInUse[NDSP_NUM_CHANNELS] = {0};
-static channel_prio channelPrio[NDSP_NUM_CHANNELS];
-static Thread audioThreads[NDSP_NUM_CHANNELS];
 
 bool AudioManager::quitThread[NDSP_NUM_CHANNELS]  = {};
 LightEvent AudioManager::event[NDSP_NUM_CHANNELS] = {};
-
 LightLock AudioManager::l						  = {1};
-
-void callbackFunc(void *lock) {
-	(void)lock;
-	for (auto &ev : AudioManager::event)
-		LightEvent_Signal(&ev);
-};
+namespace {
+	void callbackFunc(void *lock) {
+		(void)lock;
+		for (auto &ev : AudioManager::event)
+			LightEvent_Signal(&ev);
+	};
+	static bool channelInUse[NDSP_NUM_CHANNELS] = {0};
+	static channel_prio channelPrio[NDSP_NUM_CHANNELS];
+	static Thread audioThreads[NDSP_NUM_CHANNELS];
+}
 
 void AudioManager::init() {
 	LightLock_Init(&l);
@@ -36,11 +37,10 @@ ndsp_channel AudioManager::requestChannel(channel_prio priority,
 	LightLock_Guard lock(l);
 	channel_prio lowestprio = 0;
 	ndsp_channel id			= -1;
-	for (unsigned char i = 0; i < NDSP_NUM_CHANNELS; i++) {
+	for (ndsp_channel i = 0; i < NDSP_NUM_CHANNELS; i++) {
 		if (!channelInUse[i]) { // free channel
-			channelInUse[i] = true;
-			channelPrio[i]	= priority;
 			id				= i;
+			Console::log("Free channel found");
 			break;
 		}
 		if (channelPrio[i] <= lowestprio) {
@@ -57,16 +57,19 @@ ndsp_channel AudioManager::requestChannel(channel_prio priority,
 		if (a.voiceID == id)
 			a.Stop();
 	});
+
+	quitThread[id]		 = false;
 	channelInUse[id]	 = true;
 	channelPrio[id]		 = priority;
-	quitThread[id]		 = false;
-	
+
 	decodeparams p		 = {id, file};
 	audiothreadfunc_t fn = nullptr;
 	std::string extension =
 		std::string{file}.substr(std::string{file}.find_last_of(".") + 1);
 	if (extension == "opus") {
 		fn = ql::opusdecode;
+	} else if (extension == "ogg") {
+		fn = ql::vorbisdecode;
 	}
 
 	ASSERT(fn != nullptr, "Invalid audio file type");
@@ -77,8 +80,8 @@ ndsp_channel AudioManager::requestChannel(channel_prio priority,
 	threadpriority = threadpriority < 0x18 ? 0x18 : threadpriority;
 	threadpriority = threadpriority > 0x3F ? 0x3F : threadpriority;
 	audioThreads[id] =
-		threadCreate(fn, &p, AUDIO_THREAD_STACK_SZ, threadpriority, -1, true);
-	
+		threadCreate(fn, &p, AUDIO_THREAD_STACK_SZ, threadpriority, -1, false);
+	Console::log("Playing using channel %d", id);
 	return id;
 }
 
@@ -87,6 +90,9 @@ void AudioManager::freeChannel(ndsp_channel id) {
 		return;
 	if (channelInUse[id]) {
 		quitThread[id] = true;
+		LightEvent_Signal(&event[id]);
+		threadJoin(audioThreads[id], UINT64_MAX);
+		threadFree(audioThreads[id]);
 	}
 	channelInUse[id] = false;
 	channelPrio[id]	 = 0;

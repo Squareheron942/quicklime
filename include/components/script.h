@@ -1,18 +1,15 @@
 #pragma once
 
+#include "gameobject.h"
 #include <entt/entt.hpp>
 #include <string>
 
-class GameObject;
-
 class Script {
-	entt::registry &parentComponents;
-	entt::entity parentID;
 
   protected:
 	GameObject *owner;
 	template <class T> inline T *GetComponent() {
-		return parentComponents.try_get<T>(parentID);
+		return owner->reg.try_get<T>(owner->id);
 	}
 
 	GameObject *find(std::string object);

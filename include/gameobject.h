@@ -15,20 +15,23 @@ class GameObject {
 	friend class Camera;
 	friend class ComponentManager;
 	friend class AudioSource;
+	friend class Script;
+	friend class SceneManager;
+	friend class SceneLoader;
 
 	GameObject *r_search(std::string name);
-	LightLock _l, _componentL, _scriptL;
+	LightLock _scriptL;
 	Scene &s;
-
-  public:
 	std::vector<GameObject *> children; // non owning, only viewer
-	std::vector<std::unique_ptr<Script>>
-		scripts; // cannot be component since you can't have more than 1 object
-				 // of type per entity
+	// cannot be component since you can't have more than 1 object of type per
+	// entity
+	std::vector<std::unique_ptr<Script>> scripts;
 	GameObject *parent = NULL;
 	entt::registry &reg;
 	entt::entity id;
-	std::string name; // saved in scene file
+	const std::string name; // saved in scene file
+
+  public:
 	GameObject(std::string name, Scene &s);
 	GameObject(GameObject &&other);
 
@@ -51,7 +54,6 @@ class GameObject {
 	 */
 	template <typename T, typename... Args>
 	inline void addComponent(Args &&...args) {
-		LightLock_Guard l(_componentL);
 		reg.emplace_or_replace<T>(id, std::forward<Args>(args)...);
 	}
 
@@ -62,7 +64,6 @@ class GameObject {
 	 * @return T* Pointer to the component instance
 	 */
 	template <typename T> inline T *getComponent() {
-		LightLock_Guard l(_componentL);
 		return reg.try_get<T>(id);
 	}
 
@@ -72,7 +73,6 @@ class GameObject {
 	 * @param object Reference to GameObject to add as child
 	 */
 	inline void addChild(GameObject &object) {
-		LightLock_Guard l(_l);
 		object.setParent(*this);
 		children.push_back(&object);
 	}
@@ -83,7 +83,6 @@ class GameObject {
 	 * @param object GameObject to remove
 	 */
 	inline void removeChild(GameObject &object) {
-		LightLock_Guard l(_l);
 		children.erase(std::remove(children.begin(), children.end(), &object),
 					   children.end());
 		// children.remove(&object);
@@ -96,7 +95,6 @@ class GameObject {
 	 * @param object GameObject to remove
 	 */
 	inline void removeChild(GameObject *object) {
-		LightLock_Guard l(_l);
 		if (!object)
 			return;
 		// if (children.front() == children.end()) return;
@@ -107,10 +105,9 @@ class GameObject {
 	}
 
 	inline void setParent(GameObject &object) {
-		LightLock_Guard l(_l);
-		if (this->parent)
-			this->parent->removeChild(this);
-		this->parent = &object;
+		if (parent)
+			parent->removeChild(this);
+		parent = &object;
 	}
 
 	/**

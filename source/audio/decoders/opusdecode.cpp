@@ -1,6 +1,6 @@
-#include "opusdecode.h"
 #include "audiomanager.h"
 #include "console.h"
+#include "decoders.h"
 #include <cstdint>
 #include <opusfile.h>
 #include <string>
@@ -61,7 +61,7 @@ void ql::opusdecode(void *data) {
 	ndspChnSetInterp(p.chn, NDSP_INTERP_POLYPHASE);
 	ndspChnSetRate(p.chn, 48000); // opus is fixed at 48kHz
 	ndspChnSetFormat(p.chn, NDSP_FORMAT_STEREO_PCM16);
-	
+
 	int error			  = 0;
 	OggOpusFile *opusFile = op_open_file(file.c_str(), &error);
 
@@ -103,5 +103,6 @@ void ql::opusdecode(void *data) {
 exit:
 	ndspChnReset(p.chn);
 	linearFree(audioBuffer);
+	op_free(opusFile);
 	Console::log("Opus thread exited!");
 }

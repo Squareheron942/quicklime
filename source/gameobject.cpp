@@ -1,28 +1,26 @@
 #include "gameobject.h"
+#include "3ds/synchronization.h"
 #include "console.h"
 #include "scene.h"
 #include "script.h"
 #include "threads.h"
 
 GameObject::GameObject(std::string name, Scene &s)
-	: s(s), reg(s.reg), id(s.reg.create()) {
-	LightLock_Init(&_l);
-	LightLock_Init(&_componentL);
+	: s(s), reg(s.reg), id(s.reg.create()), name(name) {
 	LightLock_Init(&_scriptL);
 }
 GameObject::GameObject(GameObject &&other)
-	: _l(other._l), s(other.s), children(other.children),
+	: _scriptL(other._scriptL), s(other.s), children(other.children),
 	  scripts(std::move(other.scripts)), parent(other.parent), reg(other.reg),
 	  id(other.id), name(other.name) {
 	other.parent = nullptr;
 	other.id	 = entt::entity{entt::null};
 	other.scripts.clear();
 	other.children.clear();
-	other.name = "";
 }
 
 void GameObject::Awake() {
-	LightLock_Guard l{_scriptL};
+	LightLock_Guard l(_scriptL);
 	for (auto &s : scripts) {
 		s->Awake();
 		s->SetEnabled(true);
@@ -30,35 +28,34 @@ void GameObject::Awake() {
 }
 
 void GameObject::Start() {
-	LightLock_Guard l{_scriptL};
+	LightLock_Guard l(_scriptL);
 	for (auto &s : scripts)
 		if (s->enabled)
 			s->Start();
 }
 
 void GameObject::Update() {
-	LightLock_Guard l{_scriptL};
+	LightLock_Guard l(_scriptL);
 	for (auto &s : scripts)
 		if (s->enabled)
 			s->Update();
 }
 
 void GameObject::LateUpdate() {
-	LightLock_Guard l{_scriptL};
+	LightLock_Guard l(_scriptL);
 	for (auto &s : scripts)
 		if (s->enabled)
 			s->LateUpdate();
 }
 
 void GameObject::FixedUpdate() {
-	LightLock_Guard l{_scriptL};
+	LightLock_Guard l(_scriptL);
 	for (auto &s : scripts)
 		if (s->enabled)
 			s->FixedUpdate();
 }
 
 GameObject *GameObject::r_search(std::string name) {
-	LightLock_Guard l{_l};
 	GameObject *out = NULL;
 	for (GameObject *child : children) {
 		if (child->name == name)
@@ -71,7 +68,6 @@ GameObject *GameObject::r_search(std::string name) {
 }
 
 GameObject *GameObject::find(std::string name) {
-	LightLock_Guard l{_l};
 	/**
 	 *     in front of name will search top down
 	 * /   in front of name will only search root (then find children based on

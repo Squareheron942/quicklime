@@ -4,8 +4,7 @@
 
 GameObject *Script::find(std::string object) { return owner->find(object); }
 
-Script::Script(GameObject &_owner)
-	: parentComponents(_owner.reg), parentID(_owner.id), owner(&_owner) {}
+Script::Script(GameObject &_owner) : owner(&_owner) {}
 
 void Script::SetEnabled(bool enabled) {
 	bool wasenabled = this->enabled;
