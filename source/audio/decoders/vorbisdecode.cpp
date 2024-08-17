@@ -13,44 +13,6 @@ namespace {
 	static const int CHANNELS_PER_SAMPLE = 2;
 	static const size_t WAVEBUF_SIZE =
 		SAMPLES_PER_BUF * CHANNELS_PER_SAMPLE * sizeof(int16_t);
-
-	// Main audio decoding logic
-	// This function pulls and decodes audio samples from opusFile_ to fill
-	// waveBuf_
-	bool fillBuffer(OggVorbis_File *vorbisFile_, ndspWaveBuf *waveBuf_,
-					ndsp_channel chn) {
-		char *bufferOut		 = reinterpret_cast<char *>(waveBuf_->data_pcm16);
-
-		uint64_t samplesRead = 0;
-		int samplesToRead	 = WAVEBUF_SIZE;
-
-		while (samplesToRead > 0) {
-			static int current_section;
-			int samplesJustRead = ov_read(
-				vorbisFile_, bufferOut,
-				samplesToRead > WAVEBUF_SIZE ? WAVEBUF_SIZE : samplesToRead,
-				&current_section);
-
-			if (samplesJustRead < 0)
-				return false;
-
-			samplesRead += samplesJustRead;
-			samplesToRead -= samplesJustRead;
-			bufferOut += samplesJustRead;
-		}
-
-		// If no samples were read in the last decode cycle, we're done
-		if (samplesRead == 0)
-			return false;
-
-		// Pass samples to NDSP
-		waveBuf_->nsamples = samplesRead >> 1; // half since 2 channels
-		ndspChnWaveBufAdd(chn, waveBuf_);
-		DSP_FlushDataCache(waveBuf_->data_pcm16,
-						   samplesRead * CHANNELS_PER_SAMPLE * sizeof(int16_t));
-
-		return true;
-	}
 } // namespace
 
 void ql::vorbisdecode(void *data) {
