@@ -7,14 +7,6 @@
 #include <tremor/ivorbiscodec.h>
 #include <tremor/ivorbisfile.h>
 
-namespace {
-	static const int SAMPLE_RATE	 = 48000;
-	static const int SAMPLES_PER_BUF = SAMPLE_RATE * 120 / 1000; // 120ms buffer
-	static const int CHANNELS_PER_SAMPLE = 2;
-	static const size_t WAVEBUF_SIZE =
-		SAMPLES_PER_BUF * CHANNELS_PER_SAMPLE * sizeof(int16_t);
-} // namespace
-
 void ql::vorbisdecode(void *data) {
 	if (!data)
 		return;
@@ -42,6 +34,12 @@ void ql::vorbisdecode(void *data) {
 	}
 
 	Console::log("Vorbis decoder created");
+
+	const int SAMPLE_RATE		  = vi->rate;
+	const int SAMPLES_PER_BUF	  = SAMPLE_RATE * 200 / 1000; // 200ms buffer
+	const int CHANNELS_PER_SAMPLE = 2;
+	const size_t WAVEBUF_SIZE =
+		SAMPLES_PER_BUF * CHANNELS_PER_SAMPLE * sizeof(int16_t);
 
 	// Setup NDSP
 	ndspChnReset(p.chn);
@@ -99,7 +97,7 @@ void ql::vorbisdecode(void *data) {
 				bufferOut += samplesJustRead;
 			}
 
-			buf.nsamples = samplesRead >> 1; // half since 2 channels
+			buf.nsamples = samplesRead >> 2; // half since 2 channels
 
 			ndspChnWaveBufAdd(p.chn, &buf);
 

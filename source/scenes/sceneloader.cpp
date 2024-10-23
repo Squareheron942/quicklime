@@ -21,58 +21,51 @@
 #include <type_traits>
 
 // helper functions for the loader
-
-template <class T>
-using unique_ptr_aligned = std::unique_ptr<T, decltype(&free)>;
-template <class T>
-unique_ptr_aligned<T> aligned_uptr(size_t align, size_t size) {
-	return unique_ptr_aligned<T>(static_cast<T *>(aligned_alloc(align, size)),
-								 &free);
-}
-
-auto readFile(const std::string &filename) {
-	std::ifstream in(("romfs:/scenes/" + filename + ".scene"),
-					 std::ios::in | std::ios::binary);
-	if (in) { // only works with c++11 or higher, lower versions don't guarantee
-			  // contiguous string data
-		unsigned long size;
-		in.seekg(0, std::ios::end);
-		size   = in.tellg();
-		auto c = aligned_uptr<char>(0x1000, size);
-		in.seekg(0, std::ios::beg);
-		in.read(c.get(), size);
-		in.close();
-		char *pc = c.get(), *pd = pc;
-		do {
-			while (std::isspace(*pc))
-				pc++;
-		} while ((*pd++ = *pc++)); // remove whitespace
-		Console::log("loaded scene file, length %lu", size);
-		return c;
+namespace {
+	auto readFile(const std::string &filename) {
+			std::ifstream in(("romfs:/scenes/" + filename + ".scene"),
+							 std::ios::in | std::ios::binary);
+			if (in) { // only works with c++11 or higher, lower versions don't guarantee
+					  // contiguous string data
+				unsigned long size;
+				in.seekg(0, std::ios::end);
+				size   = in.tellg();
+				auto c = aligned_uptr<char>(0x1000, size);
+				in.seekg(0, std::ios::beg);
+				in.read(c.get(), size);
+				in.close();
+				char *pc = c.get(), *pd = pc;
+				do {
+					while (std::isspace(*pc))
+						pc++;
+				} while ((*pd++ = *pc++)); // remove whitespace
+				Console::log("loaded scene file, length %lu", size);
+				return c;
+			}
+			auto r = aligned_uptr<char>(alignof(char), 0);
+			r.reset(nullptr);
+			return r;
 	}
-	auto r = aligned_uptr<char>(alignof(char), 0);
-	r.reset(nullptr);
-	return r;
-}
-
-struct sceneLoadThreadParams {
-	std::unique_ptr<Scene> s; // scene pointer we are writing to
-	std::string name;		  // scene file name
-	float progress;			  // progress value callback
-	bool isdone;
-	bool activate;
-	LightEvent event;
-};
-
-void exceptionHandler2(void) {
-	// uninstall handler
-	uninstallExceptionHandler();
-
-	register unsigned int lr asm("lr"); // might work? idk
-	unsigned int lrval = lr;
-	Console::error("Scene Load Thread Crashed.");
-	Console::error("lr: %p", lrval);
-	threadExit(0);
+	
+	struct sceneLoadThreadParams {
+			std::unique_ptr<Scene> s; // scene pointer we are writing to
+			std::string name;		  // scene file name
+			float progress;			  // progress value callback
+			bool isdone;
+			bool activate;
+			LightEvent event;
+	};
+	
+	void exceptionHandler2(void) {
+			// uninstall handler
+			uninstallExceptionHandler();
+	
+			register unsigned int lr asm("lr"); // might work? idk
+			unsigned int lrval = lr;
+			Console::error("Scene Load Thread Crashed.");
+			Console::error("lr: %p", lrval);
+			threadExit(0);
+	}
 }
 
 void sceneLoadThread(void *params) {

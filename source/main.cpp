@@ -48,7 +48,7 @@ namespace {
 	void draw() {
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
 		SceneManager::draw();
-		C3D_FrameEnd(0);
+		C3D_FrameEnd(GX_CMDLIST_FLUSH);
 	}
 	void prgrmexit() {
 		ql::physicsExit();

@@ -59,7 +59,7 @@ void ql::opusdecode(void *data) {
 
 	ndspChnReset(p.chn);
 	ndspChnSetInterp(p.chn, NDSP_INTERP_POLYPHASE);
-	ndspChnSetRate(p.chn, 48000); // opus is fixed at 48kHz
+	ndspChnSetRate(p.chn, SAMPLE_RATE); // opus is fixed at 48kHz
 	ndspChnSetFormat(p.chn, NDSP_FORMAT_STEREO_PCM16);
 
 	int error			  = 0;

@@ -2,6 +2,7 @@
 **.lst
 **.DS_Store
 compile_commands.json
+.clangd
 .vscode/
 .zed/
 .cache/

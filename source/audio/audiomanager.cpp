@@ -48,6 +48,8 @@ ndsp_channel AudioManager::requestChannel(channel_prio priority,
 			id		   = i;
 		}
 	}
+	
+	// channel allocation failed
 	if (priority < lowestprio)
 		return -1;
 	if (id < 0 || id > 23)
