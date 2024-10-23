@@ -1,29 +1,30 @@
 #include "config.h"
 #include <3ds.h>
 
-
-CFG_Language config::lang = CFG_LANGUAGE_JP;
-CFG_SystemModel config::model = CFG_MODEL_3DS;
-CFG_Region config::region = CFG_REGION_JPN;
+CFG_Language config::lang	   = CFG_LANGUAGE_JP;
+CFG_SystemModel config::model  = CFG_MODEL_3DS;
+CFG_Region config::region	   = CFG_REGION_JPN;
 bool config::wideIsUnsupported = false;
-bool config::isOnCitra = false;
-bool config::newmodel = false;
+bool config::isOnCitra		   = false;
+bool config::newmodel		   = false;
 
 Result config::getInfo() {
-    Result r = cfguInit();
-    
-    CFGU_GetSystemModel((u8*)&model);
-    CFGU_GetSystemLanguage((u8*)&lang);
-    CFGU_SecureInfoGetRegion((u8*)&region);
+	Result r = cfguInit();
 
-    cfguExit(); // since it doesn't change at runtime we can just init, read, close
+	CFGU_GetSystemModel((u8 *)&model);
+	CFGU_GetSystemLanguage((u8 *)&lang);
+	CFGU_SecureInfoGetRegion((u8 *)&region);
 
-    s64 version = 0;
-    svcGetSystemInfo(&version, CITRA_TYPE, CITRA_VERSION); // magic idk
-    isOnCitra = (version != 0);
+	cfguExit(); // since it doesn't change at runtime we can just init, read,
+				// close
 
-    wideIsUnsupported = isOnCitra || model == CFG_MODEL_2DS;
-    newmodel = model == CFG_MODEL_N2DSXL || model == CFG_MODEL_N3DSXL || model == CFG_MODEL_N3DS;
+	s64 version = 0;
+	svcGetSystemInfo(&version, CITRA_TYPE, CITRA_VERSION); // magic idk
+	isOnCitra		  = (version != 0);
 
-    return r;
+	wideIsUnsupported = isOnCitra || model == CFG_MODEL_2DS;
+	newmodel = model == CFG_MODEL_N2DSXL || model == CFG_MODEL_N3DSXL ||
+			   model == CFG_MODEL_N3DS;
+
+	return r;
 }

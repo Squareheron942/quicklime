@@ -1,5 +1,5 @@
 #pragma once
 
 namespace ql {
-	extern const char* scenename;
+	extern const char *scenename;
 }

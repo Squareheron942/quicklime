@@ -17,9 +17,9 @@ include $(DEVKITARM)/3ds_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	$(shell basename $(CURDIR))
 BUILD		:=	build
-SOURCES		:=  source $(TEMPSOURCE) source/components source/scenes source/audio source/util source/shaders source/physics
+SOURCES		:=  source source/components source/scenes source/audio source/util source/shaders source/physics source/audio/decoders
 DATA		:=	data
-INCLUDES	:=	include $(TEMPINCLUDE) include/components include/audio include/scenes include/util include/shaders include/physics include/entt
+INCLUDES	:=	include include/components include/audio include/scenes include/util include/shaders include/physics include/entt
 
 #---------------------------------------------------------------------------------
 # options for code generation

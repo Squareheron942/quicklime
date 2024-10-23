@@ -1,18 +1,18 @@
 #include <3ds.h>
-#include <citro3d.h>
 #include <citro2d.h>
+#include <citro3d.h>
 
 #include "physics.h"
 #include "sceneloader.h"
 
+#include "audiomanager.h"
+#include "componentmanager.h"
+#include "console.h"
 #include "controls.h"
 #include "defines.h"
-#include "sl_time.h"
-#include "console.h"
-#include "componentmanager.h"
 #include "scenemanager.h"
+#include "sl_time.h"
 
-#include "shared.h"
 #include "physics.h"
 #include "scenename.h"
 
@@ -22,16 +22,17 @@ namespace {
 		C3D_Init(C3D_DEFAULT_CMDBUF_SIZE * 64);
 		C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
 
-		#if CONSOLE
+#if CONSOLE
 		consoleInit(GFX_BOTTOM, NULL);
-		#endif
+#endif
 
-		controls::init();
-		Console::init();
-		ComponentManager::init();
 		ndspInit();
 		romfsInit();
 		osSetSpeedupEnable(true);
+		controls::init();
+		Console::init();
+		ComponentManager::init();
+		AudioManager::init();
 		ql::physicsInit(21887825); // 20ms tick speed
 		// ql::physicsInit(54719563); // 50ms tick speed
 
@@ -43,11 +44,11 @@ namespace {
 		Console::update();
 		Time::Update();
 	}
-	
+
 	void draw() {
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
 		SceneManager::draw();
-		C3D_FrameEnd(0);
+		C3D_FrameEnd(GX_CMDLIST_FLUSH);
 	}
 	void prgrmexit() {
 		ql::physicsExit();
@@ -56,11 +57,11 @@ namespace {
 		ndspExit();
 		romfsExit();
 	}
-}
+} // namespace
 
 int main() {
 	prgrminit();
-	while (aptMainLoop() && !_quit) {
+	while (aptMainLoop()) {
 		update();
 		draw();
 	}

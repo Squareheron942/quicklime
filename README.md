@@ -11,19 +11,15 @@ Currently, it is a work in progress, with only the backend being mostly complete
 
 Dependencies:
 
-citro3D, libctru, ffmpeg, python3, ffmpeg-python, devkitpro 3ds-dev package
+citro3D, libctru, devkitpro 3ds-dev package
 
-Set the python install location in the makefile, then run `make` in the project directory. The first build will error when compiling the c++ code (due to how the makefile is set up, will be fixed in final release when an app is made), and the second will succeed.
+Run `make` in the project directory
 
 ## How to use the engine
 
-The makefile contains various settings, you mostly don't need to mess with them other than the python variable which should be set to your python 3 install location
-
-
 ### Scripts
 To create a new script, make a new class extending the `Script` class (defined in `script.h`) which is where all the code will go, and place it in your asset folder.
-It is very similar to Unity scripts, look at the example scripts to see how to write it. (once those are added)
-Some stuff is not yet implemented (FixedUpdate() for example as well as just multithreading in general)
+It is very similar in utilisation to Unity scripts, look at the example scripts to see how to write it. (once those are added)
 
 ### Materials
 
@@ -42,4 +38,4 @@ Models can be imported by adding the collada model to the asset folder, then whe
 
 ### Objects
 
-Objects can be added to the scene by adding them to the scene file. Check the docs to see the syntax of that. Once the desktop frontend is developed it should handle this for you.
+Objects can be added to the scene by adding them to a scene file. Check the docs to see the syntax of that. Once the desktop editor is developed it should handle creating and editing scene files for you.
