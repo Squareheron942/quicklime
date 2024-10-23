@@ -2,7 +2,7 @@
 #include "console.h"
 #include "defines.h"
 #include "scenemanager.h"
-#include "sl_assert.h"
+#include "ql_assert.h"
 #include "threads.h"
 #include <3ds.h>
 #include <cstdint>

@@ -5,11 +5,12 @@
 #include "script.h"
 #include "threads.h"
 
-GameObject::GameObject(std::string name, Scene &s)
+ql::GameObject::GameObject(std::string name, Scene &s)
 	: s(s), reg(s.reg), id(s.reg.create()), name(name) {
 	LightLock_Init(&_scriptL);
 }
-GameObject::GameObject(GameObject &&other)
+
+ql::GameObject::GameObject(GameObject &&other)
 	: _scriptL(other._scriptL), s(other.s), children(other.children),
 	  scripts(std::move(other.scripts)), parent(other.parent), reg(other.reg),
 	  id(other.id), name(other.name) {
@@ -19,7 +20,7 @@ GameObject::GameObject(GameObject &&other)
 	other.children.clear();
 }
 
-void GameObject::Awake() {
+void ql::GameObject::Awake() {
 	LightLock_Guard l(_scriptL);
 	for (auto &s : scripts) {
 		s->Awake();
@@ -27,35 +28,35 @@ void GameObject::Awake() {
 	}
 }
 
-void GameObject::Start() {
+void ql::GameObject::Start() {
 	LightLock_Guard l(_scriptL);
 	for (auto &s : scripts)
 		if (s->enabled)
 			s->Start();
 }
 
-void GameObject::Update() {
+void ql::GameObject::Update() {
 	LightLock_Guard l(_scriptL);
 	for (auto &s : scripts)
 		if (s->enabled)
 			s->Update();
 }
 
-void GameObject::LateUpdate() {
+void ql::GameObject::LateUpdate() {
 	LightLock_Guard l(_scriptL);
 	for (auto &s : scripts)
 		if (s->enabled)
 			s->LateUpdate();
 }
 
-void GameObject::FixedUpdate() {
+void ql::GameObject::FixedUpdate() {
 	LightLock_Guard l(_scriptL);
 	for (auto &s : scripts)
 		if (s->enabled)
 			s->FixedUpdate();
 }
 
-GameObject *GameObject::r_search(std::string name) {
+ql::GameObject *ql::GameObject::r_search(std::string name) {
 	GameObject *out = NULL;
 	for (GameObject *child : children) {
 		if (child->name == name)
@@ -67,7 +68,7 @@ GameObject *GameObject::r_search(std::string name) {
 	return out;
 }
 
-GameObject *GameObject::find(std::string name) {
+ql::GameObject *ql::GameObject::find(std::string name) {
 	/**
 	 *     in front of name will search top down
 	 * /   in front of name will only search root (then find children based on
@@ -148,7 +149,7 @@ GameObject *GameObject::find(std::string name) {
 	return nullptr;
 };
 
-GameObject::~GameObject() {
+ql::GameObject::~GameObject() {
 	if (parent)
 		parent->removeChild(this);
 	if (id != entt::null)

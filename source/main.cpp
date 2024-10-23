@@ -11,7 +11,7 @@
 #include "controls.h"
 #include "defines.h"
 #include "scenemanager.h"
-#include "sl_time.h"
+#include "ql_time.h"
 
 #include "physics.h"
 #include "scenename.h"
@@ -29,25 +29,25 @@ namespace {
 		ndspInit();
 		romfsInit();
 		osSetSpeedupEnable(true);
-		controls::init();
-		Console::init();
-		ComponentManager::init();
-		AudioManager::init();
+		ql::controls::init();
+		ql::Console::init();
+		ql::ComponentManager::init();
+		ql::AudioManager::init();
 		ql::physicsInit(21887825); // 20ms tick speed
 		// ql::physicsInit(54719563); // 50ms tick speed
 
-		SceneLoader::load(ql::scenename);
+		ql::SceneLoader::load(ql::scenename);
 	}
 	void update() {
-		controls::update();
-		SceneManager::update();
-		Console::update();
-		Time::Update();
+		ql::controls::update();
+		ql::SceneManager::update();
+		ql::Console::update();
+		ql::Time::Update();
 	}
 
 	void draw() {
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
-		SceneManager::draw();
+		ql::SceneManager::draw();
 		C3D_FrameEnd(GX_CMDLIST_FLUSH);
 	}
 	void prgrmexit() {

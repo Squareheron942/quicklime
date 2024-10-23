@@ -9,21 +9,23 @@
 #include <type_traits>
 #include <utility>
 
-// TODO needs to be basically completely rewritten/remade
-class SceneManager {
-	SceneManager() = delete;
-	static bool loadSceneNextFrame;
-	static void setScene(std::unique_ptr<Scene> &s);
-	static void setScene(std::unique_ptr<Scene> &&s);
-	friend class SceneLoader;
-	friend class Console; // given access to read scene name
-	friend class AudioManager;
-	friend void sceneLoadThread(void *params);
+namespace ql {
+	// TODO needs to be basically completely rewritten/remade
+	class SceneManager {
+		SceneManager() = delete;
+		static bool loadSceneNextFrame;
+		static void setScene(std::unique_ptr<Scene> &s);
+		static void setScene(std::unique_ptr<Scene> &&s);
+		friend class SceneLoader;
+		friend class Console; // given access to read scene name
+		friend class AudioManager;
+		friend void sceneLoadThread(void *params);
 
-  public:
-	static LightLock lock;
-	static std::unique_ptr<Scene> currentScene, sceneToBeLoaded;
-	static void init();
-	static void update();
-	static void draw();
-};
+	  public:
+		static LightLock lock;
+		static std::unique_ptr<Scene> currentScene, sceneToBeLoaded;
+		static void init();
+		static void update();
+		static void draw();
+	};
+} // namespace ql

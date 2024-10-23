@@ -5,29 +5,31 @@
 #include <string>
 #include <unordered_map>
 
-#include "bone.h"
+// #include "bone.h"
+class ql::bone {};
 #include "console.h"
 #include "materialmanager.h"
 #include "mesh.h"
+#include "ql_assert.h"
 #include "shader.h"
-#include "sl_assert.h"
 #include "threads.h"
 
-namespace {
-	LightLock _loader_l = {1}, _mesh_l = {1};
-	static void freadstr(FILE *fid, char *str, size_t max_size) {
-		unsigned long int pos1 = ftell(fid);
-		fseek(fid, 0L, SEEK_END);
-		unsigned long int pos2 = ftell(fid);
-		fseek(fid, pos1, SEEK_SET);
+namespace ql::mdlLoader {
+	namespace {
+		LightLock _loader_l = {1}, _mesh_l = {1};
+		static void freadstr(FILE *fid, char *str, size_t max_size) {
+			unsigned long int pos1 = ftell(fid);
+			fseek(fid, 0L, SEEK_END);
+			unsigned long int pos2 = ftell(fid);
+			fseek(fid, pos1, SEEK_SET);
 
-		fread(str, max_size < (pos2 - pos1) ? max_size : (pos2 - pos1), 1, fid);
-	}
-	LightLock_Mutex<std::unordered_map<std::string, std::weak_ptr<mesh>>>
-		loadedMeshes;
-} // namespace
+			fread(str, max_size < (pos2 - pos1) ? max_size : (pos2 - pos1), 1,
+				  fid);
+		}
+		LightLock_Mutex<std::unordered_map<std::string, std::weak_ptr<mesh>>>
+			loadedMeshes;
+	} // namespace
 
-namespace mdlLoader {
 	std::unique_ptr<shader> parseMat(const std::string file) {
 		FILE *f = fopen(file.c_str(), "r");
 		ASSERT(f != nullptr, "Material file not found");
@@ -40,8 +42,8 @@ namespace mdlLoader {
 		unsigned char nBones = 0;
 		fread(&nBones, sizeof(nBones), 1, f);
 		if (!nBones)
-			return NULL; // return null if no bones are used, prevents useless
-						 // reading
+			return NULL; // return null if no bones are used, prevents
+						 // useless reading
 		bone *bones = new bone[nBones];
 		fread(bones, sizeof(bone), nBones, f);
 		return bones;
@@ -111,4 +113,4 @@ namespace mdlLoader {
 	exit_0:
 		return std::nullopt;
 	}
-} // namespace mdlLoader
+} // namespace ql::mdlLoader

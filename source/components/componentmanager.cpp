@@ -3,9 +3,9 @@
 #include "threads.h"
 #include <iostream>
 
-LightLock ComponentManager::_l = {};
+LightLock ql::ComponentManager::_l = {};
 
-bool ComponentManager::addComponent(const char *name, GameObject &obj,
+bool ql::ComponentManager::addComponent(const char *name, GameObject &obj,
 									const void *data) {
 	LightLock_Guard l(_l);
 	if (getComponentMap().find(name) == getComponentMap().end()) {
@@ -16,7 +16,7 @@ bool ComponentManager::addComponent(const char *name, GameObject &obj,
 	return true;
 }
 
-bool ComponentManager::addScript(const char *name, GameObject &obj) {
+bool ql::ComponentManager::addScript(const char *name, GameObject &obj) {
 	LightLock_Guard l(_l);
 	if (getScriptMap().find(name) == getScriptMap().end()) {
 		Console::error("Unknown script %s", name);

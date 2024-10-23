@@ -1,14 +1,14 @@
 #include "config.h"
 #include <3ds.h>
 
-CFG_Language config::lang	   = CFG_LANGUAGE_JP;
-CFG_SystemModel config::model  = CFG_MODEL_3DS;
-CFG_Region config::region	   = CFG_REGION_JPN;
-bool config::wideIsUnsupported = false;
-bool config::isOnCitra		   = false;
-bool config::newmodel		   = false;
+CFG_Language ql::config::lang	   = CFG_LANGUAGE_JP;
+CFG_SystemModel ql::config::model  = CFG_MODEL_3DS;
+CFG_Region ql::config::region	   = CFG_REGION_JPN;
+bool ql::config::wideIsUnsupported = false;
+bool ql::config::isOnCitra		   = false;
+bool ql::config::newmodel		   = false;
 
-Result config::getInfo() {
+Result ql::config::getInfo() {
 	Result r = cfguInit();
 
 	CFGU_GetSystemModel((u8 *)&model);

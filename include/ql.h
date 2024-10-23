@@ -18,7 +18,6 @@
 #include "components/script.h"
 
 #include "components/camera.h"
-#include "components/light.h"
 #include "components/renderer.h"
 #include "components/transform.h"
 #include "components/audiosource.h"

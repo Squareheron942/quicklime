@@ -7,36 +7,36 @@
 #include <unordered_map>
 #include <utility>
 
-namespace controls {
+namespace ql::controls {
 	// mapping for key name
-	enum class key : unsigned char {
-		KEY_A			 = 0,
-		KEY_B			 = 1,
-		KEY_X			 = 2,
-		KEY_Y			 = 3,
-		KEY_SELECT		 = 4,
-		KEY_START		 = 5,
-		KEY_DPAD_RIGHT	 = 6,
-		KEY_DPAD_LEFT	 = 7,
-		KEY_DPAD_UP		 = 8,
-		KEY_DPAD_DOWN	 = 9,
-		KEY_L			 = 10,
-		KEY_R			 = 11,
-		KEY_ZL			 = 12,
-		KEY_ZR			 = 13,
-		KEY_CSTICK_UP	 = 14,
-		KEY_CSTICK_DOWN	 = 15,
-		KEY_CSTICK_LEFT	 = 16,
-		KEY_CSTICK_RIGHT = 17,
-		KEY_CPAD_UP		 = 18,
-		KEY_CPAD_DOWN	 = 19,
-		KEY_CPAD_LEFT	 = 20,
-		KEY_CPAD_RIGHT	 = 21,
-		KEY_UP			 = 22,
-		KEY_DOWN		 = 23,
-		KEY_LEFT		 = 24,
-		KEY_RIGHT		 = 25,
-		KEY_TOUCH		 = 26
+	enum key {
+		QL_KEY_A			 = 0,
+		QL_KEY_B			 = 1,
+		QL_KEY_X			 = 2,
+		QL_KEY_Y			 = 3,
+		QL_KEY_SELECT		 = 4,
+		QL_KEY_START		 = 5,
+		QL_KEY_DPAD_RIGHT	 = 6,
+		QL_KEY_DPAD_LEFT	 = 7,
+		QL_KEY_DPAD_UP		 = 8,
+		QL_KEY_DPAD_DOWN	 = 9,
+		QL_KEY_L			 = 10,
+		QL_KEY_R			 = 11,
+		QL_KEY_ZL			 = 12,
+		QL_KEY_ZR			 = 13,
+		QL_KEY_CSTICK_UP	 = 14,
+		QL_KEY_CSTICK_DOWN	 = 15,
+		QL_KEY_CSTICK_LEFT	 = 16,
+		QL_KEY_CSTICK_RIGHT = 17,
+		QL_KEY_CPAD_UP		 = 18,
+		QL_KEY_CPAD_DOWN	 = 19,
+		QL_KEY_CPAD_LEFT	 = 20,
+		QL_KEY_CPAD_RIGHT	 = 21,
+		QL_KEY_UP			 = 22,
+		QL_KEY_DOWN		 = 23,
+		QL_KEY_LEFT		 = 24,
+		QL_KEY_RIGHT		 = 25,
+		QL_KEY_TOUCH		 = 26
 	};
 
 	void update();
@@ -103,6 +103,6 @@ namespace controls {
 	const circlePosition cStickPos();
 
 	float gyroDeadZone(), gyroSensitivity();
-	void setGyroDeadZone(float min_radius),
-		setGyroSensitivity(float multiplier);
-}; // namespace controls
+	void setGyroDeadZone(float min_radius);
+	void setGyroSensitivity(float multiplier);
+}; // namespace ql::controls

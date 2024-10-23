@@ -1,5 +1,5 @@
 #include "controls.h"
-#include "sl_time.h"
+#include "ql_time.h"
 #include "threads.h"
 #include <3ds.h>
 #include <algorithm>
@@ -10,7 +10,7 @@
 
 #define M_RAD 0.01745329252f
 
-namespace controls {
+namespace ql::controls {
 
 	namespace // makes these inaccessible outside this namespace
 	{
@@ -76,19 +76,19 @@ namespace controls {
 
 	bool getDown(key inputName) {
 		LightLock_Guard l(_l);
-		return kDown & mappings[(unsigned char)inputName];
+		return kDown & mappings[(int)inputName];
 	}
 	bool getRepeat(key inputName) {
 		LightLock_Guard l(_l);
-		return kRepeat & mappings[(unsigned char)inputName];
+		return kRepeat & mappings[(int)inputName];
 	}
 	bool getHeld(key inputName) {
 		LightLock_Guard l(_l);
-		return kHeld & mappings[(unsigned char)inputName];
+		return kHeld & mappings[(int)inputName];
 	}
 	bool getUp(key inputName) {
 		LightLock_Guard l(_l);
-		return kUp & mappings[(unsigned char)inputName];
+		return kUp & mappings[(int)inputName];
 	}
 	void setMapping(key keyName, unsigned int mapping) {
 		LightLock_Guard l(_l);
@@ -130,4 +130,4 @@ namespace controls {
 		LightLock_Guard l(_l);
 		gyro_d = min_rate;
 	}
-}; // namespace controls
+}; // namespace ql::controls

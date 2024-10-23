@@ -14,4 +14,4 @@ namespace ql::config {
 	extern bool newmodel;
 
 	Result getInfo();
-} // namespace config
+} // namespace ql::config

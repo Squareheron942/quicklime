@@ -16,7 +16,7 @@ namespace {
 	// This function pulls and decodes audio samples from opusFile_ to fill
 	// waveBuf_
 	bool fillBuffer(OggOpusFile *opusFile_, ndspWaveBuf *waveBuf_,
-					ndsp_channel chn) {
+					ql::ndsp_channel chn) {
 		// Decode samples until our waveBuf is full
 		int totalSamples = 0;
 		while (totalSamples < SAMPLES_PER_BUF) {

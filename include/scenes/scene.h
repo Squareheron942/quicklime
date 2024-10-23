@@ -9,35 +9,37 @@
 #include <stdio.h>
 #include <string>
 
-class Scene {
-	LightLock lock;
-	std::string _name;
-	GameObject *root;
-	// needs to be a list so it doesn't get reallocated (sad)
-	std::list<GameObject> objects;
-	entt::registry reg;
+namespace ql {
+	class Scene {
+		LightLock lock;
+		std::string _name;
+		GameObject *root;
+		// needs to be a list so it doesn't get reallocated (sad)
+		std::list<GameObject> objects;
+		entt::registry reg;
 
-	friend class SceneLoader;
-	friend class Camera;
-	friend class AudioSource;
-	friend class AudioManager;
-	friend class GameObject;
-	friend void sceneLoadThread(void *params);
+		friend class SceneLoader;
+		friend class Camera;
+		friend class AudioSource;
+		friend class AudioManager;
+		friend class GameObject;
+		friend void sceneLoadThread(void *params);
 
-	void act_on_objects(void (GameObject::*action)()) {
-		for (GameObject &child : objects)
-			(child.*action)();
-	}
+		void act_on_objects(void (GameObject::*action)()) {
+			for (GameObject &child : objects)
+				(child.*action)();
+		}
 
-  public:
-	const std::string &name = _name;
-	~Scene();
+	  public:
+		const std::string &name = _name;
+		~Scene();
 
-	void awake();
-	void start();
-	void update();
-	void fixedUpdate();
-	void draw();
+		void awake();
+		void start();
+		void update();
+		void fixedUpdate();
+		void draw();
 
-	Scene(std::string name);
-};
+		Scene(std::string name);
+	};
+} // namespace ql

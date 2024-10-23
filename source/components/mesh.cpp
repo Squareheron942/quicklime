@@ -2,7 +2,7 @@
 #include "componentmanager.h"
 #include "console.h"
 #include "gameobject.h"
-#include "sl_assert.h"
+#include "ql_assert.h"
 #include "stats.h"
 #include <memory>
 
@@ -17,7 +17,7 @@ namespace {
 	}
 } // namespace
 
-mesh::mesh(void *vertices, const mdlLoader::mdl_header &hdr)
+ql::mesh::mesh(void *vertices, const mdlLoader::mdl_header &hdr)
 	: numVerts(hdr.numVerts), vertsize(hdr.sv), _vertices(vertices),
 	  radius(hdr.radius) {
 	ASSERT(vertices != nullptr, "Invalid vertex data");
@@ -37,7 +37,7 @@ mesh::mesh(void *vertices, const mdlLoader::mdl_header &hdr)
 	stats::_vertices += numVerts;
 }
 
-mesh::~mesh() {
+ql::mesh::~mesh() {
 	linearFree(_vertices);
 	stats::_vertices -= numVerts;
 }
