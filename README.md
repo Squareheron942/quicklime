@@ -9,11 +9,9 @@ Currently, it is a work in progress, with only the backend being mostly complete
 
 ## How to build
 
-Dependencies:
-
-citro3D, libctru, devkitpro 3ds-dev package
-
-Run `make` in the project directory
+1. Install devkitpro 3ds-dev package according to devkitpro [getting started instructions](https://devkitpro.org/wiki/Getting_Started).
+2. Clone repository
+3. Run `make` in repository directory
 
 ## How to use the engine
 
@@ -34,7 +32,7 @@ These contain the data to be input to the shader code. This will vary depending 
 
 ### Models
 
-Models can be imported by adding the collada model to the asset folder, then when building, a script will generate a .qlmdl model and .qlmtl material. You can then optionally move those models back to the original folder and remove the collada model (so that the models aren't regenerated every build), and you can edit the material file to select what shader is being used. 
+Models can be imported by adding the collada model to the asset folder, then when building, a script will generate a .qlmdl model and .qlmtl material. You can then optionally move those models back to the original folder and remove the collada model (so that the models aren't regenerated every build), and you can edit the material file to select what shader is being used, what data etc
 
 ### Objects
 
