@@ -80,14 +80,14 @@ namespace ql {
 				distatten = 1;
 				break;
 			}
-			std::clamp(stereoPan, -1.f, 1.f);
+			stereoPan = std::clamp(stereoPan, -1.f, 1.f);
 			unsigned char panidx = (uint8_t)((0.5f * stereoPan + 0.5f) * 255);
 			lvol				 = volume * panVolLeft[panidx] * distatten;
 			rvol				 = volume * panVolRight[panidx] * distatten;
 		}
 
-		std::clamp(lvol, 0.f, 1.f);
-		std::clamp(rvol, 0.f, 1.f);
+		lvol = std::clamp(lvol, 0.f, 1.f);
+		rvol = std::clamp(rvol, 0.f, 1.f);
 
 		// float mix[12] = {lvol, rvol};
 		float mix[12] = {1.0, 1.0};
