@@ -21,8 +21,7 @@ namespace ql {
 		static shader *createMaterialInstance(FILE *matFile) {
 			return new T(matFile);
 		}
-		static std::unordered_map<std::string, shaderInstantiationFunc> &
-		getMaterialMap() {
+		static auto &getMaterialMap() {
 			static std::unordered_map<std::string, shaderInstantiationFunc> map;
 			return map;
 		}
@@ -42,3 +41,4 @@ namespace ql {
 #define MATERIAL_REGISTER(material)                                            \
 	bool material##_material =                                                 \
 		::ql::MaterialManager::registerMaterial<material>(#material);
+

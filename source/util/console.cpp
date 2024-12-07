@@ -5,6 +5,8 @@
 #include "ql_time.h"
 #include "stats.h"
 #include "threads.h"
+#include <stdio.h>
+#include <malloc.h>
 
 namespace ql {
 	int Console::line							 = 0;
@@ -86,14 +88,25 @@ namespace ql {
 		printf("\e[2J"); // clear screen
 	}
 
+	static FILE* errf = nullptr;
 	void Console::basic_log(CONSOLE_LOG_LEVEL loglevel, const char *text,
 							va_list args) {
 #if CONSOLE
 		LightLock_Guard l(_l);
+
+		// write out to file immediately
+		if (!errf) {
+			errf = fopen("sdmc:/log.txt", "w+");
+			setbuf(errf, NULL);
+		}
+		if (errf) {
+			vfprintf(errf, text, args);
+			fprintf(errf, "\n");
+		}
+
 		// same between all so might as well leave it that way
 		// 40 char space in the middle is where the actual text goes
-		char base[7 + 40 + 4 + 1] = {
-			"\e[1;3_m                                        \e[0m"};
+		char base[7 + 40 + 4 + 1] = {"\e[1;3_m                                        \e[0m"};
 
 		base[5] = loglevel; // silly hack that works bc the loglevel enum
 

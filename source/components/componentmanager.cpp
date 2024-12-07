@@ -10,8 +10,14 @@ bool ql::ComponentManager::addComponent(const char *name, GameObject &obj,
 	LightLock_Guard l(_l);
 	if (getComponentMap().find(name) == getComponentMap().end()) {
 		Console::error("Unknown component %s", name);
+		Console::error("Known components:");
+		for(const auto& elem : getComponentMap())
+			Console::log("%s: %p", elem.first.c_str(), elem.second);
 		return false;
 	}
+	Console::error("Known components:");
+	for(const auto& elem : getComponentMap())
+		Console::log("%s: %p", elem.first.c_str(), elem.second);
 	getComponentMap()[name](obj, data);
 	return true;
 }

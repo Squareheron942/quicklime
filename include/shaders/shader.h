@@ -1,5 +1,6 @@
 #pragma once
 
+#include "util/renderqueue.h"
 #include "shaders/color.h"
 #include "shaders/texture.h"
 #include <citro3d.h>
@@ -9,9 +10,9 @@
 #include <string>
 
 namespace ql {
-#define float3torgb32(color)                                                   \
-	((((int)(color[0] * 255) & 0xFF) << 24) |                                  \
-	 (((int)(color[1] * 255) & 0xFF) << 16) |                                  \
+#define float3torgb32(color)                  \
+	((((int)(color[0] * 255) & 0xFF) << 24) | \
+	 (((int)(color[1] * 255) & 0xFF) << 16) | \
 	 (((int)(color[2] * 255) & 0xFF) << 8) | (0xFF << 0))
 
 	class shader {
@@ -45,13 +46,12 @@ namespace ql {
 		 * load a blank white texture. If the specified name cannot be found,
 		 * the return value will be empty.
 		 */
-		static std::optional<std::shared_ptr<Texture>>
-		loadTextureFromFile(std::string name);
+		static std::optional<std::shared_ptr<Texture>> loadTextureFromFile(std::string name);
 
 	  public:
-		shader(FILE *args) noexcept {};
+		RenderQueue queue;
 		virtual ~shader()												  = 0;
 		virtual void resetMaterial()									  = 0;
-		virtual void setMaterial(C3D_Mtx *modelView, C3D_Mtx *projection) = 0;
+		virtual void setMaterial(C3D_Mtx *modelview, C3D_Mtx *projection) = 0;
 	};
 } // namespace ql

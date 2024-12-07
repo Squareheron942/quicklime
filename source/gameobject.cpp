@@ -4,10 +4,12 @@
 #include "scene.h"
 #include "script.h"
 #include "threads.h"
+#include "camera.h"
 
 ql::GameObject::GameObject(std::string name, Scene &s)
 	: s(s), reg(s.reg), id(s.reg.create()), name(name) {
 	LightLock_Init(&_scriptL);
+	Camera::cameraObjectListDirty = true;
 }
 
 ql::GameObject::GameObject(GameObject &&other)
@@ -154,4 +156,5 @@ ql::GameObject::~GameObject() {
 		parent->removeChild(this);
 	if (id != entt::null)
 		reg.destroy(id);
+	Camera::cameraObjectListDirty = true;
 }

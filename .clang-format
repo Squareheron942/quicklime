@@ -7,3 +7,4 @@ AlignConsecutiveAssignments:
   AcrossEmptyLines: true
   AcrossComments: true
 NamespaceIndentation: All
+ColumnLimit: 0

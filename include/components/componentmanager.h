@@ -2,6 +2,7 @@
 
 #include "gameobject.h"
 #include "script.h"
+#include "util/console.h"
 #include <3ds.h>
 #include <entt/entt.hpp>
 #include <memory>
@@ -31,6 +32,7 @@ namespace ql {
 		template <typename T>
 			requires validcomponent<T>
 		static bool registerComponent(const char *name) {
+			Console::log(name);
 			if constexpr (std::is_base_of_v<Script, T>)
 				getScriptMap()[name] = ComponentManager::attachScript<T>;
 			else
@@ -66,5 +68,5 @@ namespace ql {
 } // namespace ql
 
 #define COMPONENT_REGISTER(component)                                          \
-	bool component##_component =                                               \
+	volatile bool component##_component =                                               \
 		::ql::ComponentManager::registerComponent<component>(#component);

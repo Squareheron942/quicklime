@@ -1,9 +1,7 @@
 #pragma once
 
 #include <3ds.h>
-#include <malloc.h>
 #include <stdarg.h>
-#include <stdio.h>
 
 #define FPS_X 0
 #define FPS_Y 2

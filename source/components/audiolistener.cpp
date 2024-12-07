@@ -8,5 +8,11 @@ namespace ql {
 		(void)data;
 	}
 
-	COMPONENT_REGISTER(AudioListener)
+	COMPONENT_REGISTER(AudioListener);
 } // namespace ql
+
+bool test() {
+	ql::Console::log("text");
+}
+
+bool testvar = test();

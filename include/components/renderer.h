@@ -2,6 +2,7 @@
 
 #include "components/meshrenderer.h"
 #include "util/dummyrenderer.h"
+#include "util/renderqueue.h"
 #include <variant>
 
 namespace ql {
@@ -19,11 +20,13 @@ namespace ql {
 	class Renderer {
 		std::variant<DummyRenderer, MeshRenderer> rnd;
 		RendererType t;
-		unsigned int layer = ~0; // by default on base layer (layer 1)
+		u32 layer = 1; // by default on base layer (layer 1)
 		GameObject *parent;
 
 	  public:
 		Renderer(GameObject &obj, const void *data);
-		void render(C3D_Mtx &view, C3D_Mtx &projection, u32 mask);
+		void render(C3D_Mtx &view, C3D_Mtx& projection, u32 mask);
+		RenderQueue queue() const;
+		Renderer& operator=(Renderer&&);
 	};
 } // namespace ql

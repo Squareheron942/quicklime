@@ -1,4 +1,5 @@
 #include "sceneloader.h"
+#include "aligned_uptr.h"
 #include "base64.hpp"
 #include "componentmanager.h"
 #include "config.h"
@@ -6,11 +7,11 @@
 #include "defines.h"
 #include "exceptions.h"
 #include "gameobject.h"
+#include "ql_assert.h"
+#include "readfile.h"
 #include "scene.h"
 #include "scenemanager.h"
-#include "ql_assert.h"
 #include "slmdlloader.h"
-#include "aligned_uptr.h"
 #include <3ds.h>
 #include <cctype>
 #include <fstream>
@@ -24,31 +25,6 @@
 namespace ql {
 	// helper functions for the loader
 	namespace {
-		auto readFile(const std::string &filename) {
-			std::ifstream in(("romfs:/scenes/" + filename + ".scene"),
-							 std::ios::in | std::ios::binary);
-			if (in) { // only works with c++11 or higher, lower versions don't
-					  // guarantee contiguous string data
-				unsigned long size;
-				in.seekg(0, std::ios::end);
-				size   = in.tellg();
-				auto c = aligned_uptr<char>(0x1000, size);
-				in.seekg(0, std::ios::beg);
-				in.read(c.get(), size);
-				in.close();
-				char *pc = c.get(), *pd = pc;
-				do {
-					while (std::isspace(*pc))
-						pc++;
-				} while ((*pd++ = *pc++)); // remove whitespace
-				Console::log("loaded scene file, length %lu", size);
-				return c;
-			}
-			auto r = aligned_uptr<char>(alignof(char), 0);
-			r.reset(nullptr);
-			return r;
-		}
-
 		struct sceneLoadThreadParams {
 			std::unique_ptr<Scene> s; // scene pointer we are writing to
 			std::string name;		  // scene file name
@@ -57,6 +33,14 @@ namespace ql {
 			bool activate;
 			LightEvent event;
 		};
+
+		void remove_whitespace(auto &str) {
+			char *pc = str.get(), *pd = pc;
+			do {
+				while (std::isspace(*pc))
+					pc++;
+			} while ((*pd++ = *pc++)); // remove whitespace
+		}
 
 		[[maybe_unused]] void exceptionHandler2(void) {
 			// uninstall handler
@@ -87,9 +71,13 @@ namespace ql {
 
 		LightEvent_Init(&p.event, RESET_ONESHOT);
 
-		auto textstr{readFile(p.name)};
+		auto textstr{readFileAligned(("romfs:/scenes/" + p.name + ".scene"))};
 		ASSERT(textstr != nullptr, "Invalid scene file");
+
+		remove_whitespace(textstr);
 		std::string_view text{textstr.get()};
+		Console::log("loaded scene file, length %lu", text.size());
+		Console::log(text.data());
 
 		SceneLoader::parseObjectAsync(
 			p.s, text, text.size(),
@@ -152,14 +140,15 @@ namespace ql {
 	bool SceneLoader::load(std::string name) {
 		std::unique_ptr<Scene> out = std::make_unique<Scene>(name);
 
-		auto textstr{readFile(name)};
+		auto textstr{readFileAligned(("romfs:/scenes/" + name + ".scene"))};
 		ASSERT(textstr != nullptr, "Invalid scene file");
+		remove_whitespace(textstr);
 		std::string_view text{textstr.get()};
 		Console::success("read scene file");
-		std::string_view t{text};
+		Console::log(text.data());
 
 		// parse the whole object tree recursively
-		parseObject(out, t);
+		parseObject(out, text);
 		out->root = &out->objects.back();
 		Console::success("finished reading scene file");
 
@@ -281,7 +270,7 @@ namespace ql {
 					std::string(input.substr(0, input.find(']'))).c_str(),
 					object);
 				input.remove_prefix(input.find(',') + 1); // go to next one
-			} else { // this means there is only one in there
+			} else {									  // this means there is only one in there
 				ComponentManager::addScript(
 					std::string(input.substr(0, input.find(']'))).c_str(),
 					object);
@@ -302,7 +291,7 @@ namespace ql {
 								   // there must be at least another value
 				parseComponent(s, object, input.substr(0, input.find(',')));
 				input.remove_prefix(input.find(',') + 1); // go to next one
-			} else { // this means there is only one in there
+			} else {									  // this means there is only one in there
 				parseComponent(s, object, input.substr(0, input.find(']')));
 				input.remove_prefix(input.find(']') +
 									1); // go to the end of the section

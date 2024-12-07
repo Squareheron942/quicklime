@@ -73,6 +73,7 @@ namespace ql::mdlLoader {
 
 			char str[4] = "";
 			fread(str, sizeof(char), 3, f);
+			Console::log(str);
 			ASSERT(strcmp(str, "mdl"), "Error loading model");
 			if (!strcmp(str, "mdl"))
 				goto exit_1;

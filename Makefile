@@ -19,7 +19,7 @@ TARGET		:=	$(shell basename $(CURDIR))
 BUILD		:=	build
 SOURCES		:=  source source/components source/scenes source/audio source/util source/shaders source/physics source/audio/decoders
 DATA		:=	data
-INCLUDES	:=	include include/components include/audio include/scenes include/util include/shaders include/physics include/entt
+INCLUDES	:=	include include/components include/audio include/scenes include/util include/shaders include/physics include/entt 
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -30,8 +30,8 @@ CFLAGS	:=	-Wall -O0 -ggdb -mword-relocations \
 			-ffunction-sections \
 			$(ARCH)
 
-CFLAGS	+=	$(INCLUDE) -D__3DS__ -lm `/opt/devkitpro/portlibs/3ds/bin/arm-none-eabi-pkg-config opusfile libmpg123 --cflags`
-CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++2b -flto
+CFLAGS	+=	$(INCLUDE) -D__3DS__ -lm `/opt/devkitpro/portlibs/3ds/bin/arm-none-eabi-pkg-config opusfile libmpg123 --cflags` 
+CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++2b
 
 ASFLAGS	:=	-g $(ARCH)
 
