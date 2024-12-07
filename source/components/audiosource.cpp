@@ -81,11 +81,7 @@ namespace ql {
 				break;
 			}
 			stereoPan = std::clamp(stereoPan, -1.f, 1.f);
-<<<<<<< Updated upstream
-			unsigned char panidx = (uint8_t)((0.5f * stereoPan + 0.5f) * 255);
-=======
 			uint8_t panidx = (uint8_t)((0.5f * stereoPan + 0.5f) * 255);
->>>>>>> Stashed changes
 			lvol				 = volume * panVolLeft[panidx] * distatten;
 			rvol				 = volume * panVolRight[panidx] * distatten;
 		}
